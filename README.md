@@ -1,1 +1,1 @@
-# event_monitoring_system
+# event-monitoring-system
