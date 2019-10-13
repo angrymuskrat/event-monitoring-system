@@ -46,21 +46,4 @@ func (s *service) Select(ctx context.Context, interval SpatialTemporalInterval) 
 }
 
 
-// GetByID returns an order given by id
-func (s *service) GetByID(ctx context.Context, id string) (ordersvc.Order, error) {
-	logger := log.With(s.logger, "method", "GetByID")
-	order, err := s.repository.GetOrderByID(ctx, id)
-	if err != nil {
-		level.Error(logger).Log("err", err)
-		if err == sql.ErrNoRows {
-			return order, ordersvc.ErrOrderNotFound
-		}
-		return order, ordersvc.ErrQueryRepository
-	}
-	return order, nil
-}
-
-
-
-
 
