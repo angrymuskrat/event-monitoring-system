@@ -24,7 +24,7 @@ func NewService(rep dbconnectorsvc.Repository, logger log.Logger) dbconnectorsvc
 }
 
 // Push save array of Posts to db
-func (s *service) Push(ctx context.Context, posts [] dbconnectorsvc.Posts) error {
+func (s *service) Push(ctx context.Context, posts [] dbconnectorsvc.Post) error {
 	logger := log.With(s.logger, "method", "Push")
 	if err := s.repository.PushPosts(ctx, posts); err != nil {
 		level.Error(logger).Log("err", err)
@@ -35,7 +35,7 @@ func (s *service) Push(ctx context.Context, posts [] dbconnectorsvc.Posts) error
 
 
 // Select returns array of posts, which  SpatialTemporal coordinates are in given interval
-func (s *service) Select(ctx context.Context, interval SpatialTemporalInterval) ([]Post, error) {
+func (s *service) Select(ctx context.Context, interval dbconnectorsvc.SpatialTemporalInterval) ([]dbconnectorsvc.Post, error) {
 	logger := log.With(s.logger, "method", "Select")
 	posts, err := s.repository.SelectPosts(ctx, interval)
 	if err != nil && err != sql.ErrNoRows {
