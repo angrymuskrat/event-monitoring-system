@@ -19,7 +19,7 @@ type Post struct {
 }
 
 type SpatialTemporalInterval struct {
-	MinTime int64 `msg`
+	MinTime int64
 	MaxTime int64
 	MinLat  float64
 	MinLon  float64
