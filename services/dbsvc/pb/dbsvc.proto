@@ -2,31 +2,31 @@ syntax = "proto3";
 
 package pb;
 
-// The Add service definition.
+// The db service definition.
 service Dbsvc {
-    // Sums two integers.
+    // Push array of posts to database
     rpc Push (PushRequest) returns (PushReply) {}
 
-    // Concatenates two strings
-    rpc Concat (SelectRequest) returns (SelectReply) {}
+    // Select array from database, each element from array belongs the interval
+    rpc Select (SelectRequest) returns (SelectReply) {}
 }
 
-// The sum request contains two parameters.
+// The push request contains two parameters.
 message PushRequest {
     repeated Post posts = 1;
 }
 
-// The sum response contains the result of the calculation.
+// The push response contains the result of the calculation.
 message PushReply {
     string err = 1;
 }
 
-// The Concat request contains two parameters.
+// The Select request contains two parameters.
 message SelectRequest {
     SpatialTemporalInterval interval = 1;
 }
 
-// The Concat response contains the result of the concatenation.
+// The Select response contains the result of the select request.
 message SelectReply {
     repeated Post posts = 1;
     string err = 2;
