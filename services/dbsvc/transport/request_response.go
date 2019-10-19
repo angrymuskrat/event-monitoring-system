@@ -1,9 +1,9 @@
 package transport
 
-import "github.com/angrymuskrat/event-monitoring-system/services/dbconnector"
+import "github.com/angrymuskrat/event-monitoring-system/services/dbsvc"
 
 type PushRequest struct {
-	Posts []dbconnector.Post
+	Posts []dbsvc.Post
 }
 
 type PushResponse struct {
@@ -12,11 +12,11 @@ type PushResponse struct {
 
 type SelectRequest struct {
 	Err error
-	Interval dbconnector.SpatialTemporalInterval
+	Interval dbsvc.SpatialTemporalInterval
 }
 
 type SelectResponse struct {
-	Posts []dbconnector.Post
+	Posts []dbsvc.Post
 	Err error
 }
 

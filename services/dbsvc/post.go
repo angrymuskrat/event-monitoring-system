@@ -1,4 +1,4 @@
-package dbconnector
+package dbsvc
 
 import (
 	"context"
