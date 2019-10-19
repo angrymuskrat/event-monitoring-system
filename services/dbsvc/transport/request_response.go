@@ -1,9 +1,11 @@
 package transport
 
-import "github.com/angrymuskrat/event-monitoring-system/services/dbsvc"
+import (
+	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/pb"
+)
 
 type PushRequest struct {
-	Posts []dbsvc.Post
+	Posts []pb.Post
 }
 
 type PushResponse struct {
@@ -12,11 +14,11 @@ type PushResponse struct {
 
 type SelectRequest struct {
 	Err error
-	Interval dbsvc.SpatialTemporalInterval
+	Interval pb.SpatialTemporalInterval
 }
 
 type SelectResponse struct {
-	Posts []dbsvc.Post
+	Posts []pb.Post
 	Err error
 }
 
