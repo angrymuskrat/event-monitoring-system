@@ -1,4 +1,4 @@
-package transport
+package dbtransport
 
 import (
 	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/pb"
