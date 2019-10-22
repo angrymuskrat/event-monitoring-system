@@ -2,19 +2,21 @@ package dbendpoint
 
 import (
 	"context"
+	//"time"
+
+	//"golang.org/x/time/rate"
+
 	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/dbservice"
 	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/pb"
-	"github.com/go-kit/kit/metrics"
 
-	//"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
-
 	"github.com/go-kit/kit/log"
-	//"github.com/go-kit/kit/metrics"
+	"github.com/go-kit/kit/metrics"
+	//stdopentracing "github.com/opentracing/opentracing-go"
+	//stdzipkin "github.com/openzipkin/zipkin-go"
 	//"github.com/go-kit/kit/ratelimit"
 	//"github.com/go-kit/kit/tracing/opentracing"
 	//"github.com/go-kit/kit/tracing/zipkin"
-	//"time"
 )
 
 // Set collects all of the endpoints that compose an add service. It's meant to
@@ -32,9 +34,11 @@ func New(svc dbservice.Service, logger log.Logger, duration metrics.Histogram/*,
 	{
 		pushEndpoint = MakePushEndpoint(svc)
 		//pushEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(pushEndpoint)
-		//pushEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(pushEndpoint)
-		//pushEndpoint = opentracing.TraceServer(otTracer, "Push")(pushEndpoint)
-		
+		/*pushEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(pushEndpoint)
+		pushEndpoint = opentracing.TraceServer(otTracer, "Push")(pushEndpoint)
+		if zipkinTracer != nil {
+			pushEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Push")(pushEndpoint)
+		}*/
 		pushEndpoint = LoggingMiddleware(log.With(logger, "method", "Push"))(pushEndpoint)
 		pushEndpoint = InstrumentingMiddleware(duration.With("method", "Push"))(pushEndpoint)
 	}
@@ -42,9 +46,11 @@ func New(svc dbservice.Service, logger log.Logger, duration metrics.Histogram/*,
 	{
 		selectEndpoint = MakeSelectEndpoint(svc)
 		//selectEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 100))(selectEndpoint)
-		//selectEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(selectEndpoint)
-		//selectEndpoint = opentracing.TraceServer(otTracer, "Select")(selectEndpoint)
-		
+		/*selectEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(selectEndpoint)
+		selectEndpoint = opentracing.TraceServer(otTracer, "Select")(selectEndpoint)
+		if zipkinTracer != nil {
+			selectEndpoint = zipkin.TraceEndpoint(zipkinTracer, "Se;ect")(selectEndpoint)
+		}*/
 		selectEndpoint = LoggingMiddleware(log.With(logger, "method", "Select"))(selectEndpoint)
 		selectEndpoint = InstrumentingMiddleware(duration.With("method", "Select"))(selectEndpoint)
 	}
