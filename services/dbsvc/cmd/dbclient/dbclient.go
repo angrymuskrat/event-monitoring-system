@@ -4,15 +4,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc"
+	"github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"os"
 	"text/tabwriter"
 	"time"
 
 	"google.golang.org/grpc"
-
-	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/dbservice"
-	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/dbtransport"
-	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/pb"
 
 	//"sourcegraph.com/sourcegraph/appdash"
 	//appdashot "sourcegraph.com/sourcegraph/appdash/opentracing"
@@ -29,59 +27,14 @@ func main() {
 	// see profilesvc.
 	fs := flag.NewFlagSet("dbcient", flag.ExitOnError)
 	var (
-		grpcAddr     = fs.String("grpc-addr", ":8082", "gRPC address of addsvc")
-		//zipkinURL    = fs.String("zipkin-url", ":9090", "Enable Zipkin tracing via HTTP reporter URL e.g. http://localhost:9411/api/v2/spans")
-		//zipkinBridge = fs.Bool("zipkin-ot-bridge", false, "Use Zipkin OpenTracing bridge instead of native implementation")
-		//lightstepToken = fs.String("lightstep-token", "", "Enable LightStep tracing via a LightStep access token")
-		//appdashAddr    = fs.String("appdash-addr", "", "Enable Appdash tracing via an Appdash server host:port")
-		method = fs.String("method", "select", "push, select")
+		grpcAddr = fs.String("grpc-addr", ":8082", "gRPC address of addsvc")
+		method   = fs.String("method", "select", "push, select")
 	)
-
-	/*fs.Usage = usageFor(fs, os.Args[0]+" [flags]")
-	fs.Parse(os.Args[1:])
-	fmt.Print(fs.Args(), len(fs.Args()))
-	if len(fs.Args()) != 2 {
-		fs.Usage()
-		os.Exit(1)
-	}*/
-
-	// This is a demonstration of the native Zipkin tracing client. If using
-	// Zipkin this is the more idiomatic client over OpenTracing.
-	/*var zipkinTracer *zipkin.Tracer
-	{
-		if *zipkinURL != "" {
-			var (
-				err         error
-				hostPort    = "" // if host:port is unknown we can keep this empty
-				serviceName = "dbsvc-cli"
-				reporter    = zipkinhttp.NewReporter(*zipkinURL)
-			)
-			defer reporter.Close()
-			zEP, _ := zipkin.NewEndpoint(serviceName, hostPort)
-			zipkinTracer, err = zipkin.NewTracer(reporter, zipkin.WithLocalEndpoint(zEP))
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "unable to create zipkin tracer: %s\n", err.Error())
-				os.Exit(1)
-			}
-		}
-	}*/
-
-	// This is a demonstration client, which supports multiple tracers.
-	// Your clients will probably just use one tracer.
-	/*var otTracer stdopentracing.Tracer
-	{
-		if *zipkinBridge && zipkinTracer != nil {
-			otTracer = zipkinot.Wrap(zipkinTracer)
-			zipkinTracer = nil // do not instrument with both native and ot bridge
-		} else {
-			otTracer = stdopentracing.GlobalTracer() // no-op
-		}
-	}*/
 
 	// This is a demonstration client, which supports multiple transports.
 	// Your clients will probably just define and stick with 1 transport.
 	var (
-		svc dbservice.Service
+		svc dbsvc.Service
 		err error
 	)
 	if *grpcAddr != "" {
@@ -91,7 +44,7 @@ func main() {
 			os.Exit(1)
 		}
 		defer conn.Close()
-		svc = dbtransport.NewGRPCClient(conn/*, otTracer, zipkinTracer*/, log.NewNopLogger())
+		svc = dbsvc.NewGRPCClient(conn, log.NewNopLogger())
 	} else {
 		fmt.Fprintf(os.Stderr, "error: no remote address specified\n")
 		os.Exit(1)
@@ -101,7 +54,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	testPosts := []pb.Post{pb.Post{"13131", "23", "-", false, "sasda", 5, 5, 5, false, "1313", "12313", 12.4, 12.5}}
+	testPosts := []proto.Post{}
 
 	switch *method {
 	case "push":
@@ -114,7 +67,7 @@ func main() {
 		fmt.Fprintf(os.Stdout, "It is all right")
 
 	case "select":
-		_, err := svc.Select(context.Background(), pb.SpatialTemporalInterval{1, 2, 1, 2, 1, 2})
+		_, err := svc.Select(context.Background(), proto.SpatioTemporalInterval{})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
@@ -141,4 +94,3 @@ func usageFor(fs *flag.FlagSet, short string) func() {
 		fmt.Fprintf(os.Stderr, "\n")
 	}
 }
-

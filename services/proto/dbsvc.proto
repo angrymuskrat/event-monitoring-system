@@ -1,6 +1,8 @@
 syntax = "proto3";
 
-package pb;
+package proto;
+
+import "gogo.proto";
 
 // The db service definition.
 service Dbsvc {
@@ -13,7 +15,7 @@ service Dbsvc {
 
 // The push request contains two parameters.
 message PushRequest {
-    repeated Post posts = 1;
+    repeated Post posts = 1 [(gogoproto.nullable) = false];
 }
 
 // The push response contains the result of the calculation.
@@ -23,12 +25,12 @@ message PushReply {
 
 // The Select request contains two parameters.
 message SelectRequest {
-    SpatialTemporalInterval interval = 1;
+    SpatioTemporalInterval interval = 1 [(gogoproto.nullable) = false];;
 }
 
 // The Select response contains the result of the select request.
 message SelectReply {
-    repeated Post posts = 1;
+    repeated Post posts = 1 [(gogoproto.nullable) = false];;
     string err = 2;
 }
 
@@ -48,7 +50,7 @@ message Post {
     double Lon = 13;
 }
 
-message SpatialTemporalInterval {
+message SpatioTemporalInterval {
     int64 MinTime = 1;
     int64 MaxTime = 2;
     double MinLat = 3;

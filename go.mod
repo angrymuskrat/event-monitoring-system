@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5 // indirect
 	github.com/go-kit/kit v0.9.0
+	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/oklog/oklog v0.3.2
 	github.com/oklog/run v1.0.0 // indirect

@@ -1,33 +1,30 @@
-package dbservice
+package dbsvc
 
 import (
 	"context"
 	"errors"
 	"fmt"
-
-	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/pb"
+	"github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/metrics"
 )
 
 var (
 	ErrCmdRepository   = errors.New("unable to command repository")
 	ErrQueryRepository = errors.New("unable to query repository")
-	ErrDbNotCreated = errors.New("db not created") //tmp error
+	ErrDbNotCreated    = errors.New("db not created") //tmp error
 )
 
 type Service interface {
-	Push (ctx context.Context, posts []pb.Post) error
-	Select (ctx context.Context, interval pb.SpatialTemporalInterval) ([]pb.Post, error)
+	Push(ctx context.Context, posts []proto.Post) error
+	Select(ctx context.Context, interval proto.SpatioTemporalInterval) ([]proto.Post, error)
 }
 
 // New returns a basic Service with all of the expected middlewares wired in.
-func New(logger log.Logger, pushed, selected metrics.Counter) Service {
+func NewService(logger log.Logger) Service {
 	var svc Service
 	{
 		svc = NewBasicService()
 		svc = LoggingMiddleware(logger)(svc)
-		svc = InstrumentingMiddleware(pushed, selected)(svc)
 	}
 	return svc
 }
@@ -39,7 +36,7 @@ func NewBasicService() Service {
 
 type basicService struct{}
 
-func (s basicService) Push (ctx context.Context, posts []pb.Post) error {
+func (s basicService) Push(ctx context.Context, posts []proto.Post) error {
 	for _, post := range posts {
 		fmt.Print(post.ID)
 	}
@@ -47,7 +44,6 @@ func (s basicService) Push (ctx context.Context, posts []pb.Post) error {
 }
 
 // Concat implements Service.
-func (s basicService) Select(_ context.Context, interval pb.SpatialTemporalInterval) ([]pb.Post, error) {
-	fmt.Print(interval.ForLog())
+func (s basicService) Select(_ context.Context, interval proto.SpatioTemporalInterval) ([]proto.Post, error) {
 	return nil, ErrDbNotCreated
 }
