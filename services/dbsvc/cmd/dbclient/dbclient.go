@@ -54,7 +54,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	testPosts := []proto.Post{}
+	testPosts := []data.Post{}
 
 	switch *method {
 	case "push":
@@ -67,7 +67,7 @@ func main() {
 		fmt.Fprintf(os.Stdout, "It is all right")
 
 	case "select":
-		_, err := svc.Select(context.Background(), proto.SpatioTemporalInterval{})
+		_, err := svc.Select(context.Background(), data.SpatioTemporalInterval{})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)

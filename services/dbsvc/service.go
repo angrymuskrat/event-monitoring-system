@@ -15,8 +15,8 @@ var (
 )
 
 type Service interface {
-	Push(ctx context.Context, posts []proto.Post) error
-	Select(ctx context.Context, interval proto.SpatioTemporalInterval) ([]proto.Post, error)
+	Push(ctx context.Context, posts []data.Post) error
+	Select(ctx context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error)
 }
 
 // New returns a basic Service with all of the expected middlewares wired in.
@@ -36,7 +36,7 @@ func NewBasicService() Service {
 
 type basicService struct{}
 
-func (s basicService) Push(ctx context.Context, posts []proto.Post) error {
+func (s basicService) Push(ctx context.Context, posts []data.Post) error {
 	for _, post := range posts {
 		fmt.Print(post.ID)
 	}
@@ -44,6 +44,6 @@ func (s basicService) Push(ctx context.Context, posts []proto.Post) error {
 }
 
 // Concat implements Service.
-func (s basicService) Select(_ context.Context, interval proto.SpatioTemporalInterval) ([]proto.Post, error) {
+func (s basicService) Select(_ context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error) {
 	return nil, ErrDbNotCreated
 }

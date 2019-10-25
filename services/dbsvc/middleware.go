@@ -22,14 +22,14 @@ type loggingMiddleware struct {
 	next   Service
 }
 
-func (mw loggingMiddleware) Push(ctx context.Context, posts []proto.Post) (err error) {
+func (mw loggingMiddleware) Push(ctx context.Context, posts []data.Post) (err error) {
 	defer func() {
 		mw.logger.Log("method", "Push", "err", err)
 	}()
 	return mw.next.Push(ctx, posts)
 }
 
-func (mw loggingMiddleware) Select(ctx context.Context, interval proto.SpatioTemporalInterval) (posts []proto.Post, err error) {
+func (mw loggingMiddleware) Select(ctx context.Context, interval data.SpatioTemporalInterval) (posts []data.Post, err error) {
 	defer func() {
 		mw.logger.Log("method", "Select", "interval", interval.String(), "err", err)
 	}()

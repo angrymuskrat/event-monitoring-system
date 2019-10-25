@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc"
-	"github.com/angrymuskrat/event-monitoring-system/services/proto"
+	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/proto"
 	"net"
 	"os"
 	"os/signal"

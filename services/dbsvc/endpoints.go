@@ -2,6 +2,7 @@ package dbsvc
 
 import (
 	"context"
+	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/proto"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
 
 	//"time"
@@ -37,7 +38,7 @@ func NewEndpoint(svc Service) Set {
 
 // Push implements the service interface, so Set may be used as a service.
 // This is primarily useful in the context of a client library.
-func (s Set) Push(ctx context.Context, posts []proto.Post) error {
+func (s Set) Push(ctx context.Context, posts []data.Post) error {
 	resp, err := s.PushEndpoint(ctx, proto.PushRequest{Posts: posts})
 	if err != nil {
 		return err
@@ -48,7 +49,7 @@ func (s Set) Push(ctx context.Context, posts []proto.Post) error {
 
 // Select implements the service interface, so Set may be used as a
 // service. This is primarily useful in the context of a client library.
-func (s Set) Select(ctx context.Context, interval proto.SpatioTemporalInterval) ([]proto.Post, error) {
+func (s Set) Select(ctx context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error) {
 	resp, err := s.SelectEndpoint(ctx, proto.SelectRequest{Interval: interval})
 	if err != nil {
 		return nil, err
@@ -91,8 +92,8 @@ func (r PushResponse) Failed() error { return r.Err }
 
 // SelectResponse collects the response values for the Select method.
 type SelectResponse struct {
-	Posts []proto.Post `json:"posts"`
-	Err   error        `json:"-"`
+	Posts []data.Post `json:"posts"`
+	Err   error       `json:"-"`
 }
 
 // Failed implements endpoint.Failer.

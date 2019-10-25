@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package data;
+
+message Post {
+    string ID = 1;
+    string Shortcode = 2;
+    string ImageURL = 3;
+    bool IsVideo = 4;
+    string Caption = 5;
+    int64 CommentsCount = 6;
+    int64 Timestamp = 7;
+    int64 LikesCount = 8;
+    bool IsAd = 9;
+    string AuthorID = 10;
+    string LocationID = 11;
+    double Lat = 12;
+    double Lon = 13;
+}
+
+message SpatioTemporalInterval {
+    int64 MinTime = 1;
+    int64 MaxTime = 2;
+    double MinLat = 3;
+    double MinLon = 4;
+    double MaxLat = 5;
+    double MaxLon = 6;
+}

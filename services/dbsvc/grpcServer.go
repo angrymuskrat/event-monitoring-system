@@ -3,7 +3,7 @@ package dbsvc
 import (
 	"context"
 	"errors"
-	"github.com/angrymuskrat/event-monitoring-system/services/proto"
+	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/proto"
 	"time"
 
 	"github.com/go-kit/kit/circuitbreaker"
