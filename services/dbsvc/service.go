@@ -8,12 +8,7 @@ import (
 )
 
 var (
-	ErrPushStatement = errors.New("do not be able to push posts")
-	ErrSelectStatement = errors.New("do not return posts from DB")
-	ErrDBConnector = errors.New("do not create db connection")
-	ErrCmdRepository   = errors.New("unable to command repository")
-	ErrQueryRepository = errors.New("unable to query repository")
-	ErrDbNotCreated    = errors.New("db not created") //tmp error
+	ErrDBConnecting = errors.New("do not be able to connect with db")
 )
 
 type Service interface {

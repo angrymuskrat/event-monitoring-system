@@ -39,8 +39,11 @@ func main() {
 	}
 
 
-	dbConnector, _ := dbsvc.NewDBConnector("database=testgisdb user=myuser password=mypass sslmode=disable")
-
+	dbConnector, err := dbsvc.NewDBConnector("database=testgisdb user=myuser password=mypass sslmode=disable", logger)
+	if err != nil {
+		fmt.Print(err)
+		return
+	}
 
 	var (
 		service    = dbsvc.NewService(logger, dbConnector)
