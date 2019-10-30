@@ -67,12 +67,13 @@ func main() {
 		fmt.Fprintf(os.Stdout, "It is all right")
 
 	case "select":
-		_, err := svc.Select(context.Background(), data.SpatioTemporalInterval{})
+		res, err := svc.Select(context.Background(), data.SpatioTemporalInterval{ 0, 1000, 0,
+			0, 1, 1, struct{}{}, nil, 0 })
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Fprintf(os.Stdout, "Ok")
+		fmt.Fprintf(os.Stdout, "Ok %v", res)
 
 	default:
 		fmt.Fprintf(os.Stderr, "error: invalid method %q\n", *method)

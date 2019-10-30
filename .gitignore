@@ -12,4 +12,5 @@
 *.out
 
 # Directory
-.idea 
+.idea
+test

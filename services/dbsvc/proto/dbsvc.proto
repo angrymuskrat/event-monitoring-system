@@ -6,7 +6,7 @@ import "dbsvc/proto/gogo.proto";
 import "proto/data.proto";
 
 // The db service definition.
-service Dbsvc {
+service DBsvc {
     // Push array of posts to database
     rpc Push (PushRequest) returns (PushReply) {}
 

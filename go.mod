@@ -7,6 +7,7 @@ require (
 	github.com/go-kit/kit v0.9.0
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.2
+	github.com/lib/pq v1.2.0
 	github.com/oklog/oklog v0.3.2
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/openzipkin-contrib/zipkin-go-opentracing v0.4.3 // indirect

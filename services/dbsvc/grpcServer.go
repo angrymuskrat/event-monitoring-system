@@ -21,7 +21,7 @@ type grpcServer struct {
 }
 
 // NewGRPCServer makes a set of endpoints available as a gRPC AddServer.
-func NewGRPCServer(endpoints Set, logger log.Logger) proto.DbsvcServer {
+func NewGRPCServer(endpoints Set, logger log.Logger) proto.DBsvcServer {
 	options := []grpctransport.ServerOption{
 		grpctransport.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
 	}
@@ -65,9 +65,10 @@ func (s *grpcServer) Select(ctx context.Context, req *proto.SelectRequest) (*pro
 func NewGRPCClient(conn *grpc.ClientConn /*, otTracer stdopentracing.Tracer, zipkinTracer *stdzipkin.Tracer*/, logger log.Logger) Service {
 	var pushEndpoint endpoint.Endpoint
 	{
+
 		pushEndpoint = grpctransport.NewClient(
 			conn,
-			"pb.Dbsvc",
+			"proto.DBsvc",
 			"Push",
 			encodeGRPCPushRequest,
 			decodeGRPCPushResponse,
@@ -83,7 +84,7 @@ func NewGRPCClient(conn *grpc.ClientConn /*, otTracer stdopentracing.Tracer, zip
 	{
 		selectEndpoint = grpctransport.NewClient(
 			conn,
-			"pb.Dbsvc",
+			"proto.DBsvc",
 			"Select",
 			encodeGRPCSelectRequest,
 			decodeGRPCSelectResponse,

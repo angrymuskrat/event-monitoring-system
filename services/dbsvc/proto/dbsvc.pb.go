@@ -6,6 +6,7 @@ package proto
 import (
 	context "context"
 	fmt "fmt"
+	proto1 "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
@@ -14,7 +15,6 @@ import (
 	io "io"
 	math "math"
 	math_bits "math/bits"
-	proto1 "proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -238,7 +238,7 @@ func init() {
 func init() { proto.RegisterFile("dbsvc/proto/dbsvc.proto", fileDescriptor_9f605332abaf6980) }
 
 var fileDescriptor_9f605332abaf6980 = []byte{
-	// 279 bytes of a gzipped FileDescriptorProto
+	// 280 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4f, 0x49, 0x2a, 0x2e,
 	0x4b, 0xd6, 0x2f, 0x28, 0xca, 0x2f, 0xc9, 0xd7, 0x07, 0xb3, 0xf5, 0xc0, 0x6c, 0x21, 0x56, 0x30,
 	0x25, 0x25, 0x86, 0x2c, 0x9f, 0x9e, 0x9f, 0x9e, 0x0f, 0x91, 0x96, 0x12, 0x80, 0xea, 0x48, 0x2c,
@@ -251,12 +251,12 @@ var fileDescriptor_9f605332abaf6980 = []byte{
 	0x95, 0x25, 0xe6, 0x80, 0xd5, 0x71, 0x1b, 0xc9, 0x40, 0x8c, 0x0e, 0x2e, 0x48, 0x2c, 0xc9, 0xcc,
 	0x0f, 0x49, 0xcd, 0x2d, 0xc8, 0x2f, 0x4a, 0xcc, 0xf1, 0x84, 0xaa, 0x81, 0x5a, 0x06, 0xd7, 0xa3,
 	0xe4, 0xce, 0xc5, 0x0d, 0x33, 0x10, 0x64, 0x23, 0x91, 0xce, 0x84, 0xb9, 0x8c, 0x09, 0xee, 0x32,
-	0xa3, 0x5c, 0x2e, 0x56, 0x17, 0x50, 0xd8, 0x08, 0xe9, 0x71, 0xb1, 0x80, 0x7c, 0x20, 0x24, 0x04,
-	0x09, 0x08, 0x3d, 0xa4, 0x50, 0x90, 0x12, 0x40, 0x11, 0x2b, 0xc8, 0xa9, 0x54, 0x62, 0x10, 0x32,
-	0xe1, 0x62, 0x83, 0xb8, 0x40, 0x48, 0x04, 0x2a, 0x8b, 0xe2, 0x43, 0x29, 0x21, 0x34, 0x51, 0xb0,
-	0x2e, 0x27, 0x81, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71,
-	0xc6, 0x63, 0x39, 0x86, 0x24, 0x36, 0xb0, 0x32, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0xa0,
-	0xd7, 0x61, 0x73, 0xc3, 0x01, 0x00, 0x00,
+	0xa3, 0x5c, 0x2e, 0x56, 0x17, 0xa7, 0xe2, 0xb2, 0x64, 0x21, 0x3d, 0x2e, 0x16, 0x90, 0x0f, 0x84,
+	0x84, 0x20, 0x01, 0xa1, 0x87, 0x14, 0x0a, 0x52, 0x02, 0x28, 0x62, 0x05, 0x39, 0x95, 0x4a, 0x0c,
+	0x42, 0x26, 0x5c, 0x6c, 0x10, 0x17, 0x08, 0x89, 0x40, 0x65, 0x51, 0x7c, 0x28, 0x25, 0x84, 0x26,
+	0x0a, 0xd6, 0xe5, 0x24, 0x70, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9,
+	0x31, 0xce, 0x78, 0x2c, 0xc7, 0x90, 0xc4, 0x06, 0x56, 0x66, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff,
+	0xe9, 0xa1, 0x37, 0xdf, 0xc3, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -267,112 +267,112 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// DbsvcClient is the client API for Dbsvc service.
+// DBsvcClient is the client API for DBsvc service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type DbsvcClient interface {
+type DBsvcClient interface {
 	// Push array of posts to database
 	Push(ctx context.Context, in *PushRequest, opts ...grpc.CallOption) (*PushReply, error)
 	// Select array from database, each element from array belongs the interval
 	Select(ctx context.Context, in *SelectRequest, opts ...grpc.CallOption) (*SelectReply, error)
 }
 
-type dbsvcClient struct {
+type dBsvcClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewDbsvcClient(cc *grpc.ClientConn) DbsvcClient {
-	return &dbsvcClient{cc}
+func NewDBsvcClient(cc *grpc.ClientConn) DBsvcClient {
+	return &dBsvcClient{cc}
 }
 
-func (c *dbsvcClient) Push(ctx context.Context, in *PushRequest, opts ...grpc.CallOption) (*PushReply, error) {
+func (c *dBsvcClient) Push(ctx context.Context, in *PushRequest, opts ...grpc.CallOption) (*PushReply, error) {
 	out := new(PushReply)
-	err := c.cc.Invoke(ctx, "/proto.Dbsvc/Push", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.DBsvc/Push", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dbsvcClient) Select(ctx context.Context, in *SelectRequest, opts ...grpc.CallOption) (*SelectReply, error) {
+func (c *dBsvcClient) Select(ctx context.Context, in *SelectRequest, opts ...grpc.CallOption) (*SelectReply, error) {
 	out := new(SelectReply)
-	err := c.cc.Invoke(ctx, "/proto.Dbsvc/Select", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.DBsvc/Select", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// DbsvcServer is the server API for Dbsvc service.
-type DbsvcServer interface {
+// DBsvcServer is the server API for DBsvc service.
+type DBsvcServer interface {
 	// Push array of posts to database
 	Push(context.Context, *PushRequest) (*PushReply, error)
 	// Select array from database, each element from array belongs the interval
 	Select(context.Context, *SelectRequest) (*SelectReply, error)
 }
 
-// UnimplementedDbsvcServer can be embedded to have forward compatible implementations.
-type UnimplementedDbsvcServer struct {
+// UnimplementedDBsvcServer can be embedded to have forward compatible implementations.
+type UnimplementedDBsvcServer struct {
 }
 
-func (*UnimplementedDbsvcServer) Push(ctx context.Context, req *PushRequest) (*PushReply, error) {
+func (*UnimplementedDBsvcServer) Push(ctx context.Context, req *PushRequest) (*PushReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Push not implemented")
 }
-func (*UnimplementedDbsvcServer) Select(ctx context.Context, req *SelectRequest) (*SelectReply, error) {
+func (*UnimplementedDBsvcServer) Select(ctx context.Context, req *SelectRequest) (*SelectReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Select not implemented")
 }
 
-func RegisterDbsvcServer(s *grpc.Server, srv DbsvcServer) {
-	s.RegisterService(&_Dbsvc_serviceDesc, srv)
+func RegisterDBsvcServer(s *grpc.Server, srv DBsvcServer) {
+	s.RegisterService(&_DBsvc_serviceDesc, srv)
 }
 
-func _Dbsvc_Push_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _DBsvc_Push_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PushRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DbsvcServer).Push(ctx, in)
+		return srv.(DBsvcServer).Push(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.Dbsvc/Push",
+		FullMethod: "/proto.DBsvc/Push",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DbsvcServer).Push(ctx, req.(*PushRequest))
+		return srv.(DBsvcServer).Push(ctx, req.(*PushRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Dbsvc_Select_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _DBsvc_Select_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SelectRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DbsvcServer).Select(ctx, in)
+		return srv.(DBsvcServer).Select(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.Dbsvc/Select",
+		FullMethod: "/proto.DBsvc/Select",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DbsvcServer).Select(ctx, req.(*SelectRequest))
+		return srv.(DBsvcServer).Select(ctx, req.(*SelectRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _Dbsvc_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "proto.Dbsvc",
-	HandlerType: (*DbsvcServer)(nil),
+var _DBsvc_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "proto.DBsvc",
+	HandlerType: (*DBsvcServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Push",
-			Handler:    _Dbsvc_Push_Handler,
+			Handler:    _DBsvc_Push_Handler,
 		},
 		{
 			MethodName: "Select",
-			Handler:    _Dbsvc_Select_Handler,
+			Handler:    _DBsvc_Select_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

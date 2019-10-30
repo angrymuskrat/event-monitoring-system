@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc"
-	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/proto"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 	"text/tabwriter"
+
+	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc"
+	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/proto"
 
 	"github.com/oklog/oklog/pkg/group"
 	"google.golang.org/grpc"
@@ -37,33 +38,18 @@ func main() {
 		logger = log.With(logger, "caller", log.DefaultCaller)
 	}
 
-	// Build the layers of the service "onion" from the inside out. First, the
-	// business logic service; then, the set of endpoints that wrap the service;
-	// and finally, a series of concrete transport adapters. The adapters, like
-	// the HTTP handler or the gRPC server, are the bridge between Go kit and
-	// the interfaces that the transports expect. Note that we're not binding
-	// them to ports or anything yet; we'll do that next.
+
+	dbConnector, _ := dbsvc.NewDBConnector("database=testgisdb user=myuser password=mypass sslmode=disable")
+
+
 	var (
-		service    = dbsvc.NewService(logger)
+		service    = dbsvc.NewService(logger, dbConnector)
 		endpoints  = dbsvc.NewEndpoint(service)
-		grpcServer = dbsvc.NewGRPCServer(endpoints /*, tracer, zipkinTracer*/, logger)
+		grpcServer = dbsvc.NewGRPCServer(endpoints, logger)
 	)
 
-	// Now we're to the part of the func main where we want to start actually
-	// running things, like servers bound to listeners to receive connections.
-	//
-	// The method is the same for each component: add a new actor to the group
-	// struct, which is a combination of 2 anonymous functions: the first
-	// function actually runs the component, and the second function should
-	// interrupt the first function and cause it to return. It's in these
-	// functions that we actually bind the Go kit server/handler structs to the
-	// concrete transports and run them.
-	//
-	// Putting each component into its own block is mostly for aesthetics: it
-	// clearly demarcates the scope in which each listener/socket may be used.
 	var g group.Group
 	{
-		// The gRPC listener mounts the Go kit gRPC server we created.
 		grpcListener, err := net.Listen("tcp", *grpcAddr)
 		if err != nil {
 			logger.Log("transport", "gRPC", "during", "Listen", "err", err)
@@ -72,14 +58,13 @@ func main() {
 		g.Add(func() error {
 			logger.Log("transport", "gRPC", "addr", *grpcAddr)
 			baseServer := grpc.NewServer(grpc.UnaryInterceptor(kitgrpc.Interceptor))
-			proto.RegisterDbsvcServer(baseServer, grpcServer)
+			proto.RegisterDBsvcServer(baseServer, grpcServer)
 			return baseServer.Serve(grpcListener)
 		}, func(error) {
 			grpcListener.Close()
 		})
 	}
 	{
-		// This function just sits and waits for ctrl-C.
 		cancelInterrupt := make(chan struct{})
 		g.Add(func() error {
 			c := make(chan os.Signal, 1)
