@@ -54,7 +54,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	testPosts := []data.Post{}
+	testPosts := GeneratePosts(4)
 
 	switch *method {
 	case "push":
@@ -68,7 +68,7 @@ func main() {
 
 	case "select":
 		res, err := svc.Select(context.Background(), data.SpatioTemporalInterval{ 0, 1000, 0,
-			0, 1, 1, struct{}{}, nil, 0 })
+			0, 10, 10, struct{}{}, nil, 0 })
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
