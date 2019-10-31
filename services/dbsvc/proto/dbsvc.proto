@@ -19,7 +19,7 @@ message PushRequest {
 }
 
 message PushReply {
-    repeated string ids = 1;
+    repeated string ids = 1 [(gogoproto.nullable) = false];
     string err = 2;
 }
 

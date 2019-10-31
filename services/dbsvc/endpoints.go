@@ -2,7 +2,6 @@ package dbsvc
 
 import (
 	"context"
-	"fmt"
 	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/proto"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
 
@@ -41,7 +40,6 @@ func NewEndpoint(svc Service) Set {
 // This is primarily useful in the context of a client library.
 func (s Set) Push(ctx context.Context, posts []data.Post) ([]string, error) {
 	resp, err := s.PushEndpoint(ctx, proto.PushRequest{Posts: posts})
-	fmt.Print(resp, " resp!!!\n")
 	if err != nil {
 		return nil, err
 	}

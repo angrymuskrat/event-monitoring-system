@@ -109,7 +109,7 @@ func decodeGRPCSelectRequest(_ context.Context, grpcReq interface{}) (interface{
 
 func decodeGRPCPushResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*proto.PushReply)
-	return PushResponse{Err: str2err(reply.Err)}, nil
+	return PushResponse{Ids: reply.Ids, Err: str2err(reply.Err)}, nil
 }
 
 func decodeGRPCSelectResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
@@ -119,7 +119,7 @@ func decodeGRPCSelectResponse(_ context.Context, grpcReply interface{}) (interfa
 
 func encodeGRPCPushResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(PushResponse)
-	return &proto.PushReply{Err: err2str(resp.Err)}, nil
+	return &proto.PushReply{Ids: resp.Ids, Err: err2str(resp.Err)}, nil
 }
 
 func encodeGRPCSelectResponse(_ context.Context, response interface{}) (interface{}, error) {
