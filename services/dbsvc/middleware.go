@@ -22,7 +22,7 @@ type loggingMiddleware struct {
 	next   Service
 }
 
-func (mw loggingMiddleware) Push(ctx context.Context, posts []data.Post) (err error) {
+func (mw loggingMiddleware) Push(ctx context.Context, posts []data.Post) (ids []string, err error) {
 	defer func() {
 		mw.logger.Log("method", "Push", "err", err)
 	}()

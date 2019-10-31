@@ -12,27 +12,16 @@ import (
 
 	"google.golang.org/grpc"
 
-	//"sourcegraph.com/sourcegraph/appdash"
-	//appdashot "sourcegraph.com/sourcegraph/appdash/opentracing"
 
-	"github.com/go-kit/kit/log"
 )
 
 func main() {
-	// The dbclient presumes no service discovery system, and expects users to
-	// provide the direct address of an dbsvc. This presumption is reflected in
-	// the dbcient binary and the client packages: the -transport.addr flags
-	// and various client constructors both expect host:port strings. For an
-	// example service with a client built on top of a service discovery system,
-	// see profilesvc.
 	fs := flag.NewFlagSet("dbcient", flag.ExitOnError)
 	var (
 		grpcAddr = fs.String("grpc-addr", ":8082", "gRPC address of addsvc")
-		method   = fs.String("method", "select", "push, select")
+		method   = fs.String("method", "push", "push, select")
 	)
 
-	// This is a demonstration client, which supports multiple transports.
-	// Your clients will probably just define and stick with 1 transport.
 	var (
 		svc dbsvc.Service
 		err error
@@ -44,7 +33,7 @@ func main() {
 			os.Exit(1)
 		}
 		defer conn.Close()
-		svc = dbsvc.NewGRPCClient(conn, log.NewNopLogger())
+		svc = dbsvc.NewGRPCClient(conn)
 	} else {
 		fmt.Fprintf(os.Stderr, "error: no remote address specified\n")
 		os.Exit(1)
@@ -54,26 +43,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	testPosts := GeneratePosts(4)
+	testPosts := GeneratePosts(10)
 
 	switch *method {
 	case "push":
 
-		err := svc.Push(context.Background(), testPosts)
+		res, err := svc.Push(context.Background(), testPosts)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Fprintf(os.Stdout, "It is all right")
+		fmt.Fprintf(os.Stdout, "It is all right\n%v", res)
 
 	case "select":
-		res, err := svc.Select(context.Background(), data.SpatioTemporalInterval{ 0, 1000, 0,
-			0, 10, 10, struct{}{}, nil, 0 })
+		res, err := svc.Select(context.Background(), data.SpatioTemporalInterval{ 0, 1000000, 5,
+			5, 10, 10, struct{}{}, nil, 0 })
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Fprintf(os.Stdout, "Ok %v", res)
+		fmt.Fprintf(os.Stdout, "Ok %v", len(res))
 
 	default:
 		fmt.Fprintf(os.Stderr, "error: invalid method %q\n", *method)

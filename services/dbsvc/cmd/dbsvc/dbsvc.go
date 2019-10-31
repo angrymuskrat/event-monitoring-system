@@ -19,10 +19,8 @@ import (
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 )
 
+
 func main() {
-	// Define our flags. Your service probably won't need to bind listeners for
-	// *all* supported transports, or support both Zipkin and LightStep, and so
-	// on, but we do it here for demonstration purposes.
 	fs := flag.NewFlagSet("dbsvc", flag.ExitOnError)
 	var (
 		grpcAddr = fs.String("grpc-addr", ":8082", "gRPC listen address")

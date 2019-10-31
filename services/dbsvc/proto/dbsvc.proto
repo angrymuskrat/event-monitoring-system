@@ -5,7 +5,6 @@ package proto;
 import "dbsvc/proto/gogo.proto";
 import "proto/data.proto";
 
-// The db service definition.
 service DBsvc {
     // Push array of posts to database
     rpc Push (PushRequest) returns (PushReply) {}
@@ -19,17 +18,15 @@ message PushRequest {
     repeated data.Post posts = 1 [(gogoproto.nullable) = false];
 }
 
-// The push response contains the result of the calculation.
 message PushReply {
-    string err = 1;
+    repeated string ids = 1;
+    string err = 2;
 }
 
-// The Select request contains two parameters.
 message SelectRequest {
     data.SpatioTemporalInterval interval = 1 [(gogoproto.nullable) = false];
 }
 
-// The Select response contains the result of the select request.
 message SelectReply {
     repeated data.Post posts = 1 [(gogoproto.nullable) = false];
     string err = 2;

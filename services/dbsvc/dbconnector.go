@@ -14,6 +14,7 @@ type DBConnector struct {
 	logger log.Logger
 }
 
+
 func NewDBConnector(config string, logger log.Logger) (*DBConnector, error) {
 	db, err := sql.Open("postgres", config)
 	if err != nil {
@@ -21,7 +22,19 @@ func NewDBConnector(config string, logger log.Logger) (*DBConnector, error) {
 	}
 	dbc := &DBConnector{db: db, logger: log.With(logger, "dbConnector")}
 
-	create := `CREATE TABLE IF NOT EXISTS posts(
+	_, err = dbc.db.Exec("CREATE EXTENSION IF NOT EXISTS postgis;")
+	if err != nil {
+		dbc.Close()
+		return nil, err
+	}
+
+	_, err = dbc.db.Exec("CREATE EXTENSION IF NOT EXISTS postgis_topology;")
+	if err != nil {
+		dbc.Close()
+		return nil, err
+	}
+
+	createPostTable := `CREATE TABLE IF NOT EXISTS posts(
 		ID varchar (120) not null primary key,
 		Shortcode varchar (120),
 		ImageURL varchar (120),
@@ -38,24 +51,20 @@ func NewDBConnector(config string, logger log.Logger) (*DBConnector, error) {
 		Location geometry 
 	)`
 
-	_, err = dbc.db.Exec(create)
+	_, err = dbc.db.Exec(createPostTable)
 	if err != nil {
-		errClose := dbc.db.Close();
-		if errClose != nil {
-			level.Error(dbc.logger).Log("err", errClose.Error())
-		}
+		dbc.Close()
 		return nil, err
 	}
 	return dbc, nil
 }
 
-func (c *DBConnector) Push(posts []data.Post) error {
-	err := c.db.Ping()
+func (c *DBConnector) Push(posts []data.Post) (ids []string, err error) {
+	err = c.db.Ping()
 	if err != nil {
-		level.Error(c.logger).Log("errPush", err);
-		return ErrDBConnecting
+		c.logError("errPush", err)
+		return ids, ErrDBConnecting
 	}
-
 	for _, v := range posts {
 		insert := fmt.Sprintf(`
 			INSERT INTO posts (ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, 
@@ -63,16 +72,18 @@ func (c *DBConnector) Push(posts []data.Post) error {
 			VALUES ('%v', '%v', '%v', %v, '%v', %v, %v, %v, %v, '%v', '%v', ST_GeometryFromText('POINT(%v %v)'));`,
 			v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp,
 			v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lat, v.Lon)
-		_, err = c.db.Exec(insert);
+		_, err = c.db.Exec(insert)
 		if err != nil {
-			level.Error(c.logger).Log("errPush", err);
+			c.logError("errPush", err)
+		} else {
+			ids = append(ids, v.ID)
 		}
 	}
-
-	return err
+	return ids, err
 }
 
 func (c DBConnector) Select(irv data.SpatioTemporalInterval) (posts []data.Post, err error) {
+
 	poly := fmt.Sprintf("ST_GeometryFromText('POLYGON((%v %v, %v %v, %v %v, %v %v, %v %v))')",
 		irv.MinLat, irv.MinLon, irv.MaxLat, irv.MinLon, irv.MaxLat, irv.MaxLon, irv.MinLat, irv.MaxLon,
 		irv.MinLat, irv.MinLon)
@@ -87,19 +98,19 @@ func (c DBConnector) Select(irv data.SpatioTemporalInterval) (posts []data.Post,
 
 	err = c.db.Ping()
 	if err != nil {
-		level.Error(c.logger).Log("errSelect", err);
+		c.logError("errSelect", err)
 		return nil, ErrDBConnecting
 	}
 
 	rows, err := c.db.Query(statement)
 	if err != nil {
-		return nil, err;
+		return nil, err
 	}
 
 	defer func() {
-		errClose := rows.Close();
+		errClose := rows.Close()
 		if errClose != nil {
-			level.Error(c.logger).Log("err", errClose.Error())
+			c.logError("errSelect", errClose)
 		}
 	}()
 
@@ -109,6 +120,7 @@ func (c DBConnector) Select(irv data.SpatioTemporalInterval) (posts []data.Post,
 		err = rows.Scan(&p.ID, &p.Shortcode, &p.ImageURL, &p.IsVideo, &p.Caption, &p.CommentsCount, &p.Timestamp,
 			&p.LikesCount, &p.IsAd, &p.AuthorID, &p.LocationID, &p.Lat, &p.Lon)
 		if err != nil {
+			c.logError("errSelect", err)
 			return nil, err
 		}
 		posts = append(posts, *p)
@@ -116,10 +128,13 @@ func (c DBConnector) Select(irv data.SpatioTemporalInterval) (posts []data.Post,
 	return posts, nil
 }
 
-func (c *DBConnector) Close() error {
-	err := c.db.Close();
+func (c *DBConnector) Close() {
+	err := c.db.Close()
 	if err != nil {
-		level.Error(c.logger).Log("err", err.Error())
+		c.logError("errClose", err)
 	}
-	return err
+}
+
+func (c *DBConnector) logError (key string, err error) {
+	level.Error(c.logger).Log(key, err.Error())
 }

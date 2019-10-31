@@ -2,6 +2,7 @@ package dbsvc
 
 import (
 	"context"
+	"fmt"
 	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/proto"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
 
@@ -38,13 +39,14 @@ func NewEndpoint(svc Service) Set {
 
 // Push implements the service interface, so Set may be used as a service.
 // This is primarily useful in the context of a client library.
-func (s Set) Push(ctx context.Context, posts []data.Post) error {
+func (s Set) Push(ctx context.Context, posts []data.Post) ([]string, error) {
 	resp, err := s.PushEndpoint(ctx, proto.PushRequest{Posts: posts})
+	fmt.Print(resp, " resp!!!\n")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	response := resp.(PushResponse)
-	return response.Err
+	return response.Ids, response.Err
 }
 
 // Select implements the service interface, so Set may be used as a
@@ -62,8 +64,8 @@ func (s Set) Select(ctx context.Context, interval data.SpatioTemporalInterval) (
 func makePushEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PushRequest)
-		err = s.Push(ctx, req.Posts)
-		return PushResponse{Err: err}, nil
+		ids, err := s.Push(ctx, req.Posts)
+		return PushResponse{Ids: ids, Err: err}, nil
 	}
 }
 
@@ -84,6 +86,7 @@ var (
 
 // PushResponse collects the response values for the Push method.
 type PushResponse struct {
+	Ids []string `json:"ids"`
 	Err error `json:"-"` // should be intercepted by Failed/errorEncoder
 }
 

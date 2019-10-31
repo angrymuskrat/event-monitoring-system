@@ -9,14 +9,23 @@ import (
 
 var (
 	ErrDBConnecting = errors.New("do not be able to connect with db")
+	ErrPushStatement = errors.New("one or more posts wasn't pushed")
+	ErrSelectInterval = errors.New("incorrect interval")
+	ErrSelectStatement = errors.New("don't be able to return posts")
 )
 
 type Service interface {
-	Push(ctx context.Context, posts []data.Post) error
+	// input array of Posts and write every Post to database
+	// return array of posts ID, which was successfully pushed
+	// 		and error if one or more Post wasn't pushed
+	Push(ctx context.Context, posts []data.Post) ([] string, error)
+
+	// input SpatioTemporalInterval
+	// return array of post, every of which satisfy the interval conditions
+	// 		and error if interval is incorrect or dbconnector can't return posts due to other reasons
 	Select(ctx context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error)
 }
 
-// New returns a basic Service with all of the expected middlewares wired in.
 func NewService(logger log.Logger, db *DBConnector) Service {
 	var svc Service
 	{
@@ -26,7 +35,6 @@ func NewService(logger log.Logger, db *DBConnector) Service {
 	return svc
 }
 
-// NewBasicService returns a naïve, stateless implementation of Service.
 func NewBasicService(db *DBConnector) Service {
 	return basicService{ db: db }
 }
@@ -35,16 +43,21 @@ type basicService struct{
 	db *DBConnector
 }
 
-func (s basicService) Push(ctx context.Context, posts []data.Post) error {
-	err := s.db.Push(posts);
-	return err
+func (s basicService) Push(ctx context.Context, posts []data.Post) ([] string, error) {
+	ids, err := s.db.Push(posts)
+	if err != nil {
+		err = ErrPushStatement
+	}
+	return ids, err
 }
 
-// Concat implements Service.
 func (s basicService) Select(_ context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error) {
+	if interval.MaxLon < interval.MinLon || interval.MaxLat < interval.MinLat || interval.MaxTime < interval.MinTime {
+		return nil, ErrSelectInterval
+	}
 	posts, err := s.db.Select(interval)
 	if err != nil {
-		return nil, err
+		return nil, ErrSelectStatement
 	}
-	return posts, err
+	return posts, nil
 }
