@@ -21,12 +21,12 @@ import (
 
 
 func main() {
+
+	conf := readConfig("services/dbsvc/cmd/dbsvc/config.json")
 	fs := flag.NewFlagSet("dbsvc", flag.ExitOnError)
 	var (
-		grpcAddr = fs.String("grpc-addr", ":8082", "gRPC listen address")
+		grpcAddr = fs.String("grpc-addr", conf.GRPCPort, "gRPC listen address")
 	)
-	fs.Usage = usageFor(fs, os.Args[0]+" [flags]")
-	fs.Parse(os.Args[1:])
 
 	// Create a single logger, which we'll use and give to other components.
 	var logger log.Logger
@@ -36,8 +36,7 @@ func main() {
 		logger = log.With(logger, "caller", log.DefaultCaller)
 	}
 
-
-	dbConnector, err := dbsvc.NewDBConnector("database=testgisdb user=myuser password=mypass sslmode=disable", logger)
+	dbConnector, err := dbsvc.NewDBConnector(conf.DB, logger)
 	if err != nil {
 		fmt.Print(err)
 		return
@@ -63,6 +62,7 @@ func main() {
 			return baseServer.Serve(grpcListener)
 		}, func(error) {
 			grpcListener.Close()
+			dbConnector.Close()
 		})
 	}
 	{
@@ -72,6 +72,7 @@ func main() {
 			signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 			select {
 			case sig := <-c:
+				dbConnector.Close()
 				return fmt.Errorf("received signal %s", sig)
 			case <-cancelInterrupt:
 				return nil
