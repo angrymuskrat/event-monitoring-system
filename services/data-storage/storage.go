@@ -3,6 +3,9 @@ package service
 import (
 	"database/sql"
 	"fmt"
+	"strings"
+
+	types "github.com/angrymuskrat/event-monitoring-system/services/data-storage/data"
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -74,10 +77,14 @@ func (c *Storage) Push(posts []data.Post) (ids []int32, err error) {
 			v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lat, v.Lon)
 		_, err = c.db.Exec(insert)
 		if err != nil {
-			c.logError("errPush", err)
-			ids = append(ids, 0)
+			if strings.Contains(err.Error(), "duplicate key") {
+				ids = append(ids, types.DuplicatedPostId.Int32())
+			} else {
+				c.logError("errPush", err)
+				ids = append(ids, types.DBError.Int32())
+			}
 		} else {
-			ids = append(ids, 1)
+			ids = append(ids, types.PostPushed.Int32())
 		}
 	}
 	return ids, err

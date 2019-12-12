@@ -40,6 +40,7 @@ func main() {
 	}
 
 	testPosts := GeneratePosts(10)
+	testPosts[0].ID = "gJVKjRJO"
 
 	switch *method {
 	case "push":
