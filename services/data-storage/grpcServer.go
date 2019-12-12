@@ -1,9 +1,9 @@
-package dbsvc
+package service
 
 import (
 	"context"
 	"errors"
-	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/proto"
+	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/proto"
 	"time"
 
 	"github.com/go-kit/kit/circuitbreaker"
@@ -20,7 +20,7 @@ type grpcServer struct {
 	mySelect grpctransport.Handler
 }
 
-func NewGRPCServer(endpoints Set, logger log.Logger) proto.DBsvcServer {
+func NewGRPCServer(endpoints Set, logger log.Logger) proto.DataStorageServer {
 	options := []grpctransport.ServerOption{
 		grpctransport.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
 	}
@@ -63,7 +63,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 
 		pushEndpoint = grpctransport.NewClient(
 			conn,
-			"proto.DBsvc",
+			"proto.DataStorage",
 			"Push",
 			encodeGRPCPushRequest,
 			decodeGRPCPushResponse,
@@ -79,7 +79,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 	{
 		selectEndpoint = grpctransport.NewClient(
 			conn,
-			"proto.DBsvc",
+			"proto.DataStorage",
 			"Select",
 			encodeGRPCSelectRequest,
 			decodeGRPCSelectResponse,

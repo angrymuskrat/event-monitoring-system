@@ -2,10 +2,10 @@ syntax = "proto3";
 
 package proto;
 
-import "dbsvc/proto/gogo.proto";
+import "data-storage/proto/gogo.proto";
 import "proto/data.proto";
 
-service DBsvc {
+service DataStorage {
     // Push array of posts to database
     rpc Push (PushRequest) returns (PushReply) {}
 
@@ -19,7 +19,7 @@ message PushRequest {
 }
 
 message PushReply {
-    repeated string ids = 1;
+    repeated int32 ids = 1;
     string err = 2;
 }
 

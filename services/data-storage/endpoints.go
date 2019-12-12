@@ -1,20 +1,11 @@
-package dbsvc
+package service
 
 import (
 	"context"
-	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/proto"
+	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/proto"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
 
-	//"time"
-
-	//"golang.org/x/time/rate"
-
 	"github.com/go-kit/kit/endpoint"
-	//stdopentracing "github.com/opentracing/opentracing-go"
-	//stdzipkin "github.com/openzipkin/zipkin-go"
-	//"github.com/go-kit/kit/ratelimit"
-	//"github.com/go-kit/kit/tracing/opentracing"
-	//"github.com/go-kit/kit/tracing/zipkin"
 )
 
 // Set collects all of the endpoints that compose an add service. It's meant to
@@ -38,7 +29,7 @@ func NewEndpoint(svc Service) Set {
 
 // Push implements the service interface, so Set may be used as a service.
 // This is primarily useful in the context of a client library.
-func (s Set) Push(ctx context.Context, posts []data.Post) ([]string, error) {
+func (s Set) Push(ctx context.Context, posts []data.Post) ([]int32, error) {
 	resp, err := s.PushEndpoint(ctx, proto.PushRequest{Posts: posts})
 	if err != nil {
 		return nil, err
@@ -84,7 +75,7 @@ var (
 
 // PushResponse collects the response values for the Push method.
 type PushResponse struct {
-	Ids []string `json:"ids"`
+	Ids []int32 `json:"ids"`
 	Err error `json:"-"` // should be intercepted by Failed/errorEncoder
 }
 

@@ -1,4 +1,4 @@
-package dbsvc
+package service
 
 import (
 	"database/sql"
@@ -9,18 +9,18 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type DBConnector struct {
+type Storage struct {
 	db     *sql.DB
 	logger log.Logger
 }
 
 
-func NewDBConnector(config string, logger log.Logger) (*DBConnector, error) {
+func NewStorage(config string, logger log.Logger) (*Storage, error) {
 	db, err := sql.Open("postgres", config)
 	if err != nil {
 		return nil, err
 	}
-	dbc := &DBConnector{db: db, logger: log.With(logger, "dbConnector")}
+	dbc := &Storage{db: db, logger: log.With(logger, "Storage")}
 
 	_, err = dbc.db.Exec("CREATE EXTENSION IF NOT EXISTS postgis;")
 	if err != nil {
@@ -59,7 +59,7 @@ func NewDBConnector(config string, logger log.Logger) (*DBConnector, error) {
 	return dbc, nil
 }
 
-func (c *DBConnector) Push(posts []data.Post) (ids []string, err error) {
+func (c *Storage) Push(posts []data.Post) (ids []int32, err error) {
 	err = c.db.Ping()
 	if err != nil {
 		c.logError("errPush", err)
@@ -75,14 +75,15 @@ func (c *DBConnector) Push(posts []data.Post) (ids []string, err error) {
 		_, err = c.db.Exec(insert)
 		if err != nil {
 			c.logError("errPush", err)
+			ids = append(ids, 0)
 		} else {
-			ids = append(ids, v.ID)
+			ids = append(ids, 1)
 		}
 	}
 	return ids, err
 }
 
-func (c DBConnector) Select(irv data.SpatioTemporalInterval) (posts []data.Post, err error) {
+func (c Storage) Select(irv data.SpatioTemporalInterval) (posts []data.Post, err error) {
 
 	poly := fmt.Sprintf("ST_GeometryFromText('POLYGON((%v %v, %v %v, %v %v, %v %v, %v %v))')",
 		irv.MinLat, irv.MinLon, irv.MaxLat, irv.MinLon, irv.MaxLat, irv.MaxLon, irv.MinLat, irv.MaxLon,
@@ -128,13 +129,13 @@ func (c DBConnector) Select(irv data.SpatioTemporalInterval) (posts []data.Post,
 	return posts, nil
 }
 
-func (c *DBConnector) Close() {
+func (c *Storage) Close() {
 	err := c.db.Close()
 	if err != nil {
 		c.logError("errClose", err)
 	}
 }
 
-func (c *DBConnector) logError (key string, err error) {
+func (c *Storage) logError (key string, err error) {
 	level.Error(c.logger).Log(key, err.Error())
 }

@@ -1,4 +1,4 @@
-package dbsvc
+package service
 
 import (
 	"context"
@@ -16,17 +16,17 @@ var (
 
 type Service interface {
 	// input array of Posts and write every Post to database
-	// return array of posts ID, which was successfully pushed
+	// return array of statuses of adding posts
 	// 		and error if one or more Post wasn't pushed
-	Push(ctx context.Context, posts []data.Post) ([] string, error)
+	Push(ctx context.Context, posts []data.Post) ([]int32, error)
 
 	// input SpatioTemporalInterval
 	// return array of post, every of which satisfy the interval conditions
-	// 		and error if interval is incorrect or dbconnector can't return posts due to other reasons
+	// 		and error if interval is incorrect or storage can't return posts due to other reasons
 	Select(ctx context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error)
 }
 
-func NewService(logger log.Logger, db *DBConnector) Service {
+func NewService(logger log.Logger, db *Storage) Service {
 	var svc Service
 	{
 		svc = NewBasicService(db)
@@ -35,15 +35,15 @@ func NewService(logger log.Logger, db *DBConnector) Service {
 	return svc
 }
 
-func NewBasicService(db *DBConnector) Service {
+func NewBasicService(db *Storage) Service {
 	return basicService{ db: db }
 }
 
 type basicService struct{
-	db *DBConnector
+	db *Storage
 }
 
-func (s basicService) Push(ctx context.Context, posts []data.Post) ([] string, error) {
+func (s basicService) Push(ctx context.Context, posts []data.Post) ([]int32, error) {
 	ids, err := s.db.Push(posts)
 	if err != nil {
 		err = ErrPushStatement

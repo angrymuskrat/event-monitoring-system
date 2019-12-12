@@ -38,10 +38,10 @@ func RandDouble() float64 {
 func GeneratePosts(n int) []data.Post {
 	posts := *new([]data.Post)
 	for i := 0; i < n; i++ {
-		posts = append(posts, data.Post{ RandString(), RandString(), RandString(),
-			RandBool(), RandString(), RandInt64(), RandInt64(),
-			RandInt64(), RandBool(), RandString(), RandString(),
-			RandDouble(), RandDouble(), struct{}{}, nil, 0})
+		posts = append(posts, data.Post{ ID:RandString(), Shortcode: RandString(), ImageURL: RandString(),
+			IsVideo: RandBool(), Caption: RandString(), CommentsCount: RandInt64(), Timestamp: RandInt64(),
+			LikesCount: RandInt64(), IsAd: RandBool(), AuthorID: RandString(), LocationID: RandString(),
+			Lat: RandDouble(), Lon: RandDouble()})
 	}
 	return posts;
 }

@@ -4,15 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc"
+	storagesvc "github.com/angrymuskrat/event-monitoring-system/services/data-storage"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
+	"google.golang.org/grpc"
 	"os"
 	"text/tabwriter"
 	"time"
-
-	"google.golang.org/grpc"
-
-
 )
 
 func main() {
@@ -21,9 +18,8 @@ func main() {
 		grpcAddr = fs.String("grpc-addr", ":8082", "gRPC address of addsvc")
 		method   = fs.String("method", "push", "push, select")
 	)
-
 	var (
-		svc dbsvc.Service
+		svc storagesvc.Service
 		err error
 	)
 	if *grpcAddr != "" {
@@ -33,7 +29,7 @@ func main() {
 			os.Exit(1)
 		}
 		defer conn.Close()
-		svc = dbsvc.NewGRPCClient(conn)
+		svc = storagesvc.NewGRPCClient(conn)
 	} else {
 		fmt.Fprintf(os.Stderr, "error: no remote address specified\n")
 		os.Exit(1)

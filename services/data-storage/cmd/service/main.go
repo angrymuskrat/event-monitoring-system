@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"text/tabwriter"
 
-	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc"
-	"github.com/angrymuskrat/event-monitoring-system/services/dbsvc/proto"
+	storagesvc "github.com/angrymuskrat/event-monitoring-system/services/data-storage"
+	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/proto"
 
 	"github.com/oklog/oklog/pkg/group"
 	"google.golang.org/grpc"
@@ -22,8 +22,8 @@ import (
 
 func main() {
 
-	conf := readConfig("services/dbsvc/cmd/dbsvc/config.json")
-	fs := flag.NewFlagSet("dbsvc", flag.ExitOnError)
+	conf := readConfig("services/data-storage/cmd/service/config.json")
+	fs := flag.NewFlagSet("data-storage", flag.ExitOnError)
 	var (
 		grpcAddr = fs.String("grpc-addr", conf.GRPCPort, "gRPC listen address")
 	)
@@ -36,16 +36,16 @@ func main() {
 		logger = log.With(logger, "caller", log.DefaultCaller)
 	}
 
-	dbConnector, err := dbsvc.NewDBConnector(conf.DB, logger)
+	dbConnector, err := storagesvc.NewStorage(conf.DB, logger)
 	if err != nil {
 		fmt.Print(err)
 		return
 	}
 
 	var (
-		service    = dbsvc.NewService(logger, dbConnector)
-		endpoints  = dbsvc.NewEndpoint(service)
-		grpcServer = dbsvc.NewGRPCServer(endpoints, logger)
+		service    = storagesvc.NewService(logger, dbConnector)
+		endpoints  = storagesvc.NewEndpoint(service)
+		grpcServer = storagesvc.NewGRPCServer(endpoints, logger)
 	)
 
 	var g group.Group
@@ -58,7 +58,7 @@ func main() {
 		g.Add(func() error {
 			logger.Log("transport", "gRPC", "addr", *grpcAddr)
 			baseServer := grpc.NewServer(grpc.UnaryInterceptor(kitgrpc.Interceptor))
-			proto.RegisterDBsvcServer(baseServer, grpcServer)
+			proto.RegisterDataStorageServer(baseServer, grpcServer)
 			return baseServer.Serve(grpcListener)
 		}, func(error) {
 			grpcListener.Close()
