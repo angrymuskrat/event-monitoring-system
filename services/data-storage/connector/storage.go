@@ -1,29 +1,40 @@
-package service
+package connector
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"go.uber.org/zap"
+
+	"github.com/visheratin/unilog"
 	"strings"
 
 	types "github.com/angrymuskrat/event-monitoring-system/services/data-storage/data"
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	_ "github.com/lib/pq"
 )
 
 type Storage struct {
 	db     *sql.DB
-	logger log.Logger
+	config Configuration
 }
 
 
-func NewStorage(config string, logger log.Logger) (*Storage, error) {
-	db, err := sql.Open("postgres", config)
+var (
+	ErrDBConnecting = errors.New("do not be able to connect with db")
+)
+
+
+func NewStorage(confPath string) (*Storage, error) {
+	conf, err := readConfig(confPath)
 	if err != nil {
 		return nil, err
 	}
-	dbc := &Storage{db: db, logger: log.With(logger, "Storage")}
+	db, err := sql.Open("postgres", conf.AuthDB)
+	if err != nil {
+		return nil, err
+	}
+	dbc := &Storage{db: db, config: conf}
 
 	_, err = dbc.db.Exec("CREATE EXTENSION IF NOT EXISTS postgis;")
 	if err != nil {
@@ -38,17 +49,17 @@ func NewStorage(config string, logger log.Logger) (*Storage, error) {
 	}
 
 	createPostTable := `CREATE TABLE IF NOT EXISTS posts(
-		ID varchar (120) not null primary key,
-		Shortcode varchar (120),
-		ImageURL varchar (120),
+		ID varchar (30) not null primary key,
+		Shortcode varchar (15),
+		ImageURL varchar (300),
 		IsVideo boolean not null,
-		Caption varchar (120),
+		Caption varchar (2200), -- max size of text in Instagram
 		CommentsCount bigint,
 		Timestamp bigint,
 		LikesCount bigint,
 		IsAd boolean,
-		AuthorID varchar (120),
-		LocationID varchar (120),
+		AuthorID varchar (15),
+		LocationID varchar (20),
 		--Lat real,
 		--Lon real
 		Location geometry 
@@ -59,20 +70,22 @@ func NewStorage(config string, logger log.Logger) (*Storage, error) {
 		dbc.Close()
 		return nil, err
 	}
+
+	unilog.Logger().Info("db connector has started")
 	return dbc, nil
 }
 
 func (c *Storage) Push(posts []data.Post) (ids []int32, err error) {
 	err = c.db.Ping()
 	if err != nil {
-		c.logError("errPush", err)
-		return ids, ErrDBConnecting
+		unilog.Logger().Error("db error", zap.Error(err))
+		return nil, ErrDBConnecting
 	}
 	for _, v := range posts {
 		insert := fmt.Sprintf(`
 			INSERT INTO posts (ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, 
 				AuthorID, LocationID, Location)
-			VALUES ('%v', '%v', '%v', %v, '%v', %v, %v, %v, %v, '%v', '%v', ST_GeometryFromText('POINT(%v %v)'));`,
+			VALUES ("%v", "%v", "%v", %v, "%v", %v, %v, %v, %v, "%v", "%v", ST_GeometryFromText('POINT(%v %v)'));`, //TODO Error due to single amd double comma
 			v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp,
 			v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lat, v.Lon)
 		_, err = c.db.Exec(insert)
@@ -80,7 +93,8 @@ func (c *Storage) Push(posts []data.Post) (ids []int32, err error) {
 			if strings.Contains(err.Error(), "duplicate key") {
 				ids = append(ids, types.DuplicatedPostId.Int32())
 			} else {
-				c.logError("errPush", err)
+				unilog.Logger().Error("don't be able to push post", zap.String("body", insert), zap.Error(err))
+				//TODO Error due to special symbol
 				ids = append(ids, types.DBError.Int32())
 			}
 		} else {
@@ -103,22 +117,22 @@ func (c Storage) Select(irv data.SpatioTemporalInterval) (posts []data.Post, err
 		WHERE ST_Contains(%v, Location) AND (Timestamp BETWEEN %v AND %v)
 	`, poly, irv.MinTime, irv.MaxTime)
 
-
 	err = c.db.Ping()
 	if err != nil {
-		c.logError("errSelect", err)
+		unilog.Logger().Error("db error", zap.Error(err))
 		return nil, ErrDBConnecting
 	}
 
 	rows, err := c.db.Query(statement)
 	if err != nil {
+		unilog.Logger().Error("error in select", zap.Error(err))
 		return nil, err
 	}
 
 	defer func() {
 		errClose := rows.Close()
 		if errClose != nil {
-			c.logError("errSelect", errClose)
+			unilog.Logger().Error("don't be able to close rows in select", zap.Error(err))
 		}
 	}()
 
@@ -128,7 +142,7 @@ func (c Storage) Select(irv data.SpatioTemporalInterval) (posts []data.Post, err
 		err = rows.Scan(&p.ID, &p.Shortcode, &p.ImageURL, &p.IsVideo, &p.Caption, &p.CommentsCount, &p.Timestamp,
 			&p.LikesCount, &p.IsAd, &p.AuthorID, &p.LocationID, &p.Lat, &p.Lon)
 		if err != nil {
-			c.logError("errSelect", err)
+			unilog.Logger().Error("error in select", zap.Error(err))
 			return nil, err
 		}
 		posts = append(posts, *p)
@@ -139,10 +153,7 @@ func (c Storage) Select(irv data.SpatioTemporalInterval) (posts []data.Post, err
 func (c *Storage) Close() {
 	err := c.db.Close()
 	if err != nil {
-		c.logError("errClose", err)
+		unilog.Logger().Error("don't be able to close db", zap.Error(err))
 	}
 }
 
-func (c *Storage) logError (key string, err error) {
-	level.Error(c.logger).Log(key, err.Error())
-}

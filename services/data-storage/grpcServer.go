@@ -8,8 +8,6 @@ import (
 
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/transport"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"github.com/sony/gobreaker"
 	"google.golang.org/grpc"
@@ -20,23 +18,18 @@ type grpcServer struct {
 	mySelect grpctransport.Handler
 }
 
-func NewGRPCServer(endpoints Set, logger log.Logger) proto.DataStorageServer {
-	options := []grpctransport.ServerOption{
-		grpctransport.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
-	}
+func NewGRPCServer(endpoints Set) proto.DataStorageServer {
 
 	return &grpcServer{
 		push: grpctransport.NewServer(
 			endpoints.PushEndpoint,
 			decodeGRPCPushRequest,
 			encodeGRPCPushResponse,
-			append(options)...,
 		),
 		mySelect: grpctransport.NewServer(
 			endpoints.SelectEndpoint,
 			decodeGRPCSelectRequest,
 			encodeGRPCSelectResponse,
-			append(options)...,
 		),
 	}
 }

@@ -3,35 +3,33 @@ package service
 import (
 	"context"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
-	"github.com/go-kit/kit/log"
+	"go.uber.org/zap"
+	"time"
 )
 
-// Middleware describes a service (as opposed to endpoint) middleware.
-type Middleware func(Service) Service
-
-// LoggingMiddleware takes a logger as a dependency
-// and returns a ServiceMiddleware.
-func LoggingMiddleware(logger log.Logger) Middleware {
-	return func(next Service) Service {
-		return loggingMiddleware{logger, next}
-	}
-}
-
 type loggingMiddleware struct {
-	logger log.Logger
+	logger *zap.Logger
 	next   Service
 }
 
 func (mw loggingMiddleware) Push(ctx context.Context, posts []data.Post) (ids []int32, err error) {
-	defer func() {
-		mw.logger.Log("method", "Push", "err", err)
-	}()
-	return mw.next.Push(ctx, posts)
+	func(begin time.Time) {
+		mw.logger.Info("push request",
+			zap.String("len(posts)", string(len(posts))),
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	ids, err = mw.next.Push(ctx, posts)
+	return
 }
 
 func (mw loggingMiddleware) Select(ctx context.Context, interval data.SpatioTemporalInterval) (posts []data.Post, err error) {
-	defer func() {
-		mw.logger.Log("method", "Select", "interval", interval.String(), "err", err)
-	}()
-	return mw.next.Select(ctx, interval)
+	defer func(begin time.Time) {
+		mw.logger.Info("session status",
+			zap.Any("interval", interval),
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	posts, err = mw.next.Select(ctx, interval)
+	return
 }

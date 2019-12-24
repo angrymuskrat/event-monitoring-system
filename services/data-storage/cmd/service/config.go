@@ -8,8 +8,9 @@ import (
 )
 
 type Config struct {
-	DB       string `json:"DB"`
-	GRPCPort string `json:"GRPCPort"`
+	DB         string `json:"DB"`
+	GRPCPort   string `json:"GRPCPort"`
+	StorageLog string `json:"StorageLog"`
 }
 
 func readConfig(storage string) Config {

@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	fs := flag.NewFlagSet("dbcient", flag.ExitOnError)
+	/*fs := flag.NewFlagSet("dbcient", flag.ExitOnError)
 	var (
 		grpcAddr = fs.String("grpc-addr", ":8082", "gRPC address of addsvc")
 		method   = fs.String("method", "push", "push, select")
@@ -23,7 +23,8 @@ func main() {
 		err error
 	)
 	if *grpcAddr != "" {
-		conn, err := grpc.Dial(*grpcAddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+		//conn, err := grpc.Dial(*grpcAddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+		conn, err := grpc.Dial("localhost:8082", grpc.WithInsecure(), grpc.WithTimeout(time.Second))
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v", err)
 			os.Exit(1)
@@ -37,12 +38,24 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
+	}*/
+	var (
+		svc storagesvc.Service
+		err error
+	)
+	conn, err := grpc.Dial("localhost:8082", grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v", err)
+		os.Exit(1)
 	}
+	defer conn.Close()
+	svc = storagesvc.NewGRPCClient(conn)
 
 	testPosts := GeneratePosts(10)
-	testPosts[0].ID = "gJVKjRJO"
+	//testPosts[0].ID = "gJVKjRJO"
+	method := "select"
 
-	switch *method {
+	switch method {
 	case "push":
 
 		res, err := svc.Push(context.Background(), testPosts)
@@ -54,7 +67,7 @@ func main() {
 
 	case "select":
 		res, err := svc.Select(context.Background(), data.SpatioTemporalInterval{ 0, 1000000, 5,
-			5, 10, 10, struct{}{}, nil, 0 })
+			5, 30, 30, struct{}{}, nil, 0 })
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
@@ -62,7 +75,7 @@ func main() {
 		fmt.Fprintf(os.Stdout, "Ok %v", len(res))
 
 	default:
-		fmt.Fprintf(os.Stderr, "error: invalid method %q\n", *method)
+		fmt.Fprintf(os.Stderr, "error: invalid method %q\n", method)
 		os.Exit(1)
 	}
 }

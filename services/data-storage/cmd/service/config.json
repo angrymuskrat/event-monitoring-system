@@ -1,4 +1,5 @@
 {
   "DB": "database=testgisdb user=myuser password=mypass sslmode=disable",
-  "GRPCPort": ":8082"
+  "GRPCPort": ":8082",
+  "StorageLog": "app.log"
 }

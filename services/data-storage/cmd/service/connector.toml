@@ -1,0 +1,1 @@
+AuthDB = "database=testgisdb user=myuser password=mypass sslmode=disable"

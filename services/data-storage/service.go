@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/connector"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
-	"github.com/go-kit/kit/log"
 )
 
 var (
@@ -26,24 +26,11 @@ type Service interface {
 	Select(ctx context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error)
 }
 
-func NewService(logger log.Logger, db *Storage) Service {
-	var svc Service
-	{
-		svc = NewBasicService(db)
-		svc = LoggingMiddleware(logger)(svc)
-	}
-	return svc
-}
-
-func NewBasicService(db *Storage) Service {
-	return basicService{ db: db }
-}
-
 type basicService struct{
-	db *Storage
+	db *connector.Storage
 }
 
-func (s basicService) Push(ctx context.Context, posts []data.Post) ([]int32, error) {
+func (s basicService) Push(_ context.Context, posts []data.Post) ([]int32, error) {
 	ids, err := s.db.Push(posts)
 	if err != nil {
 		err = ErrPushStatement
