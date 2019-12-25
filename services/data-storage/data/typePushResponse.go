@@ -9,7 +9,7 @@ const (
 	DBError
 )
 
-func CountPushRequestTypes() int {
+func CountPushResponseTypes() int {
 	return 3
 }
 
