@@ -1,15 +1,19 @@
 package data
 
-type PushRequestType int
+type PushResponseType int
 
 const (
-	InvalidType PushRequestType = iota
+	InvalidType PushResponseType = iota
 	PostPushed
 	DuplicatedPostId
 	DBError
 )
 
-func parseType(t int32) PushRequestType {
+func CountPushRequestTypes() int {
+	return 3
+}
+
+func ParseType(t int32) PushResponseType {
 	switch t {
 	case 0:
 		return PostPushed
@@ -22,7 +26,7 @@ func parseType(t int32) PushRequestType {
 	}
 }
 
-func (t PushRequestType) Int32() int32 {
+func (t PushResponseType) Int32() int32 {
 	switch t {
 	case PostPushed:
 		return 0
