@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"go.uber.org/zap"
-	"strconv"
 	"time"
 )
 
@@ -16,7 +15,7 @@ type loggingMiddleware struct {
 func (mw loggingMiddleware) Push(ctx context.Context, posts []data.Post) (ids []int32, err error) {
 	func(begin time.Time) {
 		mw.logger.Info("push request",
-			zap.String("len(posts)", strconv.Itoa(len(posts))),
+			zap.Int("len(posts)", len(posts)),
 			zap.Error(err),
 			zap.String("took", time.Since(begin).String()))
 	}(time.Now())
