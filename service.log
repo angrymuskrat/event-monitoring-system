@@ -1,2 +1,0 @@
-2019-12-24T12:35:41.152+0300	session status	{"interval": {"MaxTime":1000000,"MinLat":5,"MinLon":5,"MaxLat":30,"MaxLon":30}, "took": "60.170007ms"}
-2019-12-24T17:04:23.165+0300	push request	{"len(posts)": "ӂ", "took": "28.153µs"}

@@ -8,10 +8,7 @@ import (
 )
 
 var (
-	ErrDBConnecting = errors.New("do not be able to connect with db")
-	ErrPushStatement = errors.New("one or more posts wasn't pushed")
 	ErrSelectInterval = errors.New("incorrect interval")
-	ErrSelectStatement = errors.New("don't be able to return posts")
 )
 
 type Service interface {
@@ -31,20 +28,12 @@ type basicService struct{
 }
 
 func (s basicService) Push(_ context.Context, posts []data.Post) ([]int32, error) {
-	ids, err := s.db.Push(posts)
-	if err != nil {
-		err = ErrPushStatement
-	}
-	return ids, err
+	return s.db.Push(posts)
 }
 
 func (s basicService) Select(_ context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error) {
 	if interval.MaxLon < interval.MinLon || interval.MaxLat < interval.MinLat || interval.MaxTime < interval.MinTime {
 		return nil, ErrSelectInterval
 	}
-	posts, err := s.db.Select(interval)
-	if err != nil {
-		return nil, ErrSelectStatement
-	}
-	return posts, nil
+	return s.db.Select(interval)
 }

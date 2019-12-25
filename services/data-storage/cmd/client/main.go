@@ -2,13 +2,11 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	storagesvc "github.com/angrymuskrat/event-monitoring-system/services/data-storage"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"google.golang.org/grpc"
 	"os"
-	"text/tabwriter"
 	"time"
 )
 
@@ -51,9 +49,9 @@ func main() {
 	defer conn.Close()
 	svc = storagesvc.NewGRPCClient(conn)
 
-	testPosts := GeneratePosts(10)
-	//testPosts[0].ID = "gJVKjRJO"
-	method := "select"
+	testPosts := GeneratePosts(1)
+	testPosts[0].ID = "dHirNwnQr"
+	method := "push"
 
 	switch method {
 	case "push":
@@ -80,17 +78,3 @@ func main() {
 	}
 }
 
-func usageFor(fs *flag.FlagSet, short string) func() {
-	return func() {
-		fmt.Fprintf(os.Stderr, "USAGE\n")
-		fmt.Fprintf(os.Stderr, "  %s\n", short)
-		fmt.Fprintf(os.Stderr, "\n")
-		fmt.Fprintf(os.Stderr, "FLAGS\n")
-		w := tabwriter.NewWriter(os.Stderr, 0, 2, 2, ' ', 0)
-		fs.VisitAll(func(f *flag.Flag) {
-			fmt.Fprintf(w, "\t-%s %s\t%s\n", f.Name, f.DefValue, f.Usage)
-		})
-		w.Flush()
-		fmt.Fprintf(os.Stderr, "\n")
-	}
-}
