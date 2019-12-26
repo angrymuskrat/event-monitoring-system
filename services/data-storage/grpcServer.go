@@ -14,120 +14,120 @@ import (
 )
 
 type grpcServer struct {
-	push     grpctransport.Handler
-	mySelect grpctransport.Handler
+	pushPosts     grpctransport.Handler
+	selectPosts grpctransport.Handler
 }
 
 func NewGRPCServer(endpoints Set) proto.DataStorageServer {
 
 	return &grpcServer{
-		push: grpctransport.NewServer(
-			endpoints.PushEndpoint,
-			decodeGRPCPushRequest,
-			encodeGRPCPushResponse,
+		pushPosts: grpctransport.NewServer(
+			endpoints.PushPostsEndpoint,
+			decodeGRPCPushPostsRequest,
+			encodeGRPCPushPostsResponse,
 		),
-		mySelect: grpctransport.NewServer(
-			endpoints.SelectEndpoint,
-			decodeGRPCSelectRequest,
-			encodeGRPCSelectResponse,
+		selectPosts: grpctransport.NewServer(
+			endpoints.SelectPostsEndpoint,
+			decodeGRPCSelectPostsRequest,
+			encodeGRPCSelectPostsResponse,
 		),
 	}
 }
 
-func (s *grpcServer) Push(ctx context.Context, req *proto.PushRequest) (*proto.PushReply, error) {
-	_, rep, err := s.push.ServeGRPC(ctx, req)
+func (s *grpcServer) PushPosts(ctx context.Context, req *proto.PushPostsRequest) (*proto.PushPostsReply, error) {
+	_, rep, err := s.pushPosts.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return rep.(*proto.PushReply), nil
+	return rep.(*proto.PushPostsReply), nil
 }
 
-func (s *grpcServer) Select(ctx context.Context, req *proto.SelectRequest) (*proto.SelectReply, error) {
-	_, rep, err := s.mySelect.ServeGRPC(ctx, req)
+func (s *grpcServer) SelectPosts(ctx context.Context, req *proto.SelectPostsRequest) (*proto.SelectPostsReply, error) {
+	_, rep, err := s.selectPosts.ServeGRPC(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	return rep.(*proto.SelectReply), nil
+	return rep.(*proto.SelectPostsReply), nil
 }
 
 func NewGRPCClient(conn *grpc.ClientConn) Service {
-	var pushEndpoint endpoint.Endpoint
+	var pushPostsEndpoint endpoint.Endpoint
 	{
 
-		pushEndpoint = grpctransport.NewClient(
+		pushPostsEndpoint = grpctransport.NewClient(
 			conn,
 			"proto.DataStorage",
-			"Push",
-			encodeGRPCPushRequest,
-			decodeGRPCPushResponse,
-			proto.PushReply{},
+			"PushPosts",
+			encodeGRPCPushPostsRequest,
+			decodeGRPCPushPostsResponse,
+			proto.PushPostsReply{},
 		).Endpoint()
-		pushEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
-			Name:    "Push",
+		pushPostsEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "PushPosts",
 			Timeout: 30 * time.Second,
-		}))(pushEndpoint)
+		}))(pushPostsEndpoint)
 	}
 
-	var selectEndpoint endpoint.Endpoint
+	var selectPostsEndpoint endpoint.Endpoint
 	{
-		selectEndpoint = grpctransport.NewClient(
+		selectPostsEndpoint = grpctransport.NewClient(
 			conn,
 			"proto.DataStorage",
 			"Select",
-			encodeGRPCSelectRequest,
-			decodeGRPCSelectResponse,
-			proto.SelectReply{},
+			encodeGRPCSelectPostsRequest,
+			decodeGRPCSelectPostsResponse,
+			proto.SelectPostsReply{},
 		).Endpoint()
-		selectEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+		selectPostsEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "Select",
 			Timeout: 30 * time.Second,
-		}))(selectEndpoint)
+		}))(selectPostsEndpoint)
 	}
 
 	return Set{
-		PushEndpoint:   pushEndpoint,
-		SelectEndpoint: selectEndpoint,
+		PushPostsEndpoint:   pushPostsEndpoint,
+		SelectPostsEndpoint: selectPostsEndpoint,
 	}
 }
 
-func decodeGRPCPushRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*proto.PushRequest)
-	return proto.PushRequest{Posts: req.Posts}, nil
+func decodeGRPCPushPostsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PushPostsRequest)
+	return proto.PushPostsRequest{Posts: req.Posts}, nil
 }
 
-func decodeGRPCSelectRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*proto.SelectRequest)
-	return proto.SelectRequest{Interval: req.Interval}, nil
+func decodeGRPCSelectPostsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.SelectPostsRequest)
+	return proto.SelectPostsRequest{Interval: req.Interval}, nil
 }
 
-func decodeGRPCPushResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*proto.PushReply)
-	return PushResponse{Ids: reply.Ids, Err: str2err(reply.Err)}, nil
+func decodeGRPCPushPostsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PushPostsReply)
+	return PushPostsResponse{Ids: reply.Ids, Err: str2err(reply.Err)}, nil
 }
 
-func decodeGRPCSelectResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*proto.SelectReply)
-	return SelectResponse{Posts: reply.Posts, Err: str2err(reply.Err)}, nil
+func decodeGRPCSelectPostsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.SelectPostsReply)
+	return SelectPostsResponse{Posts: reply.Posts, Err: str2err(reply.Err)}, nil
 }
 
-func encodeGRPCPushResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(PushResponse)
-	return &proto.PushReply{Ids: resp.Ids, Err: err2str(resp.Err)}, nil
+func encodeGRPCPushPostsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(PushPostsResponse)
+	return &proto.PushPostsReply{Ids: resp.Ids, Err: err2str(resp.Err)}, nil
 }
 
-func encodeGRPCSelectResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(SelectResponse)
-	return &proto.SelectReply{Posts: resp.Posts, Err: err2str(resp.Err)}, nil
+func encodeGRPCSelectPostsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(SelectPostsResponse)
+	return &proto.SelectPostsReply{Posts: resp.Posts, Err: err2str(resp.Err)}, nil
 }
 
-func encodeGRPCPushRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(proto.PushRequest)
-	return &proto.PushRequest{Posts: req.Posts}, nil
+func encodeGRPCPushPostsRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(proto.PushPostsRequest)
+	return &proto.PushPostsRequest{Posts: req.Posts}, nil
 }
 
-func encodeGRPCSelectRequest(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(proto.SelectRequest)
-	return &proto.SelectRequest{Interval: req.Interval}, nil
+func encodeGRPCSelectPostsRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(proto.SelectPostsRequest)
+	return &proto.SelectPostsRequest{Interval: req.Interval}, nil
 }
 
 func str2err(s string) error {

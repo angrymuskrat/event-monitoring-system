@@ -15,25 +15,25 @@ type Service interface {
 	// input array of Posts and write every Post to database
 	// return array of statuses of adding posts
 	// 		and error if one or more Post wasn't pushed
-	Push(ctx context.Context, posts []data.Post) ([]int32, error)
+	PushPosts(ctx context.Context, posts []data.Post) ([]int32, error)
 
 	// input SpatioTemporalInterval
 	// return array of post, every of which satisfy the interval conditions
 	// 		and error if interval is incorrect or storage can't return posts due to other reasons
-	Select(ctx context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error)
+	SelectPosts(ctx context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error)
 }
 
 type basicService struct{
 	db *connector.Storage
 }
 
-func (s basicService) Push(_ context.Context, posts []data.Post) ([]int32, error) {
-	return s.db.Push(posts)
+func (s basicService) PushPosts(_ context.Context, posts []data.Post) ([]int32, error) {
+	return s.db.PushPosts(posts)
 }
 
-func (s basicService) Select(_ context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error) {
+func (s basicService) SelectPosts(_ context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error) {
 	if interval.MaxLon < interval.MinLon || interval.MaxLat < interval.MinLat || interval.MaxTime < interval.MinTime {
 		return nil, ErrSelectInterval
 	}
-	return s.db.Select(interval)
+	return s.db.SelectPosts(interval)
 }

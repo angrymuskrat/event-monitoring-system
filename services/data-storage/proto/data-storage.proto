@@ -7,27 +7,27 @@ import "proto/data.proto";
 
 service DataStorage {
     // Push array of posts to database
-    rpc Push (PushRequest) returns (PushReply) {}
+    rpc PushPosts (PushPostsRequest) returns (PushPostsReply) {}
 
     // Select array from database, each element from array belongs the interval
-    rpc Select (SelectRequest) returns (SelectReply) {}
+    rpc SelectPosts (SelectPostsRequest) returns (SelectPostsReply) {}
 }
 
 // The push request contains two parameters.
-message PushRequest {
+message PushPostsRequest {
     repeated data.Post posts = 1 [(gogoproto.nullable) = false];
 }
 
-message PushReply {
+message PushPostsReply {
     repeated int32 ids = 1;
     string err = 2;
 }
 
-message SelectRequest {
+message SelectPostsRequest {
     data.SpatioTemporalInterval interval = 1 [(gogoproto.nullable) = false];
 }
 
-message SelectReply {
+message SelectPostsReply {
     repeated data.Post posts = 1 [(gogoproto.nullable) = false];
     string err = 2;
 }

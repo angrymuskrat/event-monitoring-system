@@ -29,25 +29,25 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // The push request contains two parameters.
-type PushRequest struct {
+type PushPostsRequest struct {
 	Posts                []proto1.Post `protobuf:"bytes,1,rep,name=posts,proto3" json:"posts"`
 	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
 	XXX_unrecognized     []byte        `json:"-"`
 	XXX_sizecache        int32         `json:"-"`
 }
 
-func (m *PushRequest) Reset()         { *m = PushRequest{} }
-func (m *PushRequest) String() string { return proto.CompactTextString(m) }
-func (*PushRequest) ProtoMessage()    {}
-func (*PushRequest) Descriptor() ([]byte, []int) {
+func (m *PushPostsRequest) Reset()         { *m = PushPostsRequest{} }
+func (m *PushPostsRequest) String() string { return proto.CompactTextString(m) }
+func (*PushPostsRequest) ProtoMessage()    {}
+func (*PushPostsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8ec0c2fba98f9a4b, []int{0}
 }
-func (m *PushRequest) XXX_Unmarshal(b []byte) error {
+func (m *PushPostsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PushRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *PushPostsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PushRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_PushPostsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -57,26 +57,26 @@ func (m *PushRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) 
 		return b[:n], nil
 	}
 }
-func (m *PushRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PushRequest.Merge(m, src)
+func (m *PushPostsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PushPostsRequest.Merge(m, src)
 }
-func (m *PushRequest) XXX_Size() int {
+func (m *PushPostsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *PushRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_PushRequest.DiscardUnknown(m)
+func (m *PushPostsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PushPostsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PushRequest proto.InternalMessageInfo
+var xxx_messageInfo_PushPostsRequest proto.InternalMessageInfo
 
-func (m *PushRequest) GetPosts() []proto1.Post {
+func (m *PushPostsRequest) GetPosts() []proto1.Post {
 	if m != nil {
 		return m.Posts
 	}
 	return nil
 }
 
-type PushReply struct {
+type PushPostsReply struct {
 	Ids                  []int32  `protobuf:"varint,1,rep,packed,name=ids,proto3" json:"ids,omitempty"`
 	Err                  string   `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -84,18 +84,18 @@ type PushReply struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *PushReply) Reset()         { *m = PushReply{} }
-func (m *PushReply) String() string { return proto.CompactTextString(m) }
-func (*PushReply) ProtoMessage()    {}
-func (*PushReply) Descriptor() ([]byte, []int) {
+func (m *PushPostsReply) Reset()         { *m = PushPostsReply{} }
+func (m *PushPostsReply) String() string { return proto.CompactTextString(m) }
+func (*PushPostsReply) ProtoMessage()    {}
+func (*PushPostsReply) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8ec0c2fba98f9a4b, []int{1}
 }
-func (m *PushReply) XXX_Unmarshal(b []byte) error {
+func (m *PushPostsReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PushReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *PushPostsReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PushReply.Marshal(b, m, deterministic)
+		return xxx_messageInfo_PushPostsReply.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -105,51 +105,51 @@ func (m *PushReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *PushReply) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PushReply.Merge(m, src)
+func (m *PushPostsReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PushPostsReply.Merge(m, src)
 }
-func (m *PushReply) XXX_Size() int {
+func (m *PushPostsReply) XXX_Size() int {
 	return m.Size()
 }
-func (m *PushReply) XXX_DiscardUnknown() {
-	xxx_messageInfo_PushReply.DiscardUnknown(m)
+func (m *PushPostsReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_PushPostsReply.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PushReply proto.InternalMessageInfo
+var xxx_messageInfo_PushPostsReply proto.InternalMessageInfo
 
-func (m *PushReply) GetIds() []int32 {
+func (m *PushPostsReply) GetIds() []int32 {
 	if m != nil {
 		return m.Ids
 	}
 	return nil
 }
 
-func (m *PushReply) GetErr() string {
+func (m *PushPostsReply) GetErr() string {
 	if m != nil {
 		return m.Err
 	}
 	return ""
 }
 
-type SelectRequest struct {
+type SelectPostsRequest struct {
 	Interval             proto1.SpatioTemporalInterval `protobuf:"bytes,1,opt,name=interval,proto3" json:"interval"`
 	XXX_NoUnkeyedLiteral struct{}                      `json:"-"`
 	XXX_unrecognized     []byte                        `json:"-"`
 	XXX_sizecache        int32                         `json:"-"`
 }
 
-func (m *SelectRequest) Reset()         { *m = SelectRequest{} }
-func (m *SelectRequest) String() string { return proto.CompactTextString(m) }
-func (*SelectRequest) ProtoMessage()    {}
-func (*SelectRequest) Descriptor() ([]byte, []int) {
+func (m *SelectPostsRequest) Reset()         { *m = SelectPostsRequest{} }
+func (m *SelectPostsRequest) String() string { return proto.CompactTextString(m) }
+func (*SelectPostsRequest) ProtoMessage()    {}
+func (*SelectPostsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8ec0c2fba98f9a4b, []int{2}
 }
-func (m *SelectRequest) XXX_Unmarshal(b []byte) error {
+func (m *SelectPostsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *SelectRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *SelectPostsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_SelectRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_SelectPostsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -159,26 +159,26 @@ func (m *SelectRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error
 		return b[:n], nil
 	}
 }
-func (m *SelectRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SelectRequest.Merge(m, src)
+func (m *SelectPostsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SelectPostsRequest.Merge(m, src)
 }
-func (m *SelectRequest) XXX_Size() int {
+func (m *SelectPostsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *SelectRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_SelectRequest.DiscardUnknown(m)
+func (m *SelectPostsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SelectPostsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SelectRequest proto.InternalMessageInfo
+var xxx_messageInfo_SelectPostsRequest proto.InternalMessageInfo
 
-func (m *SelectRequest) GetInterval() proto1.SpatioTemporalInterval {
+func (m *SelectPostsRequest) GetInterval() proto1.SpatioTemporalInterval {
 	if m != nil {
 		return m.Interval
 	}
 	return proto1.SpatioTemporalInterval{}
 }
 
-type SelectReply struct {
+type SelectPostsReply struct {
 	Posts                []proto1.Post `protobuf:"bytes,1,rep,name=posts,proto3" json:"posts"`
 	Err                  string        `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
@@ -186,18 +186,18 @@ type SelectReply struct {
 	XXX_sizecache        int32         `json:"-"`
 }
 
-func (m *SelectReply) Reset()         { *m = SelectReply{} }
-func (m *SelectReply) String() string { return proto.CompactTextString(m) }
-func (*SelectReply) ProtoMessage()    {}
-func (*SelectReply) Descriptor() ([]byte, []int) {
+func (m *SelectPostsReply) Reset()         { *m = SelectPostsReply{} }
+func (m *SelectPostsReply) String() string { return proto.CompactTextString(m) }
+func (*SelectPostsReply) ProtoMessage()    {}
+func (*SelectPostsReply) Descriptor() ([]byte, []int) {
 	return fileDescriptor_8ec0c2fba98f9a4b, []int{3}
 }
-func (m *SelectReply) XXX_Unmarshal(b []byte) error {
+func (m *SelectPostsReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *SelectReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *SelectPostsReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_SelectReply.Marshal(b, m, deterministic)
+		return xxx_messageInfo_SelectPostsReply.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -207,26 +207,26 @@ func (m *SelectReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) 
 		return b[:n], nil
 	}
 }
-func (m *SelectReply) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SelectReply.Merge(m, src)
+func (m *SelectPostsReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SelectPostsReply.Merge(m, src)
 }
-func (m *SelectReply) XXX_Size() int {
+func (m *SelectPostsReply) XXX_Size() int {
 	return m.Size()
 }
-func (m *SelectReply) XXX_DiscardUnknown() {
-	xxx_messageInfo_SelectReply.DiscardUnknown(m)
+func (m *SelectPostsReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_SelectPostsReply.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_SelectReply proto.InternalMessageInfo
+var xxx_messageInfo_SelectPostsReply proto.InternalMessageInfo
 
-func (m *SelectReply) GetPosts() []proto1.Post {
+func (m *SelectPostsReply) GetPosts() []proto1.Post {
 	if m != nil {
 		return m.Posts
 	}
 	return nil
 }
 
-func (m *SelectReply) GetErr() string {
+func (m *SelectPostsReply) GetErr() string {
 	if m != nil {
 		return m.Err
 	}
@@ -234,10 +234,10 @@ func (m *SelectReply) GetErr() string {
 }
 
 func init() {
-	proto.RegisterType((*PushRequest)(nil), "proto.PushRequest")
-	proto.RegisterType((*PushReply)(nil), "proto.PushReply")
-	proto.RegisterType((*SelectRequest)(nil), "proto.SelectRequest")
-	proto.RegisterType((*SelectReply)(nil), "proto.SelectReply")
+	proto.RegisterType((*PushPostsRequest)(nil), "proto.PushPostsRequest")
+	proto.RegisterType((*PushPostsReply)(nil), "proto.PushPostsReply")
+	proto.RegisterType((*SelectPostsRequest)(nil), "proto.SelectPostsRequest")
+	proto.RegisterType((*SelectPostsReply)(nil), "proto.SelectPostsReply")
 }
 
 func init() {
@@ -245,26 +245,26 @@ func init() {
 }
 
 var fileDescriptor_8ec0c2fba98f9a4b = []byte{
-	// 296 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x90, 0xc1, 0x4a, 0xc3, 0x40,
-	0x10, 0x86, 0xb3, 0xb6, 0x29, 0x76, 0x82, 0x10, 0x16, 0x0f, 0x21, 0x68, 0x0c, 0x01, 0x25, 0x17,
-	0x13, 0x88, 0x7a, 0xf5, 0x50, 0x04, 0xf1, 0x64, 0x49, 0x7c, 0x81, 0xd5, 0x2e, 0x31, 0x10, 0xdd,
-	0x75, 0x77, 0x2a, 0xf4, 0x4d, 0x7c, 0xa4, 0x1e, 0x7d, 0x02, 0x91, 0xf8, 0x22, 0x92, 0x6c, 0xaa,
-	0xad, 0x7a, 0xf0, 0xb4, 0xc3, 0x37, 0xff, 0xbf, 0xf3, 0xcf, 0xc0, 0xe1, 0x8c, 0x21, 0x3b, 0xd6,
-	0x28, 0x14, 0x2b, 0x79, 0x2a, 0x95, 0x40, 0x91, 0xae, 0xa3, 0xa4, 0x43, 0xd4, 0xee, 0x1e, 0x7f,
-	0xff, 0x0f, 0x75, 0x29, 0x4a, 0x61, 0x54, 0xbe, 0xfb, 0xed, 0x37, 0x24, 0x3a, 0x03, 0x67, 0x3a,
-	0xd7, 0xf7, 0x39, 0x7f, 0x9a, 0x73, 0x8d, 0xf4, 0x08, 0x6c, 0x29, 0x34, 0x6a, 0x8f, 0x84, 0x83,
-	0xd8, 0xc9, 0x20, 0xe9, 0xa4, 0x53, 0xa1, 0x71, 0x32, 0x5c, 0xbe, 0x1d, 0x58, 0xb9, 0x69, 0x47,
-	0x29, 0x8c, 0x8d, 0x4d, 0xd6, 0x0b, 0xea, 0xc2, 0xa0, 0x9a, 0x19, 0x8b, 0x9d, 0xb7, 0x65, 0x4b,
-	0xb8, 0x52, 0xde, 0x56, 0x48, 0xe2, 0x71, 0xde, 0x96, 0xd1, 0x35, 0xec, 0x14, 0xbc, 0xe6, 0x77,
-	0xb8, 0x9a, 0x74, 0x0e, 0xdb, 0xd5, 0x23, 0x72, 0xf5, 0xcc, 0x6a, 0x8f, 0x84, 0x24, 0x76, 0xb2,
-	0x3d, 0x33, 0xac, 0x90, 0x0c, 0x2b, 0x71, 0xc3, 0x1f, 0xa4, 0x50, 0xac, 0xbe, 0xea, 0x35, 0xfd,
-	0xf8, 0x2f, 0x4f, 0x74, 0x09, 0xce, 0xea, 0xc3, 0x36, 0xc3, 0x3f, 0x83, 0xff, 0x4e, 0x96, 0x69,
-	0x70, 0x2e, 0x18, 0xb2, 0xc2, 0xdc, 0x8c, 0x26, 0x30, 0x6c, 0x37, 0xa3, 0xd4, 0x1c, 0x28, 0x59,
-	0xbb, 0x8e, 0xef, 0x6e, 0x30, 0x59, 0x2f, 0x22, 0x8b, 0x9e, 0xc2, 0xc8, 0xe4, 0xa0, 0xbb, 0x7d,
-	0x77, 0x63, 0x4f, 0x9f, 0xfe, 0xa0, 0x9d, 0x6b, 0xe2, 0x2e, 0x9b, 0x80, 0xbc, 0x36, 0x01, 0x79,
-	0x6f, 0x02, 0xf2, 0xf2, 0x11, 0x58, 0xb7, 0xa3, 0x4e, 0x76, 0xf2, 0x19, 0x00, 0x00, 0xff, 0xff,
-	0x7e, 0x6f, 0x65, 0x72, 0xf0, 0x01, 0x00, 0x00,
+	// 300 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x4d, 0x49, 0x2c, 0x49,
+	0xd4, 0x2d, 0x2e, 0xc9, 0x2f, 0x4a, 0x4c, 0x4f, 0xd5, 0x2f, 0x28, 0xca, 0x2f, 0xc9, 0xd7, 0x47,
+	0x16, 0xd2, 0x03, 0x0b, 0x09, 0xb1, 0x82, 0x29, 0x29, 0x59, 0x2c, 0xaa, 0xd3, 0xf3, 0xd3, 0xf3,
+	0x21, 0xaa, 0xa4, 0x04, 0x10, 0xfa, 0x21, 0x22, 0x4a, 0x56, 0x5c, 0x02, 0x01, 0xa5, 0xc5, 0x19,
+	0x01, 0xf9, 0xc5, 0x25, 0xc5, 0x41, 0xa9, 0x85, 0xa5, 0xa9, 0xc5, 0x25, 0x42, 0x6a, 0x5c, 0xac,
+	0x05, 0x20, 0xbe, 0x04, 0xa3, 0x02, 0xb3, 0x06, 0xb7, 0x11, 0x97, 0x1e, 0x58, 0x3d, 0x48, 0x89,
+	0x13, 0xcb, 0x89, 0x7b, 0xf2, 0x0c, 0x41, 0x10, 0x69, 0x25, 0x13, 0x2e, 0x3e, 0x24, 0xbd, 0x05,
+	0x39, 0x95, 0x42, 0x02, 0x5c, 0xcc, 0x99, 0x29, 0x10, 0x7d, 0xac, 0x41, 0x20, 0x26, 0x48, 0x24,
+	0xb5, 0xa8, 0x48, 0x82, 0x49, 0x81, 0x51, 0x83, 0x33, 0x08, 0xc4, 0x54, 0x0a, 0xe1, 0x12, 0x0a,
+	0x4e, 0xcd, 0x49, 0x4d, 0x2e, 0x41, 0xb1, 0xd3, 0x8e, 0x8b, 0x23, 0x33, 0xaf, 0x24, 0xb5, 0xa8,
+	0x2c, 0x31, 0x47, 0x82, 0x51, 0x81, 0x51, 0x83, 0xdb, 0x48, 0x06, 0x62, 0x6d, 0x70, 0x41, 0x62,
+	0x49, 0x66, 0x7e, 0x48, 0x6a, 0x6e, 0x41, 0x7e, 0x51, 0x62, 0x8e, 0x27, 0x54, 0x0d, 0xd4, 0x21,
+	0x70, 0x3d, 0x4a, 0x3e, 0x5c, 0x02, 0x28, 0xa6, 0x82, 0x5c, 0x43, 0xa4, 0x3f, 0x30, 0xdd, 0x68,
+	0x34, 0x91, 0x91, 0x8b, 0xdb, 0x25, 0xb1, 0x24, 0x31, 0x18, 0x12, 0x90, 0x42, 0xb6, 0x5c, 0x9c,
+	0x70, 0x9f, 0x0a, 0x89, 0x43, 0x82, 0x4e, 0x0f, 0x3d, 0xdc, 0xa4, 0x44, 0x31, 0x25, 0x0a, 0x72,
+	0x2a, 0x95, 0x18, 0x84, 0x9c, 0xb9, 0xb8, 0x91, 0x1c, 0x27, 0x24, 0x09, 0x55, 0x87, 0x19, 0x0c,
+	0x52, 0xe2, 0xd8, 0xa4, 0xc0, 0x86, 0x38, 0x09, 0x9c, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c,
+	0xe3, 0x83, 0x47, 0x72, 0x8c, 0x33, 0x1e, 0xcb, 0x31, 0x24, 0xb1, 0x81, 0xd5, 0x1a, 0x03, 0x02,
+	0x00, 0x00, 0xff, 0xff, 0xb0, 0x3c, 0x13, 0xd5, 0x23, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -280,9 +280,9 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type DataStorageClient interface {
 	// Push array of posts to database
-	Push(ctx context.Context, in *PushRequest, opts ...grpc.CallOption) (*PushReply, error)
+	PushPosts(ctx context.Context, in *PushPostsRequest, opts ...grpc.CallOption) (*PushPostsReply, error)
 	// Select array from database, each element from array belongs the interval
-	Select(ctx context.Context, in *SelectRequest, opts ...grpc.CallOption) (*SelectReply, error)
+	SelectPosts(ctx context.Context, in *SelectPostsRequest, opts ...grpc.CallOption) (*SelectPostsReply, error)
 }
 
 type dataStorageClient struct {
@@ -293,18 +293,18 @@ func NewDataStorageClient(cc *grpc.ClientConn) DataStorageClient {
 	return &dataStorageClient{cc}
 }
 
-func (c *dataStorageClient) Push(ctx context.Context, in *PushRequest, opts ...grpc.CallOption) (*PushReply, error) {
-	out := new(PushReply)
-	err := c.cc.Invoke(ctx, "/proto.DataStorage/Push", in, out, opts...)
+func (c *dataStorageClient) PushPosts(ctx context.Context, in *PushPostsRequest, opts ...grpc.CallOption) (*PushPostsReply, error) {
+	out := new(PushPostsReply)
+	err := c.cc.Invoke(ctx, "/proto.DataStorage/PushPosts", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *dataStorageClient) Select(ctx context.Context, in *SelectRequest, opts ...grpc.CallOption) (*SelectReply, error) {
-	out := new(SelectReply)
-	err := c.cc.Invoke(ctx, "/proto.DataStorage/Select", in, out, opts...)
+func (c *dataStorageClient) SelectPosts(ctx context.Context, in *SelectPostsRequest, opts ...grpc.CallOption) (*SelectPostsReply, error) {
+	out := new(SelectPostsReply)
+	err := c.cc.Invoke(ctx, "/proto.DataStorage/SelectPosts", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -314,58 +314,58 @@ func (c *dataStorageClient) Select(ctx context.Context, in *SelectRequest, opts 
 // DataStorageServer is the server API for DataStorage service.
 type DataStorageServer interface {
 	// Push array of posts to database
-	Push(context.Context, *PushRequest) (*PushReply, error)
+	PushPosts(context.Context, *PushPostsRequest) (*PushPostsReply, error)
 	// Select array from database, each element from array belongs the interval
-	Select(context.Context, *SelectRequest) (*SelectReply, error)
+	SelectPosts(context.Context, *SelectPostsRequest) (*SelectPostsReply, error)
 }
 
 // UnimplementedDataStorageServer can be embedded to have forward compatible implementations.
 type UnimplementedDataStorageServer struct {
 }
 
-func (*UnimplementedDataStorageServer) Push(ctx context.Context, req *PushRequest) (*PushReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Push not implemented")
+func (*UnimplementedDataStorageServer) PushPosts(ctx context.Context, req *PushPostsRequest) (*PushPostsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PushPosts not implemented")
 }
-func (*UnimplementedDataStorageServer) Select(ctx context.Context, req *SelectRequest) (*SelectReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Select not implemented")
+func (*UnimplementedDataStorageServer) SelectPosts(ctx context.Context, req *SelectPostsRequest) (*SelectPostsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SelectPosts not implemented")
 }
 
 func RegisterDataStorageServer(s *grpc.Server, srv DataStorageServer) {
 	s.RegisterService(&_DataStorage_serviceDesc, srv)
 }
 
-func _DataStorage_Push_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PushRequest)
+func _DataStorage_PushPosts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PushPostsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataStorageServer).Push(ctx, in)
+		return srv.(DataStorageServer).PushPosts(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.DataStorage/Push",
+		FullMethod: "/proto.DataStorage/PushPosts",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataStorageServer).Push(ctx, req.(*PushRequest))
+		return srv.(DataStorageServer).PushPosts(ctx, req.(*PushPostsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DataStorage_Select_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SelectRequest)
+func _DataStorage_SelectPosts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SelectPostsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DataStorageServer).Select(ctx, in)
+		return srv.(DataStorageServer).SelectPosts(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.DataStorage/Select",
+		FullMethod: "/proto.DataStorage/SelectPosts",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataStorageServer).Select(ctx, req.(*SelectRequest))
+		return srv.(DataStorageServer).SelectPosts(ctx, req.(*SelectPostsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -375,19 +375,19 @@ var _DataStorage_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*DataStorageServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Push",
-			Handler:    _DataStorage_Push_Handler,
+			MethodName: "PushPosts",
+			Handler:    _DataStorage_PushPosts_Handler,
 		},
 		{
-			MethodName: "Select",
-			Handler:    _DataStorage_Select_Handler,
+			MethodName: "SelectPosts",
+			Handler:    _DataStorage_SelectPosts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "data-storage/proto/data-storage.proto",
 }
 
-func (m *PushRequest) Marshal() (dAtA []byte, err error) {
+func (m *PushPostsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -397,12 +397,12 @@ func (m *PushRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PushRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *PushPostsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PushRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *PushPostsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -428,7 +428,7 @@ func (m *PushRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *PushReply) Marshal() (dAtA []byte, err error) {
+func (m *PushPostsReply) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -438,12 +438,12 @@ func (m *PushReply) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PushReply) MarshalTo(dAtA []byte) (int, error) {
+func (m *PushPostsReply) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PushReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *PushPostsReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -481,7 +481,7 @@ func (m *PushReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *SelectRequest) Marshal() (dAtA []byte, err error) {
+func (m *SelectPostsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -491,12 +491,12 @@ func (m *SelectRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SelectRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *SelectPostsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *SelectRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *SelectPostsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -518,7 +518,7 @@ func (m *SelectRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *SelectReply) Marshal() (dAtA []byte, err error) {
+func (m *SelectPostsReply) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -528,12 +528,12 @@ func (m *SelectReply) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *SelectReply) MarshalTo(dAtA []byte) (int, error) {
+func (m *SelectPostsReply) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *SelectReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *SelectPostsReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -577,7 +577,7 @@ func encodeVarintDataStorage(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *PushRequest) Size() (n int) {
+func (m *PushPostsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -595,7 +595,7 @@ func (m *PushRequest) Size() (n int) {
 	return n
 }
 
-func (m *PushReply) Size() (n int) {
+func (m *PushPostsReply) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -618,7 +618,7 @@ func (m *PushReply) Size() (n int) {
 	return n
 }
 
-func (m *SelectRequest) Size() (n int) {
+func (m *SelectPostsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -632,7 +632,7 @@ func (m *SelectRequest) Size() (n int) {
 	return n
 }
 
-func (m *SelectReply) Size() (n int) {
+func (m *SelectPostsReply) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -660,7 +660,7 @@ func sovDataStorage(x uint64) (n int) {
 func sozDataStorage(x uint64) (n int) {
 	return sovDataStorage(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *PushRequest) Unmarshal(dAtA []byte) error {
+func (m *PushPostsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -683,10 +683,10 @@ func (m *PushRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PushRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: PushPostsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PushRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: PushPostsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -748,7 +748,7 @@ func (m *PushRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PushReply) Unmarshal(dAtA []byte) error {
+func (m *PushPostsReply) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -771,10 +771,10 @@ func (m *PushReply) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PushReply: wiretype end group for non-group")
+			return fmt.Errorf("proto: PushPostsReply: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PushReply: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: PushPostsReply: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -910,7 +910,7 @@ func (m *PushReply) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SelectRequest) Unmarshal(dAtA []byte) error {
+func (m *SelectPostsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -933,10 +933,10 @@ func (m *SelectRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SelectRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: SelectPostsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SelectRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SelectPostsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -997,7 +997,7 @@ func (m *SelectRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *SelectReply) Unmarshal(dAtA []byte) error {
+func (m *SelectPostsReply) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1020,10 +1020,10 @@ func (m *SelectReply) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: SelectReply: wiretype end group for non-group")
+			return fmt.Errorf("proto: SelectPostsReply: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: SelectReply: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: SelectPostsReply: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

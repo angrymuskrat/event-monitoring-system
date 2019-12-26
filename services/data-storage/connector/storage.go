@@ -77,7 +77,7 @@ func NewStorage(confPath string) (*Storage, error) {
 	return dbc, nil
 }
 
-func (c *Storage) Push(posts []data.Post) (ids []int32, err error) {
+func (c *Storage) PushPosts(posts []data.Post) (ids []int32, err error) {
 	err = c.db.Ping()
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
@@ -112,7 +112,7 @@ func (c *Storage) Push(posts []data.Post) (ids []int32, err error) {
 	return ids, err
 }
 
-func (c Storage) Select(irv data.SpatioTemporalInterval) (posts []data.Post, err error) {
+func (c Storage) SelectPosts(irv data.SpatioTemporalInterval) (posts []data.Post, err error) {
 
 	poly := fmt.Sprintf("ST_GeometryFromText('POLYGON((%v %v, %v %v, %v %v, %v %v, %v %v))')",
 		irv.MinLat, irv.MinLon, irv.MaxLat, irv.MinLon, irv.MaxLat, irv.MaxLon, irv.MinLat, irv.MaxLon,

@@ -12,24 +12,24 @@ type loggingMiddleware struct {
 	next   Service
 }
 
-func (mw loggingMiddleware) Push(ctx context.Context, posts []data.Post) (ids []int32, err error) {
+func (mw loggingMiddleware) PushPosts(ctx context.Context, posts []data.Post) (ids []int32, err error) {
 	func(begin time.Time) {
-		mw.logger.Info("push request",
-			zap.Int("len(posts)", len(posts)),
+		mw.logger.Info("push posts request",
+			zap.Int("count of posts", len(posts)),
 			zap.Error(err),
 			zap.String("took", time.Since(begin).String()))
 	}(time.Now())
-	ids, err = mw.next.Push(ctx, posts)
+	ids, err = mw.next.PushPosts(ctx, posts)
 	return
 }
 
-func (mw loggingMiddleware) Select(ctx context.Context, interval data.SpatioTemporalInterval) (posts []data.Post, err error) {
+func (mw loggingMiddleware) SelectPosts(ctx context.Context, interval data.SpatioTemporalInterval) (posts []data.Post, err error) {
 	defer func(begin time.Time) {
-		mw.logger.Info("session status",
+		mw.logger.Info("select posts",
 			zap.Any("interval", interval),
 			zap.Error(err),
 			zap.String("took", time.Since(begin).String()))
 	}(time.Now())
-	posts, err = mw.next.Select(ctx, interval)
+	posts, err = mw.next.SelectPosts(ctx, interval)
 	return
 }

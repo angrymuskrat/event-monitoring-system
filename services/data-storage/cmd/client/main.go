@@ -56,7 +56,7 @@ func main() {
 	switch method {
 	case "push":
 
-		res, err := svc.Push(context.Background(), testPosts)
+		res, err := svc.PushPosts(context.Background(), testPosts)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
@@ -64,7 +64,7 @@ func main() {
 		fmt.Fprintf(os.Stdout, "It is all right\n%v", res)
 
 	case "select":
-		res, err := svc.Select(context.Background(), data.SpatioTemporalInterval{ 0, 1000000, 5,
+		res, err := svc.SelectPosts(context.Background(), data.SpatioTemporalInterval{ 0, 1000000, 5,
 			5, 30, 30, struct{}{}, nil, 0 })
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)

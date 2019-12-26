@@ -12,81 +12,81 @@ import (
 // be used as a helper struct, to collect all of the endpoints into a single
 // parameter.
 type Set struct {
-	PushEndpoint   endpoint.Endpoint
-	SelectEndpoint endpoint.Endpoint
+	PushPostsEndpoint   endpoint.Endpoint
+	SelectPostsEndpoint endpoint.Endpoint
 }
 
 // New returns a Set that wraps the provided server, and wires in all of the
 // expected endpoint middlewares via the various parameters.
 func NewEndpoint(svc Service) Set {
-	var pushEndpoint = makePushEndpoint(svc)
-	var selectEndpoint = makeSelectEndpoint(svc)
+	var pushEndpoint = makePushPostsEndpoint(svc)
+	var selectEndpoint = makeSelectPostsEndpoint(svc)
 	return Set{
-		PushEndpoint:   pushEndpoint,
-		SelectEndpoint: selectEndpoint,
+		PushPostsEndpoint:   pushEndpoint,
+		SelectPostsEndpoint: selectEndpoint,
 	}
 }
 
 // Push implements the service interface, so Set may be used as a service.
 // This is primarily useful in the context of a client library.
-func (s Set) Push(ctx context.Context, posts []data.Post) ([]int32, error) {
-	resp, err := s.PushEndpoint(ctx, proto.PushRequest{Posts: posts})
+func (s Set) PushPosts(ctx context.Context, posts []data.Post) ([]int32, error) {
+	resp, err := s.PushPostsEndpoint(ctx, proto.PushPostsRequest{Posts: posts})
 	if err != nil {
 		return nil, err
 	}
-	response := resp.(PushResponse)
+	response := resp.(PushPostsResponse)
 	return response.Ids, response.Err
 }
 
 // Select implements the service interface, so Set may be used as a
 // service. This is primarily useful in the context of a client library.
-func (s Set) Select(ctx context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error) {
-	resp, err := s.SelectEndpoint(ctx, proto.SelectRequest{Interval: interval})
+func (s Set) SelectPosts(ctx context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error) {
+	resp, err := s.SelectPostsEndpoint(ctx, proto.SelectPostsRequest{Interval: interval})
 	if err != nil {
 		return nil, err
 	}
-	response := resp.(SelectResponse)
+	response := resp.(SelectPostsResponse)
 	return response.Posts, response.Err
 }
 
 // makePushEndpoint constructs a Push endpoint wrapping the service.
-func makePushEndpoint(s Service) endpoint.Endpoint {
+func makePushPostsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(proto.PushRequest)
-		ids, err := s.Push(ctx, req.Posts)
-		return PushResponse{Ids: ids, Err: err}, nil
+		req := request.(proto.PushPostsRequest)
+		ids, err := s.PushPosts(ctx, req.Posts)
+		return PushPostsResponse{Ids: ids, Err: err}, nil
 	}
 }
 
 // makeSelectEndpoint constructs a Select endpoint wrapping the service.
-func makeSelectEndpoint(s Service) endpoint.Endpoint {
+func makeSelectPostsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(proto.SelectRequest)
-		posts, err := s.Select(ctx, req.Interval)
-		return SelectResponse{Posts: posts, Err: err}, nil
+		req := request.(proto.SelectPostsRequest)
+		posts, err := s.SelectPosts(ctx, req.Interval)
+		return SelectPostsResponse{Posts: posts, Err: err}, nil
 	}
 }
 
 // compile time assertions for our response types implementing endpoint.Failer.
 var (
-	_ endpoint.Failer = PushResponse{}
-	_ endpoint.Failer = SelectResponse{}
+	_ endpoint.Failer = PushPostsResponse{}
+	_ endpoint.Failer = SelectPostsResponse{}
 )
 
 // PushResponse collects the response values for the Push method.
-type PushResponse struct {
+type PushPostsResponse struct {
 	Ids []int32 `json:"ids"`
 	Err error `json:"-"` // should be intercepted by Failed/errorEncoder
 }
 
 // Failed implements endpoint.Failer.
-func (r PushResponse) Failed() error { return r.Err }
+func (r PushPostsResponse) Failed() error { return r.Err }
 
 // SelectResponse collects the response values for the Select method.
-type SelectResponse struct {
+type SelectPostsResponse struct {
 	Posts []data.Post `json:"posts"`
 	Err   error       `json:"-"`
 }
 
 // Failed implements endpoint.Failer.
-func (r SelectResponse) Failed() error { return r.Err }
+func (r SelectPostsResponse) Failed() error { return r.Err }
