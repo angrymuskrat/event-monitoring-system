@@ -5,7 +5,9 @@ import (
 	"fmt"
 	storagesvc "github.com/angrymuskrat/event-monitoring-system/services/data-storage"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
+	"gocloud.dev/blob/fileblob"
 	"google.golang.org/grpc"
+	"log"
 	"os"
 	"time"
 )
@@ -46,7 +48,17 @@ func main() {
 		fmt.Fprintf(os.Stdout, "Ok %v", len(res))
 
 	case "pushGrid":
-		err := svc.PushGrid(context.Background(), "adc", []byte("tesjhfgjakgiqywyyuyyuyyyyyyuyulyuyyl,hst"))
+		bucket, err := fileblob.OpenBucket("tests/", nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer bucket.Close()
+		ctx := context.Background()
+		b, err := bucket.ReadAll(ctx, "foo1000000.blob")
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = svc.PushGrid(context.Background(), "adcd", b)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
@@ -54,12 +66,12 @@ func main() {
 		fmt.Fprintf(os.Stdout, "It is all right")
 
 	case "pullGrid":
-		res, err := svc.PullGrid(context.Background(), "abc")
+		res, err := svc.PullGrid(context.Background(), "adcd")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Fprintf(os.Stdout, "It is all right\n%v", string(res))
+		fmt.Fprintf(os.Stdout, "It is all right\n%v", res)
 
 	default:
 		fmt.Fprintf(os.Stderr, "error: invalid method %q\n", method)

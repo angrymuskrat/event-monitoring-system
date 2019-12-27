@@ -24,6 +24,7 @@ var (
 	ErrDBConnecting = errors.New("do not be able to connect with db")
 	ErrPushStatement = errors.New("one or more posts wasn't pushed")
 	ErrSelectStatement = errors.New("don't be able to return posts")
+	ErrPullGridStatement = errors.New("don't be able to return grid")
 )
 
 
@@ -51,23 +52,33 @@ func NewStorage(confPath string) (*Storage, error) {
 	}
 
 	createPostTable := `CREATE TABLE IF NOT EXISTS posts(
-		ID varchar (30) not null primary key,
-		Shortcode varchar (15),
-		ImageURL varchar (300),
-		IsVideo boolean not null,
-		Caption varchar (2200), -- max size of text in Instagram
-		CommentsCount bigint,
-		Timestamp bigint,
-		LikesCount bigint,
-		IsAd boolean,
-		AuthorID varchar (15),
-		LocationID varchar (20),
-		--Lat real,
-		--Lon real
+		ID VARCHAR (30) NOT NULL primary key,
+		Shortcode VARCHAR (15),
+		ImageURL VARCHAR (300),
+		IsVideo BOOLEAN NOT NULL,
+		Caption VARCHAR (2200), -- max size of text in Instagram
+		CommentsCount BIGINT,
+		Timestamp BIGINT,
+		LikesCount BIGINT,
+		IsAd BOOLEAN,
+		AuthorID VARCHAR (15),
+		LocationID VARCHAR (20),
 		Location geometry 
 	)`
 
 	_, err = dbc.db.Exec(createPostTable)
+	if err != nil {
+		dbc.Close()
+		return nil, err
+	}
+
+	createGridTable := `
+		CREATE TABLE IF NOT EXISTS grids(
+		ID VARCHAR (100) NOT NULL PRIMARY KEY,
+		Blob BYTEA NOT NULL
+	)`
+
+	_, err = dbc.db.Exec(createGridTable)
 	if err != nil {
 		dbc.Close()
 		return nil, err
@@ -96,7 +107,7 @@ func (c *Storage) PushPosts(posts []data.Post) (ids []int32, err error) {
 			if strings.Contains(err.Error(), "duplicate key") {
 				ids = append(ids, types.DuplicatedPostId.Int32())
 			} else {
-				unilog.Logger().Error("don't be able to push post", zap.String("post", fmt.Sprint(v)), zap.Error(err))
+				unilog.Logger().Error("don't be able to push post", zap.Any("post", v), zap.Error(err))
 				wasError = true
 				ids = append(ids, types.DBError.Int32())
 			}
@@ -150,12 +161,66 @@ func (c Storage) SelectPosts(irv data.SpatioTemporalInterval) (posts []data.Post
 		err = rows.Scan(&p.ID, &p.Shortcode, &p.ImageURL, &p.IsVideo, &p.Caption, &p.CommentsCount, &p.Timestamp,
 			&p.LikesCount, &p.IsAd, &p.AuthorID, &p.LocationID, &p.Lat, &p.Lon)
 		if err != nil {
-			unilog.Logger().Error("error in select", zap.Error(err))
+			unilog.Logger().Error("error in select posts", zap.Error(err))
 			return nil, ErrSelectStatement
 		}
 		posts = append(posts, *p)
 	}
 	return posts, nil
+}
+
+func (c *Storage) PushGrid(id string, blob []byte) (err error) {
+	err = c.db.Ping()
+	if err != nil {
+		unilog.Logger().Error("db error", zap.Error(err))
+		return ErrDBConnecting
+	}
+	statement := `
+			INSERT INTO grids(ID, Blob)
+			VALUES ($1, $2);`
+
+	_, err = c.db.Exec(statement, id, blob)
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key") {
+			return nil
+		} else {
+			unilog.Logger().Error("don't be able to push grid", zap.String("id", id), zap.Error(err))
+		}
+	}
+	return err
+}
+
+func (c *Storage) PullGrid(id string) (blob []byte, err error) {
+	err = c.db.Ping()
+	if err != nil {
+		unilog.Logger().Error("db error", zap.Error(err))
+		return nil, ErrDBConnecting
+	}
+	statement := fmt.Sprintf("SELECT Blob FROM grids WHERE '%v' = Id;", id)
+	rows, err := c.db.Query(statement)
+	if err != nil {
+		unilog.Logger().Error("error in pull grid", zap.Error(err))
+		return nil, ErrPullGridStatement
+	}
+
+	defer func() {
+		errClose := rows.Close()
+		if errClose != nil {
+			unilog.Logger().Error("don't be able to close rows in pull grid", zap.Error(err))
+		}
+	}()
+
+	ans := new(struct{Blob []byte})
+	for rows.Next() {
+		err = rows.Scan(&ans.Blob)
+		if err != nil {
+			unilog.Logger().Error("error in select", zap.Error(err))
+			return nil, ErrPullGridStatement
+		}
+		break
+	}
+	blob = ans.Blob
+	return
 }
 
 func (c *Storage) Close() {

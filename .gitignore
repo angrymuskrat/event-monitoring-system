@@ -14,4 +14,4 @@
 # Directory
 .idea
 test
-services/data-storage/cmd/client/tests
+tests

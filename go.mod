@@ -18,6 +18,7 @@ require (
 	github.com/streadway/handy v0.0.0-20190108123426-d5acb3125c2a // indirect
 	github.com/visheratin/unilog v0.0.0-20190821155422-b654e0d4bb5f
 	go.uber.org/zap v1.13.0
+	gocloud.dev v0.18.0
 	golang.org/x/sys v0.0.0-20191020212454-3e7259c5e7c2 // indirect
 	golang.org/x/time v0.0.0-20190921001708-c4c64cad1fd0 // indirect
 	google.golang.org/grpc v1.24.0

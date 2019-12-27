@@ -3,13 +3,14 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/connector"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
 )
 
 var (
 	ErrSelectInterval = errors.New("incorrect interval")
+	ErrEmptyGridId    = errors.New("empty grid id")
+	ErrEmptyGrid      = errors.New("empty grid")
 )
 
 type Service interface {
@@ -23,8 +24,14 @@ type Service interface {
 	// 		and error if interval is incorrect or storage can't return posts due to other reasons
 	SelectPosts(ctx context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error)
 
+	// input not empty id and not empty array of bytes
+	// if blob successfully added to database, return nil
+	// else return error
 	PushGrid(ctx context.Context, id string, blob []byte) error
 
+	// input not empty id
+	// if there are exist some blob with the id in database return the blob
+	// else return error
 	PullGrid(ctx context.Context, id string) ([]byte, error)
 }
 
@@ -44,11 +51,18 @@ func (s basicService) SelectPosts(_ context.Context, interval data.SpatioTempora
 }
 
 func (s basicService) PushGrid(_ context.Context, id string, blob []byte) error {
-	fmt.Printf("ID: %v, size: %v", id, len(blob))
-	return nil
+	if id == "" {
+		return ErrEmptyGridId
+	}
+	if blob == nil || len(blob) == 0 {
+		return ErrEmptyGrid
+	}
+	return s.db.PushGrid(id, blob)
 }
 
 func (s basicService) PullGrid(_ context.Context, id string) ([]byte, error) {
-	fmt.Printf("ID: %v", id)
-	return []byte("test"), nil
+	if id == "" {
+		return nil, ErrEmptyGridId
+	}
+	return s.db.PullGrid(id)
 }
