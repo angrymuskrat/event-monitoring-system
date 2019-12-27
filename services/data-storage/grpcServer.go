@@ -14,8 +14,10 @@ import (
 )
 
 type grpcServer struct {
-	pushPosts     grpctransport.Handler
+	pushPosts   grpctransport.Handler
 	selectPosts grpctransport.Handler
+	pushGrid    grpctransport.Handler
+	pullGrid    grpctransport.Handler
 }
 
 func NewGRPCServer(endpoints Set) proto.DataStorageServer {
@@ -30,6 +32,16 @@ func NewGRPCServer(endpoints Set) proto.DataStorageServer {
 			endpoints.SelectPostsEndpoint,
 			decodeGRPCSelectPostsRequest,
 			encodeGRPCSelectPostsResponse,
+		),
+		pushGrid: grpctransport.NewServer(
+			endpoints.PushGridEndpoint,
+			decodeGRPCPushGridRequest,
+			encodeGRPCPushGridResponse,
+		),
+		pullGrid: grpctransport.NewServer(
+			endpoints.PullGridEndpoint,
+			decodeGRPCPullGridRequest,
+			encodeGRPCPullGridResponse,
 		),
 	}
 }
@@ -50,10 +62,25 @@ func (s *grpcServer) SelectPosts(ctx context.Context, req *proto.SelectPostsRequ
 	return rep.(*proto.SelectPostsReply), nil
 }
 
+func (s *grpcServer) PushGrid(ctx context.Context, req *proto.PushGridRequest) (*proto.PushGridReply, error) {
+	_, rep, err := s.pushGrid.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*proto.PushGridReply), nil
+}
+
+func (s *grpcServer) PullGrid(ctx context.Context, req *proto.PullGridRequest) (*proto.PullGridReply, error) {
+	_, rep, err := s.pullGrid.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*proto.PullGridReply), nil
+}
+
 func NewGRPCClient(conn *grpc.ClientConn) Service {
 	var pushPostsEndpoint endpoint.Endpoint
 	{
-
 		pushPostsEndpoint = grpctransport.NewClient(
 			conn,
 			"proto.DataStorage",
@@ -79,14 +106,48 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 			proto.SelectPostsReply{},
 		).Endpoint()
 		selectPostsEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
-			Name:    "Select",
+			Name:    "SelectPosts",
 			Timeout: 30 * time.Second,
 		}))(selectPostsEndpoint)
+	}
+
+	var pushGridEndpoint endpoint.Endpoint
+	{
+		pushGridEndpoint = grpctransport.NewClient(
+			conn,
+			"proto.DataStorage",
+			"PushGrid",
+			encodeGRPCPushGridRequest,
+			decodeGRPCPushGridResponse,
+			proto.PushGridReply{},
+		).Endpoint()
+		pushGridEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "PushGrid",
+			Timeout: 30 * time.Second,
+		}))(pushGridEndpoint)
+	}
+
+	var pullGridEndpoint endpoint.Endpoint
+	{
+		pullGridEndpoint = grpctransport.NewClient(
+			conn,
+			"proto.DataStorage",
+			"PullGrid",
+			encodeGRPCPullGridRequest,
+			decodeGRPCPullGridResponse,
+			proto.PullGridReply{},
+		).Endpoint()
+		pullGridEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "PullGrid",
+			Timeout: 30 * time.Second,
+		}))(pullGridEndpoint)
 	}
 
 	return Set{
 		PushPostsEndpoint:   pushPostsEndpoint,
 		SelectPostsEndpoint: selectPostsEndpoint,
+		PushGridEndpoint:    pushGridEndpoint,
+		PullGridEndpoint:    pullGridEndpoint,
 	}
 }
 
@@ -100,6 +161,16 @@ func decodeGRPCSelectPostsRequest(_ context.Context, grpcReq interface{}) (inter
 	return proto.SelectPostsRequest{Interval: req.Interval}, nil
 }
 
+func decodeGRPCPushGridRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PushGridRequest)
+	return proto.PushGridRequest{Id: req.Id, Blob: req.Blob}, nil
+}
+
+func decodeGRPCPullGridRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PullGridRequest)
+	return proto.PullGridRequest{Id: req.Id}, nil
+}
+
 func decodeGRPCPushPostsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*proto.PushPostsReply)
 	return PushPostsResponse{Ids: reply.Ids, Err: str2err(reply.Err)}, nil
@@ -108,6 +179,16 @@ func decodeGRPCPushPostsResponse(_ context.Context, grpcReply interface{}) (inte
 func decodeGRPCSelectPostsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*proto.SelectPostsReply)
 	return SelectPostsResponse{Posts: reply.Posts, Err: str2err(reply.Err)}, nil
+}
+
+func decodeGRPCPushGridResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PushGridReply)
+	return PushGridResponse{Err: str2err(reply.Err)}, nil
+}
+
+func decodeGRPCPullGridResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PullGridReply)
+	return PullGridResponse{Blob: reply.Blob, Err: str2err(reply.Err)}, nil
 }
 
 func encodeGRPCPushPostsResponse(_ context.Context, response interface{}) (interface{}, error) {
@@ -120,6 +201,16 @@ func encodeGRPCSelectPostsResponse(_ context.Context, response interface{}) (int
 	return &proto.SelectPostsReply{Posts: resp.Posts, Err: err2str(resp.Err)}, nil
 }
 
+func encodeGRPCPushGridResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(PushGridResponse)
+	return &proto.PushGridReply{Err: err2str(resp.Err)}, nil
+}
+
+func encodeGRPCPullGridResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(PullGridResponse)
+	return &proto.PullGridReply{Blob: resp.Blob, Err: err2str(resp.Err)}, nil
+}
+
 func encodeGRPCPushPostsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PushPostsRequest)
 	return &proto.PushPostsRequest{Posts: req.Posts}, nil
@@ -128,6 +219,16 @@ func encodeGRPCPushPostsRequest(_ context.Context, request interface{}) (interfa
 func encodeGRPCSelectPostsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.SelectPostsRequest)
 	return &proto.SelectPostsRequest{Interval: req.Interval}, nil
+}
+
+func encodeGRPCPushGridRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(proto.PushGridRequest)
+	return &proto.PushGridRequest{Id: req.Id, Blob: req.Blob}, nil
+}
+
+func encodeGRPCPullGridRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(proto.PullGridRequest)
+	return &proto.PullGridRequest{Id: req.Id}, nil
 }
 
 func str2err(s string) error {

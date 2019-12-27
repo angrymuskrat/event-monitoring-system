@@ -11,32 +11,6 @@ import (
 )
 
 func main() {
-	/*fs := flag.NewFlagSet("dbcient", flag.ExitOnError)
-	var (
-		grpcAddr = fs.String("grpc-addr", ":8082", "gRPC address of addsvc")
-		method   = fs.String("method", "push", "push, select")
-	)
-	var (
-		svc storagesvc.Service
-		err error
-	)
-	if *grpcAddr != "" {
-		//conn, err := grpc.Dial(*grpcAddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
-		conn, err := grpc.Dial("localhost:8082", grpc.WithInsecure(), grpc.WithTimeout(time.Second))
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error: %v", err)
-			os.Exit(1)
-		}
-		defer conn.Close()
-		svc = storagesvc.NewGRPCClient(conn)
-	} else {
-		fmt.Fprintf(os.Stderr, "error: no remote address specified\n")
-		os.Exit(1)
-	}
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}*/
 	var (
 		svc storagesvc.Service
 		err error
@@ -51,11 +25,10 @@ func main() {
 
 	testPosts := GeneratePosts(1)
 	testPosts[0].ID = "dHirNwnQr"
-	method := "push"
+	method := "pullGrid"
 
 	switch method {
-	case "push":
-
+	case "pushPosts":
 		res, err := svc.PushPosts(context.Background(), testPosts)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -71,6 +44,22 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Fprintf(os.Stdout, "Ok %v", len(res))
+
+	case "pushGrid":
+		err := svc.PushGrid(context.Background(), "adc", []byte("tesjhfgjakgiqywyyuyyuyyyyyyuyulyuyyl,hst"))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stdout, "It is all right")
+
+	case "pullGrid":
+		res, err := svc.PullGrid(context.Background(), "abc")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stdout, "It is all right\n%v", string(res))
 
 	default:
 		fmt.Fprintf(os.Stderr, "error: invalid method %q\n", method)

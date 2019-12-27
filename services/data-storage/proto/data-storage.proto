@@ -11,6 +11,10 @@ service DataStorage {
 
     // Select array from database, each element from array belongs the interval
     rpc SelectPosts (SelectPostsRequest) returns (SelectPostsReply) {}
+
+    rpc PushGrid (PushGridRequest) returns (PushGridReply) {}
+
+    rpc PullGrid (PullGridRequest) returns (PullGridReply) {}
 }
 
 // The push request contains two parameters.
@@ -29,5 +33,23 @@ message SelectPostsRequest {
 
 message SelectPostsReply {
     repeated data.Post posts = 1 [(gogoproto.nullable) = false];
+    string err = 2;
+}
+
+message PushGridRequest {
+    string id = 1;
+    bytes blob = 2;
+}
+
+message PushGridReply {
+    string err = 1;
+}
+
+message PullGridRequest {
+    string id = 1;
+}
+
+message PullGridReply {
+    bytes blob = 1;
     string err = 2;
 }

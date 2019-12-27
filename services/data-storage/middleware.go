@@ -33,3 +33,26 @@ func (mw loggingMiddleware) SelectPosts(ctx context.Context, interval data.Spati
 	posts, err = mw.next.SelectPosts(ctx, interval)
 	return
 }
+
+func (mw loggingMiddleware) PushGrid(ctx context.Context, id string, blob []byte) (err error) {
+	defer func(begin time.Time) {
+		mw.logger.Info("push grid",
+			zap.String("id", id),
+			zap.Int("capacity", len(blob)),
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	err = mw.next.PushGrid(ctx, id, blob)
+	return
+}
+
+func (mw loggingMiddleware) PullGrid(ctx context.Context, id string) (blob []byte, err error) {
+	defer func(begin time.Time) {
+		mw.logger.Info("pull grid",
+			zap.String("id", id),
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	blob, err = mw.next.PullGrid(ctx, id)
+	return
+}
