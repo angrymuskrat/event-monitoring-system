@@ -25,6 +25,7 @@ var (
 	ErrPushStatement = errors.New("one or more posts wasn't pushed")
 	ErrSelectStatement = errors.New("don't be able to return posts")
 	ErrPullGridStatement = errors.New("don't be able to return grid")
+	ErrDuplicatedKey = errors.New("duplicated id, object hadn't saved to db")
 )
 
 
@@ -182,7 +183,7 @@ func (c *Storage) PushGrid(id string, blob []byte) (err error) {
 	_, err = c.db.Exec(statement, id, blob)
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
-			return nil
+			return ErrDuplicatedKey
 		} else {
 			unilog.Logger().Error("don't be able to push grid", zap.String("id", id), zap.Error(err))
 		}
