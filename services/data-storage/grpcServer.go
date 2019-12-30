@@ -9,11 +9,6 @@ import (
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"github.com/sony/gobreaker"
 	"google.golang.org/grpc"
-	"time"
-)
-
-const (
-	timeWaitingClient = 30 * time.Second // in seconds
 )
 
 type grpcServer struct {
@@ -94,7 +89,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 		).Endpoint()
 		pushPostsEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "PushPosts",
-			Timeout: timeWaitingClient,
+			Timeout: TimeWaitingClient,
 		}))(pushPostsEndpoint)
 	}
 
@@ -110,7 +105,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 		).Endpoint()
 		selectPostsEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "SelectPosts",
-			Timeout: timeWaitingClient,
+			Timeout: TimeWaitingClient,
 		}))(selectPostsEndpoint)
 	}
 
@@ -126,7 +121,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 		).Endpoint()
 		pushGridEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "PushGrid",
-			Timeout: timeWaitingClient,
+			Timeout: TimeWaitingClient,
 		}))(pushGridEndpoint)
 	}
 
@@ -142,7 +137,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 		).Endpoint()
 		pullGridEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "PullGrid",
-			Timeout: timeWaitingClient,
+			Timeout: TimeWaitingClient,
 		}))(pullGridEndpoint)
 	}
 

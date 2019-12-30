@@ -5,12 +5,18 @@ import (
 	"errors"
 	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/connector"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
+	"time"
 )
 
 var (
 	ErrSelectInterval = errors.New("incorrect interval")
 	ErrEmptyGridId    = errors.New("empty grid id")
 	ErrEmptyGrid      = errors.New("empty grid")
+)
+
+const (
+	TimeWaitingClient = 30 * time.Second // in seconds
+	MaxMsgSize = 1000000000 // in bytes
 )
 
 type Service interface {

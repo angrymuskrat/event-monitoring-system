@@ -9,7 +9,6 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"os"
-	"time"
 )
 
 func main() {
@@ -17,7 +16,7 @@ func main() {
 		svc storagesvc.Service
 		err error
 	)
-	conn, err := grpc.Dial("localhost:8082", grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+	conn, err := grpc.Dial("localhost:8082", grpc.WithInsecure(), grpc.WithMaxMsgSize(storagesvc.MaxMsgSize))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v", err)
 		os.Exit(1)
@@ -54,11 +53,11 @@ func main() {
 		}
 		defer bucket.Close()
 		ctx := context.Background()
-		b, err := bucket.ReadAll(ctx, "foo1000000.blob")
+		b, err := bucket.ReadAll(ctx, "foo100000000.blob")
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = svc.PushGrid(context.Background(), "adcd", b)
+		err = svc.PushGrid(context.Background(), "adeeycdf", b)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
@@ -66,12 +65,12 @@ func main() {
 		fmt.Fprintf(os.Stdout, "It is all right")
 
 	case "pullGrid":
-		res, err := svc.PullGrid(context.Background(), "adcd")
+		res, err := svc.PullGrid(context.Background(), "adcdf")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Fprintf(os.Stdout, "It is all right\n%v", res)
+		fmt.Fprintf(os.Stdout, "It is all right, len of res - \n%v", len(res))
 
 	default:
 		fmt.Fprintf(os.Stderr, "error: invalid method %q\n", method)

@@ -39,7 +39,10 @@ func Start (confPath string, dbc *connector.Storage) {
 	}
 	g.Add(func() error {
 		unilog.Logger().Info("start gRPC transport", zap.String("url", conf.Address))
-		baseServer := grpc.NewServer(grpc.UnaryInterceptor(kitgrpc.Interceptor))
+		baseServer := grpc.NewServer(
+			grpc.UnaryInterceptor(kitgrpc.Interceptor),
+			grpc.MaxRecvMsgSize(MaxMsgSize),
+			)
 		proto.RegisterDataStorageServer(baseServer, grpcServer)
 		return baseServer.Serve(grpcListener)
 	}, func(error) {
