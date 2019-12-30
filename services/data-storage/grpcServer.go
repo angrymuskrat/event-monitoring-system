@@ -4,13 +4,16 @@ import (
 	"context"
 	"errors"
 	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/proto"
-	"time"
-
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 	"github.com/sony/gobreaker"
 	"google.golang.org/grpc"
+	"time"
+)
+
+const (
+	timeWaitingClient = 30 * time.Second // in seconds
 )
 
 type grpcServer struct {
@@ -91,7 +94,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 		).Endpoint()
 		pushPostsEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "PushPosts",
-			Timeout: 30 * time.Second,
+			Timeout: timeWaitingClient,
 		}))(pushPostsEndpoint)
 	}
 
@@ -107,7 +110,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 		).Endpoint()
 		selectPostsEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "SelectPosts",
-			Timeout: 30 * time.Second,
+			Timeout: timeWaitingClient,
 		}))(selectPostsEndpoint)
 	}
 
@@ -123,7 +126,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 		).Endpoint()
 		pushGridEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "PushGrid",
-			Timeout: 30 * time.Second,
+			Timeout: timeWaitingClient,
 		}))(pushGridEndpoint)
 	}
 
@@ -139,7 +142,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 		).Endpoint()
 		pullGridEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 			Name:    "PullGrid",
-			Timeout: 30 * time.Second,
+			Timeout: timeWaitingClient,
 		}))(pullGridEndpoint)
 	}
 
