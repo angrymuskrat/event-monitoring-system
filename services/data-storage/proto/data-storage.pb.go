@@ -179,11 +179,11 @@ func (m *SelectPostsRequest) GetInterval() proto1.SpatioTemporalInterval {
 }
 
 type SelectPostsReply struct {
-	Posts                []proto1.Post `protobuf:"bytes,1,rep,name=posts,proto3" json:"posts"`
-	Err                  string        `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
-	XXX_unrecognized     []byte        `json:"-"`
-	XXX_sizecache        int32         `json:"-"`
+	Posts                []*proto1.Post `protobuf:"bytes,1,rep,name=posts,proto3" json:"posts,omitempty"`
+	Err                  string         `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
 }
 
 func (m *SelectPostsReply) Reset()         { *m = SelectPostsReply{} }
@@ -219,7 +219,7 @@ func (m *SelectPostsReply) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SelectPostsReply proto.InternalMessageInfo
 
-func (m *SelectPostsReply) GetPosts() []proto1.Post {
+func (m *SelectPostsReply) GetPosts() []*proto1.Post {
 	if m != nil {
 		return m.Posts
 	}
@@ -437,6 +437,202 @@ func (m *PullGridReply) GetErr() string {
 	return ""
 }
 
+type PushEventsRequest struct {
+	Events               []proto1.EventShort `protobuf:"bytes,1,rep,name=events,proto3" json:"events"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
+}
+
+func (m *PushEventsRequest) Reset()         { *m = PushEventsRequest{} }
+func (m *PushEventsRequest) String() string { return proto.CompactTextString(m) }
+func (*PushEventsRequest) ProtoMessage()    {}
+func (*PushEventsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{8}
+}
+func (m *PushEventsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PushEventsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PushEventsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PushEventsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PushEventsRequest.Merge(m, src)
+}
+func (m *PushEventsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *PushEventsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PushEventsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PushEventsRequest proto.InternalMessageInfo
+
+func (m *PushEventsRequest) GetEvents() []proto1.EventShort {
+	if m != nil {
+		return m.Events
+	}
+	return nil
+}
+
+type PushEventsReply struct {
+	Err                  string   `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PushEventsReply) Reset()         { *m = PushEventsReply{} }
+func (m *PushEventsReply) String() string { return proto.CompactTextString(m) }
+func (*PushEventsReply) ProtoMessage()    {}
+func (*PushEventsReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{9}
+}
+func (m *PushEventsReply) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PushEventsReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PushEventsReply.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PushEventsReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PushEventsReply.Merge(m, src)
+}
+func (m *PushEventsReply) XXX_Size() int {
+	return m.Size()
+}
+func (m *PushEventsReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_PushEventsReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PushEventsReply proto.InternalMessageInfo
+
+func (m *PushEventsReply) GetErr() string {
+	if m != nil {
+		return m.Err
+	}
+	return ""
+}
+
+type PullEventsRequest struct {
+	Interval             proto1.SpatioTemporalInterval `protobuf:"bytes,1,opt,name=interval,proto3" json:"interval"`
+	XXX_NoUnkeyedLiteral struct{}                      `json:"-"`
+	XXX_unrecognized     []byte                        `json:"-"`
+	XXX_sizecache        int32                         `json:"-"`
+}
+
+func (m *PullEventsRequest) Reset()         { *m = PullEventsRequest{} }
+func (m *PullEventsRequest) String() string { return proto.CompactTextString(m) }
+func (*PullEventsRequest) ProtoMessage()    {}
+func (*PullEventsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{10}
+}
+func (m *PullEventsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PullEventsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PullEventsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PullEventsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PullEventsRequest.Merge(m, src)
+}
+func (m *PullEventsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *PullEventsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PullEventsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PullEventsRequest proto.InternalMessageInfo
+
+func (m *PullEventsRequest) GetInterval() proto1.SpatioTemporalInterval {
+	if m != nil {
+		return m.Interval
+	}
+	return proto1.SpatioTemporalInterval{}
+}
+
+type PullEventsReply struct {
+	Events               *proto1.Events `protobuf:"bytes,1,opt,name=events,proto3" json:"events,omitempty"`
+	Err                  string         `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
+}
+
+func (m *PullEventsReply) Reset()         { *m = PullEventsReply{} }
+func (m *PullEventsReply) String() string { return proto.CompactTextString(m) }
+func (*PullEventsReply) ProtoMessage()    {}
+func (*PullEventsReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{11}
+}
+func (m *PullEventsReply) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PullEventsReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PullEventsReply.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PullEventsReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PullEventsReply.Merge(m, src)
+}
+func (m *PullEventsReply) XXX_Size() int {
+	return m.Size()
+}
+func (m *PullEventsReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_PullEventsReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PullEventsReply proto.InternalMessageInfo
+
+func (m *PullEventsReply) GetEvents() *proto1.Events {
+	if m != nil {
+		return m.Events
+	}
+	return nil
+}
+
+func (m *PullEventsReply) GetErr() string {
+	if m != nil {
+		return m.Err
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*PushPostsRequest)(nil), "proto.PushPostsRequest")
 	proto.RegisterType((*PushPostsReply)(nil), "proto.PushPostsReply")
@@ -446,6 +642,10 @@ func init() {
 	proto.RegisterType((*PushGridReply)(nil), "proto.PushGridReply")
 	proto.RegisterType((*PullGridRequest)(nil), "proto.PullGridRequest")
 	proto.RegisterType((*PullGridReply)(nil), "proto.PullGridReply")
+	proto.RegisterType((*PushEventsRequest)(nil), "proto.PushEventsRequest")
+	proto.RegisterType((*PushEventsReply)(nil), "proto.PushEventsReply")
+	proto.RegisterType((*PullEventsRequest)(nil), "proto.PullEventsRequest")
+	proto.RegisterType((*PullEventsReply)(nil), "proto.PullEventsReply")
 }
 
 func init() {
@@ -453,33 +653,37 @@ func init() {
 }
 
 var fileDescriptor_8ec0c2fba98f9a4b = []byte{
-	// 402 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x51, 0xd1, 0x8a, 0xda, 0x40,
-	0x14, 0xcd, 0x44, 0x2d, 0x7a, 0xd3, 0xda, 0x30, 0xb4, 0xd5, 0x86, 0x36, 0xd5, 0x81, 0x16, 0x5f,
-	0xaa, 0x60, 0xeb, 0x8b, 0xd0, 0x3e, 0xd8, 0x42, 0x29, 0xf4, 0x41, 0xa2, 0x3f, 0x30, 0x36, 0x83,
-	0x0d, 0x4c, 0x77, 0xb2, 0xc9, 0xb8, 0xe0, 0x27, 0xec, 0x1f, 0xec, 0x27, 0xf9, 0xb8, 0x5f, 0xb0,
-	0x2c, 0xee, 0x8f, 0x2c, 0x93, 0x49, 0xcc, 0xb8, 0x91, 0x65, 0x9f, 0x32, 0xb9, 0xf7, 0x9c, 0x73,
-	0xcf, 0x3d, 0x17, 0x3e, 0x86, 0x54, 0xd2, 0xcf, 0xa9, 0x14, 0x09, 0x5d, 0xb3, 0x51, 0x9c, 0x08,
-	0x29, 0x46, 0x66, 0x69, 0x98, 0x95, 0x70, 0x23, 0xfb, 0x78, 0xef, 0x4f, 0xa0, 0xd7, 0x62, 0x2d,
-	0x34, 0xca, 0x73, 0x4b, 0xbe, 0xae, 0x90, 0x29, 0xb8, 0xf3, 0x4d, 0xfa, 0x6f, 0x2e, 0x52, 0x99,
-	0x06, 0xec, 0x7c, 0xc3, 0x52, 0x89, 0x3f, 0x41, 0x23, 0x56, 0xff, 0x5d, 0xd4, 0xab, 0x0d, 0x9c,
-	0x31, 0x0c, 0x33, 0xbc, 0x82, 0xcc, 0xea, 0xbb, 0x9b, 0x0f, 0x56, 0xa0, 0xdb, 0xe4, 0x2b, 0xb4,
-	0x0d, 0x6e, 0xcc, 0xb7, 0xd8, 0x85, 0x5a, 0x14, 0x6a, 0x5e, 0x23, 0x50, 0x4f, 0x55, 0x61, 0x49,
-	0xd2, 0xb5, 0x7b, 0x68, 0xd0, 0x0a, 0xd4, 0x93, 0x2c, 0x01, 0x2f, 0x18, 0x67, 0x7f, 0xe5, 0xd1,
-	0xcc, 0xef, 0xd0, 0x8c, 0xce, 0x24, 0x4b, 0x2e, 0x28, 0xef, 0xa2, 0x1e, 0x1a, 0x38, 0xe3, 0x77,
-	0x7a, 0xec, 0x22, 0xa6, 0x32, 0x12, 0x4b, 0xf6, 0x3f, 0x16, 0x09, 0xe5, 0xbf, 0x73, 0x4c, 0x6e,
-	0xe4, 0xc0, 0x21, 0x7f, 0xc0, 0x3d, 0x52, 0x55, 0x6e, 0x9e, 0xb8, 0xc7, 0x09, 0x8f, 0x13, 0x78,
-	0xa9, 0x36, 0xfb, 0x95, 0x44, 0x61, 0x61, 0xb0, 0x0d, 0x76, 0x14, 0x66, 0xd6, 0x5a, 0x81, 0x1d,
-	0x85, 0x18, 0x43, 0x7d, 0xc5, 0xc5, 0x2a, 0x63, 0x3d, 0x0f, 0xb2, 0x37, 0xe9, 0xc3, 0x8b, 0x92,
-	0x96, 0xe7, 0xa1, 0x94, 0x51, 0xa9, 0xdc, 0x57, 0xca, 0x9c, 0x3f, 0xa2, 0x4c, 0x26, 0x4a, 0xa5,
-	0x80, 0x28, 0x95, 0x62, 0x14, 0x2a, 0x47, 0x55, 0x3d, 0x8f, 0x2f, 0x6d, 0x70, 0x7e, 0x52, 0x49,
-	0x17, 0xfa, 0xf8, 0xf8, 0x1b, 0xb4, 0x0e, 0xd7, 0xc1, 0x1d, 0x7d, 0xee, 0xe1, 0xc3, 0x5b, 0x7b,
-	0xaf, 0xab, 0x8d, 0x98, 0x6f, 0x89, 0x85, 0x7f, 0x80, 0x63, 0x04, 0x8a, 0xdf, 0xe6, 0xb8, 0xea,
-	0xe9, 0xbc, 0xce, 0xa9, 0x96, 0x16, 0x99, 0x42, 0xb3, 0x08, 0x04, 0xbf, 0x31, 0x26, 0x19, 0xeb,
-	0x7b, 0xaf, 0x2a, 0x75, 0x83, 0xab, 0x63, 0x30, 0xb8, 0x47, 0xd1, 0x19, 0x5c, 0x23, 0x2f, 0x62,
-	0xcd, 0xdc, 0xdd, 0xde, 0x47, 0xd7, 0x7b, 0x1f, 0xdd, 0xee, 0x7d, 0x74, 0x75, 0xe7, 0x5b, 0xab,
-	0x67, 0x19, 0xf0, 0xcb, 0x7d, 0x00, 0x00, 0x00, 0xff, 0xff, 0x05, 0x12, 0xd2, 0xb5, 0x4f, 0x03,
-	0x00, 0x00,
+	// 467 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x53, 0x4b, 0x6e, 0xd4, 0x30,
+	0x18, 0x1e, 0xa7, 0x9d, 0xaa, 0xf3, 0xa7, 0x94, 0x60, 0x01, 0x1d, 0x22, 0x08, 0xa9, 0x79, 0x68,
+	0x36, 0xa4, 0xd2, 0x40, 0x37, 0x95, 0x60, 0xd1, 0xf2, 0x50, 0x77, 0x55, 0xd2, 0x0b, 0x78, 0x88,
+	0x35, 0x8d, 0x64, 0xea, 0xe0, 0xb8, 0x95, 0x7a, 0x04, 0x6e, 0xc0, 0x91, 0xba, 0xe4, 0x04, 0x08,
+	0x0d, 0x17, 0x41, 0xb6, 0x93, 0xc6, 0x21, 0x81, 0x4d, 0x57, 0x75, 0x7f, 0x7f, 0xaf, 0xdf, 0xf9,
+	0x06, 0x5e, 0xe4, 0x54, 0xd1, 0x57, 0x95, 0x12, 0x92, 0x2e, 0xd9, 0x5e, 0x29, 0x85, 0x12, 0x7b,
+	0xee, 0x28, 0x31, 0x23, 0x3c, 0x36, 0x7f, 0xc2, 0x27, 0x03, 0xe8, 0xa5, 0x58, 0x0a, 0x8b, 0x0a,
+	0x83, 0x96, 0x6f, 0x27, 0xe4, 0x00, 0x82, 0x93, 0x8b, 0xea, 0xec, 0x44, 0x54, 0xaa, 0x4a, 0xd9,
+	0xd7, 0x0b, 0x56, 0x29, 0xfc, 0x12, 0xc6, 0xa5, 0xfe, 0x7f, 0x8a, 0xe2, 0xb5, 0x99, 0x3f, 0x87,
+	0xc4, 0xe0, 0x35, 0xe4, 0x70, 0xfd, 0xfa, 0xe7, 0xd3, 0x51, 0x6a, 0xaf, 0xc9, 0x1b, 0xd8, 0x76,
+	0xb8, 0x25, 0xbf, 0xc2, 0x01, 0xac, 0x15, 0xb9, 0xe5, 0x8d, 0x53, 0x7d, 0xd4, 0x13, 0x26, 0xe5,
+	0xd4, 0x8b, 0xd1, 0x6c, 0x92, 0xea, 0x23, 0x39, 0x05, 0x9c, 0x31, 0xce, 0x3e, 0xab, 0x8e, 0xe7,
+	0x3b, 0xd8, 0x2c, 0xce, 0x15, 0x93, 0x97, 0x94, 0x4f, 0x51, 0x8c, 0x66, 0xfe, 0xfc, 0xb1, 0xb5,
+	0xcd, 0x4a, 0xaa, 0x0a, 0x71, 0xca, 0xbe, 0x94, 0x42, 0x52, 0x7e, 0x5c, 0x63, 0xea, 0x20, 0x37,
+	0x1c, 0xf2, 0x11, 0x82, 0x8e, 0xaa, 0x4e, 0x13, 0xff, 0x73, 0x8f, 0x7a, 0x83, 0x81, 0x74, 0xfb,
+	0x70, 0x57, 0xef, 0xf4, 0x49, 0x16, 0x79, 0x13, 0x6d, 0x1b, 0xbc, 0x22, 0x37, 0xa1, 0x26, 0xa9,
+	0x57, 0xe4, 0x18, 0xc3, 0xfa, 0x82, 0x8b, 0x85, 0x61, 0x6d, 0xa5, 0xe6, 0x4c, 0x76, 0xe1, 0x4e,
+	0x4b, 0xab, 0x5f, 0x42, 0x2b, 0xa3, 0x56, 0x79, 0x57, 0x2b, 0x73, 0xfe, 0x1f, 0x65, 0xb2, 0xaf,
+	0x55, 0x1a, 0x88, 0x56, 0x69, 0xac, 0x50, 0x6b, 0x35, 0x90, 0xf9, 0x08, 0xee, 0x69, 0xf3, 0x0f,
+	0x97, 0xec, 0xbc, 0x7d, 0xd0, 0x04, 0x36, 0x98, 0x19, 0xd4, 0xdb, 0x07, 0x76, 0x7b, 0x03, 0xca,
+	0xce, 0x84, 0x6c, 0xbe, 0x65, 0x8d, 0x22, 0xcf, 0xec, 0xe2, 0x8d, 0xc8, 0xf0, 0x0e, 0x99, 0x76,
+	0xe2, 0xbc, 0xeb, 0x74, 0xdb, 0x4f, 0x77, 0x6c, 0x1f, 0xc6, 0x75, 0x7e, 0xee, 0x84, 0xd7, 0x82,
+	0x5b, 0x4e, 0xf8, 0xaa, 0x89, 0xdc, 0x7f, 0x89, 0xf9, 0x37, 0x0f, 0xfc, 0xf7, 0x54, 0xd1, 0xcc,
+	0xfe, 0x00, 0xf0, 0x5b, 0x98, 0xdc, 0x34, 0x14, 0xef, 0xd8, 0xca, 0x27, 0x7f, 0xf7, 0x3d, 0x7c,
+	0xd0, 0xbf, 0x28, 0xf9, 0x15, 0x19, 0xe1, 0x23, 0xf0, 0x9d, 0x52, 0xe1, 0x47, 0x35, 0xae, 0x5f,
+	0xdf, 0x70, 0x67, 0xe8, 0xca, 0x8a, 0x1c, 0xc0, 0x66, 0x53, 0x0d, 0xfc, 0xd0, 0x71, 0x72, 0x8a,
+	0x10, 0xde, 0xef, 0xcd, 0x1d, 0xae, 0x2d, 0x84, 0xc3, 0xed, 0x94, 0xc8, 0xe1, 0x3a, 0xcd, 0x21,
+	0xa3, 0xc3, 0xe0, 0x7a, 0x15, 0xa1, 0x1f, 0xab, 0x08, 0xfd, 0x5a, 0x45, 0xe8, 0xfb, 0xef, 0x68,
+	0xb4, 0xd8, 0x30, 0xc0, 0xd7, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0x64, 0xe7, 0x8f, 0x53, 0x53,
+	0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1003,6 +1207,164 @@ func (m *PullGridReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *PushEventsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PushEventsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PushEventsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Events) > 0 {
+		for iNdEx := len(m.Events) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Events[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintDataStorage(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PushEventsReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PushEventsReply) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PushEventsReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Err) > 0 {
+		i -= len(m.Err)
+		copy(dAtA[i:], m.Err)
+		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Err)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PullEventsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PullEventsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PullEventsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	{
+		size, err := m.Interval.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintDataStorage(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *PullEventsReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PullEventsReply) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PullEventsReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Err) > 0 {
+		i -= len(m.Err)
+		copy(dAtA[i:], m.Err)
+		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Err)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Events != nil {
+		{
+			size, err := m.Events.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintDataStorage(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintDataStorage(dAtA []byte, offset int, v uint64) int {
 	offset -= sovDataStorage(v)
 	base := offset
@@ -1151,6 +1513,74 @@ func (m *PullGridReply) Size() (n int) {
 	_ = l
 	l = len(m.Blob)
 	if l > 0 {
+		n += 1 + l + sovDataStorage(uint64(l))
+	}
+	l = len(m.Err)
+	if l > 0 {
+		n += 1 + l + sovDataStorage(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *PushEventsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Events) > 0 {
+		for _, e := range m.Events {
+			l = e.Size()
+			n += 1 + l + sovDataStorage(uint64(l))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *PushEventsReply) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Err)
+	if l > 0 {
+		n += 1 + l + sovDataStorage(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *PullEventsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Interval.Size()
+	n += 1 + l + sovDataStorage(uint64(l))
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *PullEventsReply) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Events != nil {
+		l = m.Events.Size()
 		n += 1 + l + sovDataStorage(uint64(l))
 	}
 	l = len(m.Err)
@@ -1564,7 +1994,7 @@ func (m *SelectPostsReply) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Posts = append(m.Posts, proto1.Post{})
+			m.Posts = append(m.Posts, &proto1.Post{})
 			if err := m.Posts[len(m.Posts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1979,6 +2409,389 @@ func (m *PullGridReply) Unmarshal(dAtA []byte) error {
 			m.Blob = append(m.Blob[:0], dAtA[iNdEx:postIndex]...)
 			if m.Blob == nil {
 				m.Blob = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Err = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PushEventsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PushEventsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PushEventsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Events", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Events = append(m.Events, proto1.EventShort{})
+			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PushEventsReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PushEventsReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PushEventsReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Err = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PullEventsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PullEventsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PullEventsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Interval", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Interval.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PullEventsReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PullEventsReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PullEventsReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Events", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Events == nil {
+				m.Events = &proto1.Events{}
+			}
+			if err := m.Events.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
 			iNdEx = postIndex
 		case 2:

@@ -26,3 +26,29 @@ message SpatioTemporalInterval {
     double MaxLat = 5;
     double MaxLon = 6;
 }
+
+message Point {
+    double Lat = 1;
+    double Lon = 2;
+}
+
+message WorkPost {
+    string Caption = 1;
+    int64 Timestamp = 2;
+    double Lat = 3;
+    double Lon = 4;
+}
+
+message EventShort {
+    Point TopLeft = 1;
+    Point BottomRight = 2;
+    repeated string PostsID = 3;
+    repeated string Tags = 4;
+}
+
+message Events {
+    Point TopLeft = 1;
+    Point BottomRight = 2;
+    repeated WorkPost Posts = 3;
+    repeated string Tags = 4;
+}

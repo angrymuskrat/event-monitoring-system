@@ -32,7 +32,7 @@ message SelectPostsRequest {
 }
 
 message SelectPostsReply {
-    repeated data.Post posts = 1 [(gogoproto.nullable) = false];
+    repeated data.Post posts = 1;
     string err = 2;
 }
 
@@ -51,5 +51,22 @@ message PullGridRequest {
 
 message PullGridReply {
     bytes blob = 1;
+    string err = 2;
+}
+
+message PushEventsRequest {
+    repeated data.EventShort events = 1 [(gogoproto.nullable) = false];
+}
+
+message PushEventsReply {
+    string err = 1;
+}
+
+message PullEventsRequest {
+    data.SpatioTemporalInterval interval = 1 [(gogoproto.nullable) = false];
+}
+
+message PullEventsReply {
+    data.Events events = 1;
     string err = 2;
 }
