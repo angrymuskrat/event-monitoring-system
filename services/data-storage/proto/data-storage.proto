@@ -32,7 +32,7 @@ message SelectPostsRequest {
 }
 
 message SelectPostsReply {
-    repeated data.Post posts = 1;
+    repeated data.Post posts = 1 [(gogoproto.nullable) = false];
     string err = 2;
 }
 
