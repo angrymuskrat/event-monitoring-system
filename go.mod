@@ -10,6 +10,7 @@ require (
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.2
+	github.com/gorilla/mux v1.7.3
 	github.com/lib/pq v1.2.0
 	github.com/oklog/oklog v0.3.2
 	github.com/oklog/run v1.0.0 // indirect

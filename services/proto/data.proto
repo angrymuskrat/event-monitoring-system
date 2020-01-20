@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package data;
 
+import "data-storage/proto/gogo.proto";
+
 message Post {
     string ID = 1;
     string Shortcode = 2;
@@ -47,7 +49,7 @@ message EventShort {
 }
 
 message Event {
-    Point Center = 1;
+    Point Center = 1 [(gogoproto.nullable) = false];
     repeated string PostCodes = 2;
     repeated string Tags = 3;
     string Title = 4;
@@ -56,12 +58,12 @@ message Event {
 }
 
 message AggregatedPost {
-    Point Center = 1;
+    Point Center = 1 [(gogoproto.nullable) = false];
     int64 Count = 2;
 }
 
 message Timestamp {
-    int64 Time = 1;
-    int64 PostsNumber = 2 [json_name="posts"];
-    int64 EventsNumber = 3 [json_name="events"];
+    int64 Time = 1 [(gogoproto.jsontag) = "time"];
+    int64 PostsNumber = 2 [(gogoproto.jsontag) = "posts"];
+    int64 EventsNumber = 3 [(gogoproto.jsontag) = "events"];
 }
