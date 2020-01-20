@@ -67,6 +67,6 @@ message PullEventsRequest {
 }
 
 message PullEventsReply {
-    data.Events events = 1;
+    repeated data.Event events = 1;
     string err = 2;
 }

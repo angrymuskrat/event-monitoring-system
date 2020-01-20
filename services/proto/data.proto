@@ -46,9 +46,22 @@ message EventShort {
     repeated string Tags = 4;
 }
 
-message Events {
-    Point TopLeft = 1;
-    Point BottomRight = 2;
-    repeated WorkPost Posts = 3;
-    repeated string Tags = 4;
+message Event {
+    Point Center = 1;
+    repeated string PostCodes = 2;
+    repeated string Tags = 3;
+    string Title = 4;
+    int64 Start = 5;
+    int64 Finish = 6;
+}
+
+message AggregatedPost {
+    Point Center = 1;
+    int64 Count = 2;
+}
+
+message Timestamp {
+    int64 Time = 1;
+    int64 PostsNumber = 2 [json_name="posts"];
+    int64 EventsNumber = 3 [json_name="events"];
 }
