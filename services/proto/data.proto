@@ -30,8 +30,8 @@ message SpatioTemporalInterval {
 }
 
 message Point {
-    double Lat = 1;
-    double Lon = 2;
+    double Lat = 1 [(gogoproto.jsontag) = "lt"];
+    double Lon = 2 [(gogoproto.jsontag) = "ln"];
 }
 
 message WorkPost {
@@ -58,8 +58,8 @@ message Event {
 }
 
 message AggregatedPost {
-    Point Center = 1 [(gogoproto.nullable) = false];
-    int64 Count = 2;
+    Point Center = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "c"];
+    int64 Count = 2[(gogoproto.jsontag) = "n"];
 }
 
 message Timestamp {
