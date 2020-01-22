@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
-
 	"github.com/visheratin/unilog"
 	"strings"
 
@@ -28,7 +27,6 @@ var (
 	ErrDuplicatedKey = errors.New("duplicated id, object hadn't saved to db")
 )
 
-
 func NewStorage(confPath string) (*Storage, error) {
 	conf, err := readConfig(confPath)
 	if err != nil {
@@ -40,46 +38,60 @@ func NewStorage(confPath string) (*Storage, error) {
 	}
 	dbc := &Storage{db: db, config: conf}
 
+	// create needed extension for PostGIS and TimescaleDB
+	_, err = dbc.db.Exec("CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;")
+	if err != nil {
+		dbc.Close()
+		return nil, err
+	}
 	_, err = dbc.db.Exec("CREATE EXTENSION IF NOT EXISTS postgis;")
 	if err != nil {
 		dbc.Close()
 		return nil, err
 	}
-
 	_, err = dbc.db.Exec("CREATE EXTENSION IF NOT EXISTS postgis_topology;")
 	if err != nil {
 		dbc.Close()
 		return nil, err
 	}
 
-	createPostTable := `CREATE TABLE IF NOT EXISTS posts(
-		ID VARCHAR (30) NOT NULL primary key,
-		Shortcode VARCHAR (15),
-		ImageURL VARCHAR (300),
-		IsVideo BOOLEAN NOT NULL,
-		Caption VARCHAR (2200), -- max size of text in Instagram
-		CommentsCount BIGINT,
-		Timestamp BIGINT,
-		LikesCount BIGINT,
-		IsAd BOOLEAN,
-		AuthorID VARCHAR (15),
-		LocationID VARCHAR (20),
-		Location geometry 
-	)`
-
-	_, err = dbc.db.Exec(createPostTable)
+	// create table posts with it's environment (hypertable and integer time now function)
+	_, err = dbc.db.Exec(PostTable)
+	if err != nil {
+		dbc.Close()
+		return nil, err
+	}
+	_, err = dbc.db.Exec("SELECT create_hypertable('posts', 'timestamp', chunk_time_interval => 86400, if_not_exists => TRUE);")
+	if err != nil {
+		dbc.Close()
+		return nil, err
+	}
+	_, err = dbc.db.Exec("CREATE OR REPLACE FUNCTION unix_now() returns BIGINT LANGUAGE SQL STABLE as $$ SELECT extract(epoch from now())::BIGINT $$;")
+	if err != nil {
+		dbc.Close()
+		return nil, err
+	}
+	_, err = dbc.db.Exec("SELECT set_integer_now_func('posts', 'unix_now', replace_if_exists => true);")
 	if err != nil {
 		dbc.Close()
 		return nil, err
 	}
 
-	createGridTable := `
-		CREATE TABLE IF NOT EXISTS grids(
-		ID VARCHAR (100) NOT NULL PRIMARY KEY,
-		Blob BYTEA NOT NULL
-	)`
+	// create continuous aggregation of posts
+	_, err = dbc.db.Exec("DROP VIEW aggr_posts CASCADE;")
+	if err != nil {
+		dbc.Close()
+		return nil, err
+	}
+	createAggregationPosts := fmt.Sprintf(AggregationPosts, conf.AggrPostsGRIDSize, conf.AggrPostsGRIDSize) // set grid size
+	_, err = dbc.db.Exec(createAggregationPosts)
+	if err != nil {
+		dbc.Close()
+		return nil, err
+	}
 
-	_, err = dbc.db.Exec(createGridTable)
+	// create table for grids
+	_, err = dbc.db.Exec(GridTable)
 	if err != nil {
 		dbc.Close()
 		return nil, err
@@ -100,7 +112,7 @@ func (c *Storage) PushPosts(posts []data.Post) (ids []int32, err error) {
 		statement := `
 			INSERT INTO posts (ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, 
 				AuthorID, LocationID, Location)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, ST_GeometryFromText($12));`
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, ST_GeometryFromText($12, 4326));`
 		point := fmt.Sprintf("POINT(%v %v)", v.Lat, v.Lon)
 		_, err = c.db.Exec(statement, v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp,
 			v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, point)
@@ -108,7 +120,7 @@ func (c *Storage) PushPosts(posts []data.Post) (ids []int32, err error) {
 			if strings.Contains(err.Error(), "duplicate key") {
 				ids = append(ids, types.DuplicatedPostId.Int32())
 			} else {
-				unilog.Logger().Error("don't be able to push post", zap.Any("post", v), zap.Error(err))
+				unilog.Logger().Error("don't be able to push post", zap.Any("post Shortcode", v.Shortcode), zap.Error(err))
 				wasError = true
 				ids = append(ids, types.DBError.Int32())
 			}
@@ -125,10 +137,13 @@ func (c *Storage) PushPosts(posts []data.Post) (ids []int32, err error) {
 }
 
 func (c Storage) SelectPosts(irv data.SpatioTemporalInterval) (posts []data.Post, err error) {
+	err = c.db.Ping()
+	if err != nil {
+		unilog.Logger().Error("db error", zap.Error(err))
+		return nil, ErrDBConnecting
+	}
 
-	poly := fmt.Sprintf("ST_GeometryFromText('POLYGON((%v %v, %v %v, %v %v, %v %v, %v %v))')",
-		irv.MinLat, irv.MinLon, irv.MaxLat, irv.MinLon, irv.MaxLat, irv.MaxLon, irv.MinLat, irv.MaxLon,
-		irv.MinLat, irv.MinLon)
+	poly := makePoly(data.Point{Lat:irv.MinLat, Lon:irv.MinLon},data.Point{Lat:irv.MaxLat, Lon:irv.MaxLon})
 
 	statement := fmt.Sprintf(`
 		SELECT ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, 
@@ -137,22 +152,16 @@ func (c Storage) SelectPosts(irv data.SpatioTemporalInterval) (posts []data.Post
 		WHERE ST_Contains(%v, Location) AND (Timestamp BETWEEN %v AND %v)
 	`, poly, irv.MinTime, irv.MaxTime)
 
-	err = c.db.Ping()
-	if err != nil {
-		unilog.Logger().Error("db error", zap.Error(err))
-		return nil, ErrDBConnecting
-	}
-
 	rows, err := c.db.Query(statement)
 	if err != nil {
-		unilog.Logger().Error("error in select", zap.Error(err))
+		unilog.Logger().Error("error in select posts", zap.Error(err))
 		return nil, ErrSelectStatement
 	}
 
 	defer func() {
 		errClose := rows.Close()
 		if errClose != nil {
-			unilog.Logger().Error("don't be able to close rows in select", zap.Error(err))
+			unilog.Logger().Error("don't be able to close rows in select posts", zap.Error(err))
 		}
 	}()
 
@@ -166,6 +175,46 @@ func (c Storage) SelectPosts(irv data.SpatioTemporalInterval) (posts []data.Post
 			return nil, ErrSelectStatement
 		}
 		posts = append(posts, *p)
+	}
+	return posts, nil
+}
+
+func (c Storage) SelectAggrPosts(hour int64, topLeft, botRight data.Point) (posts []data.AggregatedPost, err error) {
+	err = c.db.Ping()
+	if err != nil {
+		unilog.Logger().Error("db error", zap.Error(err))
+		return nil, ErrDBConnecting
+	}
+	poly := makePoly(topLeft, botRight)
+	statement := fmt.Sprintf(SelectAggrPostsTemplate, hour, poly)
+
+	rows, err := c.db.Query(statement)
+	if err != nil {
+		unilog.Logger().Error("error in select aggr_posts", zap.Error(err))
+		return nil, ErrSelectStatement
+	}
+
+	defer func() {
+		errClose := rows.Close()
+		if errClose != nil {
+			unilog.Logger().Error("don't be able to close rows in select aggr_posts", zap.Error(err))
+		}
+	}()
+
+	for rows.Next() {
+		p := new(struct{
+			count int64
+			lat float64
+			lon float64
+		})
+		//(ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, Location)
+		err = rows.Scan(&p.count, &p.lat, &p.lon)
+		if err != nil {
+			unilog.Logger().Error("error in select aggr_posts", zap.Error(err))
+			return nil, ErrSelectStatement
+		}
+		post := data.AggregatedPost{Count:p.count, Center: data.Point{ Lat:p.lat, Lon:p.lon }}
+		posts = append(posts, post)
 	}
 	return posts, nil
 }

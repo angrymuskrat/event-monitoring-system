@@ -24,9 +24,8 @@ func main() {
 	defer conn.Close()
 	svc = storagesvc.NewGRPCClient(conn)
 
-	testPosts := GeneratePosts(1)
-	testPosts[0].ID = "dHirNwnQr"
-	method := "pullGrid"
+	testPosts := GeneratePosts(2)
+	method := "selectAggrPosts"
 
 	switch method {
 	case "pushPosts":
@@ -37,14 +36,22 @@ func main() {
 		}
 		fmt.Fprintf(os.Stdout, "It is all right\n%v", res)
 
-	case "select":
-		res, err := svc.SelectPosts(context.Background(), data.SpatioTemporalInterval{ 0, 1000000, 5,
-			5, 30, 30, struct{}{}, nil, 0 })
+	case "selectPosts":
+		res, err := svc.SelectPosts(context.Background(), data.SpatioTemporalInterval{ 0, 100000000000, -100,
+			-100, 100, 100, struct{}{}, nil, 0 })
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Fprintf(os.Stdout, "Ok %v", len(res))
+
+	case "selectAggrPosts":
+		res, err := svc.SelectAggrPosts(context.Background(), 1579622400, data.Point{Lat: 40.6999705776032, Lon:-73.9980308623803}, data.Point{Lat:40.7098520457285 , Lon:-73.9990213882303})
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stdout, "Ok %v", res)
 
 	case "pushGrid":
 		bucket, err := fileblob.OpenBucket("tests/", nil)

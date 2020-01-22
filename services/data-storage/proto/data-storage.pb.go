@@ -6,7 +6,6 @@ package proto
 import (
 	context "context"
 	fmt "fmt"
-	proto1 "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
@@ -15,6 +14,7 @@ import (
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	proto1 "github.com/angrymuskrat/event-monitoring-system/services/proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -233,6 +233,124 @@ func (m *SelectPostsReply) GetErr() string {
 	return ""
 }
 
+type SelectAggrPostsRequest struct {
+	Hour                 int64        `protobuf:"varint,1,opt,name=hour,proto3" json:"hour,omitempty"`
+	TopLeft              proto1.Point `protobuf:"bytes,2,opt,name=topLeft,proto3" json:"topLeft"`
+	BotRight             proto1.Point `protobuf:"bytes,3,opt,name=botRight,proto3" json:"botRight"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *SelectAggrPostsRequest) Reset()         { *m = SelectAggrPostsRequest{} }
+func (m *SelectAggrPostsRequest) String() string { return proto.CompactTextString(m) }
+func (*SelectAggrPostsRequest) ProtoMessage()    {}
+func (*SelectAggrPostsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{4}
+}
+func (m *SelectAggrPostsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SelectAggrPostsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SelectAggrPostsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SelectAggrPostsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SelectAggrPostsRequest.Merge(m, src)
+}
+func (m *SelectAggrPostsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *SelectAggrPostsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_SelectAggrPostsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SelectAggrPostsRequest proto.InternalMessageInfo
+
+func (m *SelectAggrPostsRequest) GetHour() int64 {
+	if m != nil {
+		return m.Hour
+	}
+	return 0
+}
+
+func (m *SelectAggrPostsRequest) GetTopLeft() proto1.Point {
+	if m != nil {
+		return m.TopLeft
+	}
+	return proto1.Point{}
+}
+
+func (m *SelectAggrPostsRequest) GetBotRight() proto1.Point {
+	if m != nil {
+		return m.BotRight
+	}
+	return proto1.Point{}
+}
+
+type SelectAggrPostsReply struct {
+	Posts                []proto1.AggregatedPost `protobuf:"bytes,1,rep,name=posts,proto3" json:"posts"`
+	Err                  string                  `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                `json:"-"`
+	XXX_unrecognized     []byte                  `json:"-"`
+	XXX_sizecache        int32                   `json:"-"`
+}
+
+func (m *SelectAggrPostsReply) Reset()         { *m = SelectAggrPostsReply{} }
+func (m *SelectAggrPostsReply) String() string { return proto.CompactTextString(m) }
+func (*SelectAggrPostsReply) ProtoMessage()    {}
+func (*SelectAggrPostsReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{5}
+}
+func (m *SelectAggrPostsReply) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SelectAggrPostsReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SelectAggrPostsReply.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SelectAggrPostsReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SelectAggrPostsReply.Merge(m, src)
+}
+func (m *SelectAggrPostsReply) XXX_Size() int {
+	return m.Size()
+}
+func (m *SelectAggrPostsReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_SelectAggrPostsReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SelectAggrPostsReply proto.InternalMessageInfo
+
+func (m *SelectAggrPostsReply) GetPosts() []proto1.AggregatedPost {
+	if m != nil {
+		return m.Posts
+	}
+	return nil
+}
+
+func (m *SelectAggrPostsReply) GetErr() string {
+	if m != nil {
+		return m.Err
+	}
+	return ""
+}
+
 type PushGridRequest struct {
 	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Blob                 []byte   `protobuf:"bytes,2,opt,name=blob,proto3" json:"blob,omitempty"`
@@ -245,7 +363,7 @@ func (m *PushGridRequest) Reset()         { *m = PushGridRequest{} }
 func (m *PushGridRequest) String() string { return proto.CompactTextString(m) }
 func (*PushGridRequest) ProtoMessage()    {}
 func (*PushGridRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{4}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{6}
 }
 func (m *PushGridRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -299,7 +417,7 @@ func (m *PushGridReply) Reset()         { *m = PushGridReply{} }
 func (m *PushGridReply) String() string { return proto.CompactTextString(m) }
 func (*PushGridReply) ProtoMessage()    {}
 func (*PushGridReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{5}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{7}
 }
 func (m *PushGridReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -346,7 +464,7 @@ func (m *PullGridRequest) Reset()         { *m = PullGridRequest{} }
 func (m *PullGridRequest) String() string { return proto.CompactTextString(m) }
 func (*PullGridRequest) ProtoMessage()    {}
 func (*PullGridRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{6}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{8}
 }
 func (m *PullGridRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -394,7 +512,7 @@ func (m *PullGridReply) Reset()         { *m = PullGridReply{} }
 func (m *PullGridReply) String() string { return proto.CompactTextString(m) }
 func (*PullGridReply) ProtoMessage()    {}
 func (*PullGridReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{7}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{9}
 }
 func (m *PullGridReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -448,7 +566,7 @@ func (m *PushEventsRequest) Reset()         { *m = PushEventsRequest{} }
 func (m *PushEventsRequest) String() string { return proto.CompactTextString(m) }
 func (*PushEventsRequest) ProtoMessage()    {}
 func (*PushEventsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{8}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{10}
 }
 func (m *PushEventsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -495,7 +613,7 @@ func (m *PushEventsReply) Reset()         { *m = PushEventsReply{} }
 func (m *PushEventsReply) String() string { return proto.CompactTextString(m) }
 func (*PushEventsReply) ProtoMessage()    {}
 func (*PushEventsReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{9}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{11}
 }
 func (m *PushEventsReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -542,7 +660,7 @@ func (m *PullEventsRequest) Reset()         { *m = PullEventsRequest{} }
 func (m *PullEventsRequest) String() string { return proto.CompactTextString(m) }
 func (*PullEventsRequest) ProtoMessage()    {}
 func (*PullEventsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{10}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{12}
 }
 func (m *PullEventsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -590,7 +708,7 @@ func (m *PullEventsReply) Reset()         { *m = PullEventsReply{} }
 func (m *PullEventsReply) String() string { return proto.CompactTextString(m) }
 func (*PullEventsReply) ProtoMessage()    {}
 func (*PullEventsReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{11}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{13}
 }
 func (m *PullEventsReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -638,6 +756,8 @@ func init() {
 	proto.RegisterType((*PushPostsReply)(nil), "proto.PushPostsReply")
 	proto.RegisterType((*SelectPostsRequest)(nil), "proto.SelectPostsRequest")
 	proto.RegisterType((*SelectPostsReply)(nil), "proto.SelectPostsReply")
+	proto.RegisterType((*SelectAggrPostsRequest)(nil), "proto.SelectAggrPostsRequest")
+	proto.RegisterType((*SelectAggrPostsReply)(nil), "proto.SelectAggrPostsReply")
 	proto.RegisterType((*PushGridRequest)(nil), "proto.PushGridRequest")
 	proto.RegisterType((*PushGridReply)(nil), "proto.PushGridReply")
 	proto.RegisterType((*PullGridRequest)(nil), "proto.PullGridRequest")
@@ -653,36 +773,43 @@ func init() {
 }
 
 var fileDescriptor_8ec0c2fba98f9a4b = []byte{
-	// 463 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x53, 0x5f, 0x6e, 0xd3, 0x30,
-	0x18, 0x8f, 0xb3, 0x75, 0x5a, 0xbf, 0xc0, 0x08, 0x16, 0xb0, 0x12, 0x41, 0xe8, 0x3c, 0x81, 0xfa,
-	0x42, 0x26, 0x15, 0xf6, 0x32, 0x09, 0x1e, 0x36, 0x10, 0x20, 0xf1, 0x30, 0x25, 0xbb, 0x80, 0x4b,
-	0xac, 0x2e, 0x92, 0x99, 0x83, 0xe3, 0x4d, 0xda, 0x11, 0xb8, 0x01, 0x47, 0xda, 0x23, 0x27, 0x40,
-	0xa8, 0x5c, 0x04, 0xd9, 0x4e, 0x16, 0x67, 0x89, 0x10, 0xd2, 0x9e, 0xea, 0x7e, 0xfe, 0xfd, 0xf3,
-	0xd7, 0x5f, 0xe1, 0x79, 0x4e, 0x15, 0x7d, 0x59, 0x29, 0x21, 0xe9, 0x92, 0xed, 0x95, 0x52, 0x28,
-	0xb1, 0xe7, 0x8e, 0x12, 0x33, 0xc2, 0x23, 0xf3, 0x11, 0x3d, 0x1d, 0x40, 0x2f, 0xc5, 0x52, 0x58,
-	0x54, 0x14, 0xb6, 0x7c, 0x3b, 0x21, 0x07, 0x10, 0x1e, 0x9f, 0x57, 0xa7, 0xc7, 0xa2, 0x52, 0x55,
-	0xca, 0xbe, 0x9d, 0xb3, 0x4a, 0xe1, 0x17, 0x30, 0x2a, 0xf5, 0xf7, 0x09, 0x9a, 0xae, 0xcd, 0x82,
-	0x39, 0x24, 0x06, 0xaf, 0x21, 0x87, 0xeb, 0x57, 0xbf, 0x9e, 0x79, 0xa9, 0xbd, 0x26, 0xaf, 0x61,
-	0xcb, 0xe1, 0x96, 0xfc, 0x12, 0x87, 0xb0, 0x56, 0xe4, 0x96, 0x37, 0x4a, 0xf5, 0x51, 0x4f, 0x98,
-	0x94, 0x13, 0x7f, 0x8a, 0x66, 0xe3, 0x54, 0x1f, 0xc9, 0x09, 0xe0, 0x8c, 0x71, 0xf6, 0x45, 0x75,
-	0x3c, 0xdf, 0xc2, 0x66, 0x71, 0xa6, 0x98, 0xbc, 0xa0, 0x7c, 0x82, 0xa6, 0x68, 0x16, 0xcc, 0x9f,
-	0x58, 0xdb, 0xac, 0xa4, 0xaa, 0x10, 0x27, 0xec, 0x6b, 0x29, 0x24, 0xe5, 0x9f, 0x6a, 0x4c, 0x1d,
-	0xe4, 0x9a, 0x43, 0x3e, 0x43, 0xd8, 0x51, 0xd5, 0x69, 0xfe, 0xf3, 0x1d, 0x03, 0x19, 0xf7, 0xe1,
-	0x9e, 0x7e, 0xd9, 0x07, 0x59, 0xe4, 0x4d, 0xc0, 0x2d, 0xf0, 0x8b, 0xdc, 0x44, 0x1b, 0xa7, 0x7e,
-	0x91, 0x63, 0x0c, 0xeb, 0x0b, 0x2e, 0x16, 0x86, 0x75, 0x27, 0x35, 0x67, 0xb2, 0x03, 0x77, 0x5b,
-	0x5a, 0xbd, 0x0f, 0xad, 0x8c, 0x5a, 0xe5, 0x1d, 0xad, 0xcc, 0xf9, 0x3f, 0x94, 0xc9, 0xbe, 0x56,
-	0x69, 0x20, 0x5a, 0xa5, 0xb1, 0x42, 0xad, 0xd5, 0x40, 0xe6, 0x23, 0xb8, 0xaf, 0xcd, 0xdf, 0x5f,
-	0xb0, 0xb3, 0x76, 0xad, 0x09, 0x6c, 0x30, 0x33, 0xa8, 0x77, 0x10, 0xda, 0x1d, 0x18, 0x50, 0x76,
-	0x2a, 0x64, 0xb3, 0x89, 0x1a, 0x45, 0x76, 0xed, 0xc3, 0x1b, 0x91, 0xe1, 0x37, 0x64, 0xda, 0x89,
-	0xf3, 0xae, 0xd3, 0x6d, 0x7f, 0xc0, 0x8f, 0x76, 0x31, 0xae, 0xf3, 0xee, 0x8d, 0xf0, 0x81, 0x13,
-	0xbe, 0x49, 0xdc, 0x5f, 0xc4, 0xfc, 0xbb, 0x0f, 0xc1, 0x3b, 0xaa, 0x68, 0x66, 0xff, 0x05, 0xf8,
-	0x0d, 0x8c, 0xaf, 0x6b, 0x8a, 0xb7, 0x6d, 0xef, 0x93, 0x9b, 0xa5, 0x8f, 0x1e, 0xf6, 0x2f, 0x4a,
-	0x7e, 0x49, 0x3c, 0x7c, 0x04, 0x81, 0xd3, 0x2c, 0xfc, 0xb8, 0xc6, 0xf5, 0x3b, 0x1c, 0x6d, 0x0f,
-	0x5d, 0x59, 0x91, 0x03, 0xd8, 0x6c, 0x9a, 0x81, 0x1f, 0x39, 0x4e, 0x4e, 0x0f, 0xa2, 0x07, 0xbd,
-	0xb9, 0xc3, 0xb5, 0x7d, 0x70, 0xb8, 0x9d, 0x0e, 0x39, 0x5c, 0xa7, 0x38, 0xc4, 0x3b, 0x0c, 0xaf,
-	0x56, 0x31, 0xfa, 0xb9, 0x8a, 0xd1, 0xef, 0x55, 0x8c, 0x7e, 0xfc, 0x89, 0xbd, 0xc5, 0x86, 0x01,
-	0xbe, 0xfa, 0x1b, 0x00, 0x00, 0xff, 0xff, 0x39, 0x14, 0xab, 0xe8, 0x58, 0x04, 0x00, 0x00,
+	// 564 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x53, 0xc1, 0x6e, 0x13, 0x3d,
+	0x10, 0x8e, 0x93, 0xa6, 0x7f, 0x32, 0xfb, 0xd3, 0x2e, 0x56, 0x68, 0xc3, 0x42, 0x43, 0xea, 0x0a,
+	0x14, 0x09, 0x35, 0x45, 0x81, 0x5e, 0x2a, 0x81, 0x44, 0x0b, 0x02, 0xa4, 0x4a, 0x54, 0x9b, 0x9e,
+	0xb8, 0x6d, 0x58, 0xb3, 0x59, 0xc9, 0xc4, 0x8b, 0xe3, 0x54, 0xea, 0x1b, 0xf0, 0x08, 0x3c, 0x52,
+	0x8f, 0x9c, 0x39, 0x20, 0x14, 0x5e, 0x04, 0xd9, 0x5e, 0x27, 0xde, 0x24, 0x45, 0x95, 0x38, 0xad,
+	0x77, 0xfc, 0xcd, 0xf7, 0x7d, 0x33, 0x9e, 0x81, 0x87, 0x71, 0x24, 0xa3, 0xfd, 0xb1, 0xe4, 0x22,
+	0x4a, 0xe8, 0x41, 0x26, 0xb8, 0xe4, 0x07, 0x6e, 0xa8, 0xab, 0x43, 0xb8, 0xaa, 0x3f, 0xc1, 0xce,
+	0x0a, 0x74, 0xc2, 0x13, 0x6e, 0x50, 0x81, 0x3f, 0xcf, 0x37, 0x11, 0x72, 0x04, 0xfe, 0xd9, 0x64,
+	0x3c, 0x3c, 0xe3, 0x63, 0x39, 0x0e, 0xe9, 0x97, 0x09, 0x1d, 0x4b, 0xfc, 0x08, 0xaa, 0x99, 0xfa,
+	0x6f, 0xa2, 0x76, 0xa5, 0xe3, 0xf5, 0xa0, 0xab, 0xf1, 0x0a, 0x72, 0xbc, 0x76, 0xf5, 0xf3, 0x41,
+	0x29, 0x34, 0xd7, 0xe4, 0x19, 0x6c, 0x38, 0xb9, 0x19, 0xbb, 0xc4, 0x3e, 0x54, 0xd2, 0xd8, 0xe4,
+	0x55, 0x43, 0x75, 0x54, 0x11, 0x2a, 0x44, 0xb3, 0xdc, 0x46, 0x9d, 0x7a, 0xa8, 0x8e, 0xe4, 0x1c,
+	0x70, 0x9f, 0x32, 0xfa, 0x51, 0x16, 0x34, 0x5f, 0x40, 0x2d, 0x1d, 0x49, 0x2a, 0x2e, 0x22, 0xd6,
+	0x44, 0x6d, 0xd4, 0xf1, 0x7a, 0xf7, 0x8d, 0x6c, 0x3f, 0x8b, 0x64, 0xca, 0xcf, 0xe9, 0xe7, 0x8c,
+	0x8b, 0x88, 0xbd, 0xcb, 0x31, 0xb9, 0x91, 0x59, 0x0e, 0x39, 0x05, 0xbf, 0xc0, 0xaa, 0xdc, 0xdc,
+	0xb0, 0x8e, 0x15, 0x1e, 0xbf, 0x22, 0xd8, 0x32, 0x74, 0x2f, 0x93, 0x44, 0x14, 0x8c, 0x62, 0x58,
+	0x1b, 0xf2, 0x89, 0xd0, 0x26, 0x2b, 0xa1, 0x3e, 0xe3, 0xc7, 0xf0, 0x9f, 0xe4, 0xd9, 0x29, 0xfd,
+	0x24, 0x35, 0x89, 0xd7, 0xf3, 0xac, 0x54, 0x3a, 0xb2, 0x5a, 0x16, 0x81, 0xf7, 0xa1, 0x36, 0xe0,
+	0x32, 0x4c, 0x93, 0xa1, 0x6c, 0x56, 0xae, 0x43, 0xcf, 0x20, 0xe4, 0x03, 0x34, 0x96, 0x9c, 0xa8,
+	0xe2, 0x9e, 0x14, 0x8b, 0x6b, 0x18, 0x0e, 0x05, 0xa2, 0x49, 0x24, 0x69, 0x7c, 0x93, 0x32, 0x0f,
+	0x61, 0x53, 0x3d, 0xe0, 0x1b, 0x91, 0xc6, 0xb6, 0xbc, 0x0d, 0x28, 0xa7, 0xb1, 0x2e, 0xae, 0x1e,
+	0x96, 0xd3, 0x58, 0x95, 0x3b, 0x60, 0x7c, 0xa0, 0xb3, 0xfe, 0x0f, 0xf5, 0x99, 0xec, 0xc2, 0xad,
+	0x79, 0x5a, 0xfe, 0xec, 0x8a, 0x19, 0xcd, 0x99, 0x77, 0x15, 0x33, 0x63, 0x7f, 0x61, 0x26, 0x87,
+	0x8a, 0xc5, 0x42, 0x14, 0x8b, 0x95, 0x42, 0x73, 0xa9, 0x15, 0x9e, 0x4f, 0xe0, 0xb6, 0x12, 0x7f,
+	0x7d, 0x41, 0x47, 0xf3, 0x47, 0xe9, 0xc2, 0x3a, 0xd5, 0x81, 0xbc, 0x1b, 0xbe, 0xe9, 0x86, 0x06,
+	0xf5, 0x87, 0x5c, 0xd8, 0x4e, 0xe4, 0x28, 0xb2, 0x67, 0x0a, 0xb7, 0x24, 0xab, 0x6b, 0xe8, 0x2b,
+	0x25, 0xc6, 0x8a, 0x4a, 0xff, 0x3a, 0xa7, 0x6f, 0x4d, 0x63, 0x5c, 0xe5, 0xbd, 0x05, 0xf3, 0x9e,
+	0x63, 0xde, 0x3a, 0x5e, 0x6e, 0x44, 0xef, 0x47, 0x19, 0xbc, 0x57, 0x91, 0x8c, 0xfa, 0x66, 0xd9,
+	0xf1, 0x73, 0xa8, 0xcf, 0xb6, 0x11, 0x6f, 0x9b, 0xf5, 0xee, 0x2e, 0xee, 0x76, 0x70, 0x67, 0xf9,
+	0x22, 0x63, 0x97, 0xa4, 0x84, 0x4f, 0xc0, 0x73, 0x16, 0x08, 0xdf, 0xcd, 0x71, 0xcb, 0xab, 0x1a,
+	0x6c, 0xaf, 0xba, 0x32, 0x24, 0xef, 0x61, 0x73, 0x61, 0x58, 0xf1, 0x4e, 0x01, 0xbd, 0xb8, 0x4e,
+	0xc1, 0xbd, 0xeb, 0xae, 0x0d, 0xe1, 0x11, 0xd4, 0xec, 0xa8, 0xe1, 0x2d, 0xc7, 0xba, 0x33, 0x58,
+	0x41, 0x63, 0x29, 0xee, 0xe4, 0x9a, 0x01, 0x73, 0x72, 0x0b, 0x43, 0xe9, 0xe4, 0x3a, 0x93, 0x48,
+	0x4a, 0xc7, 0xfe, 0xd5, 0xb4, 0x85, 0xbe, 0x4f, 0x5b, 0xe8, 0xd7, 0xb4, 0x85, 0xbe, 0xfd, 0x6e,
+	0x95, 0x06, 0xeb, 0x1a, 0xf8, 0xf4, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x1b, 0x28, 0x60, 0xcb,
+	0x90, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -701,6 +828,7 @@ type DataStorageClient interface {
 	PushPosts(ctx context.Context, in *PushPostsRequest, opts ...grpc.CallOption) (*PushPostsReply, error)
 	// Select array from database, each element from array belongs the interval
 	SelectPosts(ctx context.Context, in *SelectPostsRequest, opts ...grpc.CallOption) (*SelectPostsReply, error)
+	SelectAggrPosts(ctx context.Context, in *SelectAggrPostsRequest, opts ...grpc.CallOption) (*SelectAggrPostsReply, error)
 	PushGrid(ctx context.Context, in *PushGridRequest, opts ...grpc.CallOption) (*PushGridReply, error)
 	PullGrid(ctx context.Context, in *PullGridRequest, opts ...grpc.CallOption) (*PullGridReply, error)
 }
@@ -731,6 +859,15 @@ func (c *dataStorageClient) SelectPosts(ctx context.Context, in *SelectPostsRequ
 	return out, nil
 }
 
+func (c *dataStorageClient) SelectAggrPosts(ctx context.Context, in *SelectAggrPostsRequest, opts ...grpc.CallOption) (*SelectAggrPostsReply, error) {
+	out := new(SelectAggrPostsReply)
+	err := c.cc.Invoke(ctx, "/proto.DataStorage/SelectAggrPosts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataStorageClient) PushGrid(ctx context.Context, in *PushGridRequest, opts ...grpc.CallOption) (*PushGridReply, error) {
 	out := new(PushGridReply)
 	err := c.cc.Invoke(ctx, "/proto.DataStorage/PushGrid", in, out, opts...)
@@ -755,6 +892,7 @@ type DataStorageServer interface {
 	PushPosts(context.Context, *PushPostsRequest) (*PushPostsReply, error)
 	// Select array from database, each element from array belongs the interval
 	SelectPosts(context.Context, *SelectPostsRequest) (*SelectPostsReply, error)
+	SelectAggrPosts(context.Context, *SelectAggrPostsRequest) (*SelectAggrPostsReply, error)
 	PushGrid(context.Context, *PushGridRequest) (*PushGridReply, error)
 	PullGrid(context.Context, *PullGridRequest) (*PullGridReply, error)
 }
@@ -768,6 +906,9 @@ func (*UnimplementedDataStorageServer) PushPosts(ctx context.Context, req *PushP
 }
 func (*UnimplementedDataStorageServer) SelectPosts(ctx context.Context, req *SelectPostsRequest) (*SelectPostsReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SelectPosts not implemented")
+}
+func (*UnimplementedDataStorageServer) SelectAggrPosts(ctx context.Context, req *SelectAggrPostsRequest) (*SelectAggrPostsReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SelectAggrPosts not implemented")
 }
 func (*UnimplementedDataStorageServer) PushGrid(ctx context.Context, req *PushGridRequest) (*PushGridReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PushGrid not implemented")
@@ -812,6 +953,24 @@ func _DataStorage_SelectPosts_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataStorageServer).SelectPosts(ctx, req.(*SelectPostsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DataStorage_SelectAggrPosts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SelectAggrPostsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataStorageServer).SelectAggrPosts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.DataStorage/SelectAggrPosts",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataStorageServer).SelectAggrPosts(ctx, req.(*SelectAggrPostsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -863,6 +1022,10 @@ var _DataStorage_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SelectPosts",
 			Handler:    _DataStorage_SelectPosts_Handler,
+		},
+		{
+			MethodName: "SelectAggrPosts",
+			Handler:    _DataStorage_SelectAggrPosts_Handler,
 		},
 		{
 			MethodName: "PushGrid",
@@ -1024,6 +1187,106 @@ func (m *SelectPostsReply) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *SelectPostsReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Err) > 0 {
+		i -= len(m.Err)
+		copy(dAtA[i:], m.Err)
+		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Err)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Posts) > 0 {
+		for iNdEx := len(m.Posts) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Posts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintDataStorage(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SelectAggrPostsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SelectAggrPostsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SelectAggrPostsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	{
+		size, err := m.BotRight.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintDataStorage(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size, err := m.TopLeft.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintDataStorage(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if m.Hour != 0 {
+		i = encodeVarintDataStorage(dAtA, i, uint64(m.Hour))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SelectAggrPostsReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SelectAggrPostsReply) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SelectAggrPostsReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1433,6 +1696,47 @@ func (m *SelectPostsRequest) Size() (n int) {
 }
 
 func (m *SelectPostsReply) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Posts) > 0 {
+		for _, e := range m.Posts {
+			l = e.Size()
+			n += 1 + l + sovDataStorage(uint64(l))
+		}
+	}
+	l = len(m.Err)
+	if l > 0 {
+		n += 1 + l + sovDataStorage(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *SelectAggrPostsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Hour != 0 {
+		n += 1 + sovDataStorage(uint64(m.Hour))
+	}
+	l = m.TopLeft.Size()
+	n += 1 + l + sovDataStorage(uint64(l))
+	l = m.BotRight.Size()
+	n += 1 + l + sovDataStorage(uint64(l))
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *SelectAggrPostsReply) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1998,6 +2302,265 @@ func (m *SelectPostsReply) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Posts = append(m.Posts, proto1.Post{})
+			if err := m.Posts[len(m.Posts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Err = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SelectAggrPostsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SelectAggrPostsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SelectAggrPostsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Hour", wireType)
+			}
+			m.Hour = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Hour |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TopLeft", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TopLeft.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BotRight", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.BotRight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SelectAggrPostsReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SelectAggrPostsReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SelectAggrPostsReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Posts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Posts = append(m.Posts, proto1.AggregatedPost{})
 			if err := m.Posts[len(m.Posts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
