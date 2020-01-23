@@ -170,10 +170,8 @@ func (m *Post) GetLon() float64 {
 type SpatioTemporalInterval struct {
 	MinTime              int64    `protobuf:"varint,1,opt,name=MinTime,proto3" json:"MinTime,omitempty"`
 	MaxTime              int64    `protobuf:"varint,2,opt,name=MaxTime,proto3" json:"MaxTime,omitempty"`
-	MinLat               float64  `protobuf:"fixed64,3,opt,name=MinLat,proto3" json:"MinLat,omitempty"`
-	MinLon               float64  `protobuf:"fixed64,4,opt,name=MinLon,proto3" json:"MinLon,omitempty"`
-	MaxLat               float64  `protobuf:"fixed64,5,opt,name=MaxLat,proto3" json:"MaxLat,omitempty"`
-	MaxLon               float64  `protobuf:"fixed64,6,opt,name=MaxLon,proto3" json:"MaxLon,omitempty"`
+	TopLeft              *Point   `protobuf:"bytes,3,opt,name=TopLeft,proto3" json:"TopLeft,omitempty"`
+	BotRight             *Point   `protobuf:"bytes,4,opt,name=BotRight,proto3" json:"BotRight,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -226,32 +224,81 @@ func (m *SpatioTemporalInterval) GetMaxTime() int64 {
 	return 0
 }
 
-func (m *SpatioTemporalInterval) GetMinLat() float64 {
+func (m *SpatioTemporalInterval) GetTopLeft() *Point {
 	if m != nil {
-		return m.MinLat
+		return m.TopLeft
+	}
+	return nil
+}
+
+func (m *SpatioTemporalInterval) GetBotRight() *Point {
+	if m != nil {
+		return m.BotRight
+	}
+	return nil
+}
+
+type SpatioHourInterval struct {
+	Hour                 int64    `protobuf:"varint,1,opt,name=Hour,proto3" json:"Hour,omitempty"`
+	TopLeft              *Point   `protobuf:"bytes,2,opt,name=TopLeft,proto3" json:"TopLeft,omitempty"`
+	BotRight             *Point   `protobuf:"bytes,3,opt,name=BotRight,proto3" json:"BotRight,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *SpatioHourInterval) Reset()         { *m = SpatioHourInterval{} }
+func (m *SpatioHourInterval) String() string { return proto.CompactTextString(m) }
+func (*SpatioHourInterval) ProtoMessage()    {}
+func (*SpatioHourInterval) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ac8e6d38f431921d, []int{2}
+}
+func (m *SpatioHourInterval) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SpatioHourInterval) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SpatioHourInterval.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SpatioHourInterval) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SpatioHourInterval.Merge(m, src)
+}
+func (m *SpatioHourInterval) XXX_Size() int {
+	return m.Size()
+}
+func (m *SpatioHourInterval) XXX_DiscardUnknown() {
+	xxx_messageInfo_SpatioHourInterval.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SpatioHourInterval proto.InternalMessageInfo
+
+func (m *SpatioHourInterval) GetHour() int64 {
+	if m != nil {
+		return m.Hour
 	}
 	return 0
 }
 
-func (m *SpatioTemporalInterval) GetMinLon() float64 {
+func (m *SpatioHourInterval) GetTopLeft() *Point {
 	if m != nil {
-		return m.MinLon
+		return m.TopLeft
 	}
-	return 0
+	return nil
 }
 
-func (m *SpatioTemporalInterval) GetMaxLat() float64 {
+func (m *SpatioHourInterval) GetBotRight() *Point {
 	if m != nil {
-		return m.MaxLat
+		return m.BotRight
 	}
-	return 0
-}
-
-func (m *SpatioTemporalInterval) GetMaxLon() float64 {
-	if m != nil {
-		return m.MaxLon
-	}
-	return 0
+	return nil
 }
 
 type Point struct {
@@ -266,7 +313,7 @@ func (m *Point) Reset()         { *m = Point{} }
 func (m *Point) String() string { return proto.CompactTextString(m) }
 func (*Point) ProtoMessage()    {}
 func (*Point) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ac8e6d38f431921d, []int{2}
+	return fileDescriptor_ac8e6d38f431921d, []int{3}
 }
 func (m *Point) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -323,7 +370,7 @@ func (m *WorkPost) Reset()         { *m = WorkPost{} }
 func (m *WorkPost) String() string { return proto.CompactTextString(m) }
 func (*WorkPost) ProtoMessage()    {}
 func (*WorkPost) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ac8e6d38f431921d, []int{3}
+	return fileDescriptor_ac8e6d38f431921d, []int{4}
 }
 func (m *WorkPost) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -378,77 +425,6 @@ func (m *WorkPost) GetLon() float64 {
 		return m.Lon
 	}
 	return 0
-}
-
-type EventShort struct {
-	TopLeft              *Point   `protobuf:"bytes,1,opt,name=TopLeft,proto3" json:"TopLeft,omitempty"`
-	BottomRight          *Point   `protobuf:"bytes,2,opt,name=BottomRight,proto3" json:"BottomRight,omitempty"`
-	PostsID              []string `protobuf:"bytes,3,rep,name=PostsID,proto3" json:"PostsID,omitempty"`
-	Tags                 []string `protobuf:"bytes,4,rep,name=Tags,proto3" json:"Tags,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *EventShort) Reset()         { *m = EventShort{} }
-func (m *EventShort) String() string { return proto.CompactTextString(m) }
-func (*EventShort) ProtoMessage()    {}
-func (*EventShort) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ac8e6d38f431921d, []int{4}
-}
-func (m *EventShort) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventShort) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventShort.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventShort) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventShort.Merge(m, src)
-}
-func (m *EventShort) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventShort) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventShort.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventShort proto.InternalMessageInfo
-
-func (m *EventShort) GetTopLeft() *Point {
-	if m != nil {
-		return m.TopLeft
-	}
-	return nil
-}
-
-func (m *EventShort) GetBottomRight() *Point {
-	if m != nil {
-		return m.BottomRight
-	}
-	return nil
-}
-
-func (m *EventShort) GetPostsID() []string {
-	if m != nil {
-		return m.PostsID
-	}
-	return nil
-}
-
-func (m *EventShort) GetTags() []string {
-	if m != nil {
-		return m.Tags
-	}
-	return nil
 }
 
 type Event struct {
@@ -656,64 +632,194 @@ func (m *Timestamp) GetEventsNumber() int64 {
 	return 0
 }
 
+type Location struct {
+	ID                   string   `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	Title                string   `protobuf:"bytes,2,opt,name=Title,proto3" json:"Title,omitempty"`
+	Position             *Point   `protobuf:"bytes,3,opt,name=Position,proto3" json:"Position,omitempty"`
+	Slug                 string   `protobuf:"bytes,4,opt,name=slug,proto3" json:"slug,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Location) Reset()         { *m = Location{} }
+func (m *Location) String() string { return proto.CompactTextString(m) }
+func (*Location) ProtoMessage()    {}
+func (*Location) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ac8e6d38f431921d, []int{8}
+}
+func (m *Location) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Location) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Location.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *Location) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Location.Merge(m, src)
+}
+func (m *Location) XXX_Size() int {
+	return m.Size()
+}
+func (m *Location) XXX_DiscardUnknown() {
+	xxx_messageInfo_Location.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Location proto.InternalMessageInfo
+
+func (m *Location) GetID() string {
+	if m != nil {
+		return m.ID
+	}
+	return ""
+}
+
+func (m *Location) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *Location) GetPosition() *Point {
+	if m != nil {
+		return m.Position
+	}
+	return nil
+}
+
+func (m *Location) GetSlug() string {
+	if m != nil {
+		return m.Slug
+	}
+	return ""
+}
+
+type City struct {
+	Title                string   `protobuf:"bytes,1,opt,name=Title,proto3" json:"Title,omitempty"`
+	ID                   string   `protobuf:"bytes,2,opt,name=ID,proto3" json:"ID,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *City) Reset()         { *m = City{} }
+func (m *City) String() string { return proto.CompactTextString(m) }
+func (*City) ProtoMessage()    {}
+func (*City) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ac8e6d38f431921d, []int{9}
+}
+func (m *City) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *City) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_City.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *City) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_City.Merge(m, src)
+}
+func (m *City) XXX_Size() int {
+	return m.Size()
+}
+func (m *City) XXX_DiscardUnknown() {
+	xxx_messageInfo_City.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_City proto.InternalMessageInfo
+
+func (m *City) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *City) GetID() string {
+	if m != nil {
+		return m.ID
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*Post)(nil), "data.Post")
 	proto.RegisterType((*SpatioTemporalInterval)(nil), "data.SpatioTemporalInterval")
+	proto.RegisterType((*SpatioHourInterval)(nil), "data.SpatioHourInterval")
 	proto.RegisterType((*Point)(nil), "data.Point")
 	proto.RegisterType((*WorkPost)(nil), "data.WorkPost")
-	proto.RegisterType((*EventShort)(nil), "data.EventShort")
 	proto.RegisterType((*Event)(nil), "data.Event")
 	proto.RegisterType((*AggregatedPost)(nil), "data.AggregatedPost")
 	proto.RegisterType((*Timestamp)(nil), "data.Timestamp")
+	proto.RegisterType((*Location)(nil), "data.Location")
+	proto.RegisterType((*City)(nil), "data.City")
 }
 
 func init() { proto.RegisterFile("proto/data.proto", fileDescriptor_ac8e6d38f431921d) }
 
 var fileDescriptor_ac8e6d38f431921d = []byte{
-	// 688 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x54, 0xcd, 0x6a, 0x1b, 0x3d,
-	0x14, 0x8d, 0xe6, 0xc7, 0xb1, 0xaf, 0x93, 0x10, 0xc4, 0x47, 0x10, 0xf9, 0xf2, 0xd9, 0xc6, 0x7c,
-	0x05, 0x97, 0x12, 0x07, 0xda, 0x65, 0x57, 0xb1, 0xdd, 0xc2, 0x80, 0x53, 0x82, 0xe2, 0xb6, 0xab,
-	0x2e, 0x94, 0x58, 0x19, 0x0f, 0xf1, 0x48, 0x66, 0x46, 0x09, 0x79, 0x82, 0xae, 0xbb, 0xec, 0x23,
-	0x74, 0xd1, 0x07, 0xc9, 0xb2, 0x0f, 0x50, 0x4c, 0x49, 0x77, 0x7e, 0x8a, 0xa2, 0xab, 0x99, 0xd8,
-	0x4e, 0x4b, 0x37, 0x46, 0xe7, 0x9c, 0x3b, 0xd2, 0xb9, 0xe7, 0x4a, 0x86, 0xdd, 0x59, 0xa6, 0x8d,
-	0x3e, 0x1a, 0x0b, 0x23, 0xba, 0xb8, 0xa4, 0x81, 0x5d, 0xef, 0xff, 0x67, 0x7f, 0x0f, 0x73, 0xa3,
-	0x33, 0x11, 0xcb, 0x23, 0x57, 0x14, 0xeb, 0x58, 0xbb, 0xa2, 0xf6, 0x77, 0x0f, 0x82, 0x53, 0x9d,
-	0x1b, 0xba, 0x03, 0x5e, 0x34, 0x60, 0xa4, 0x45, 0x3a, 0x35, 0xee, 0x45, 0x03, 0x7a, 0x00, 0xb5,
-	0xb3, 0x89, 0xce, 0xcc, 0x85, 0x1e, 0x4b, 0xe6, 0x21, 0xbd, 0x24, 0xe8, 0x3e, 0x54, 0xa3, 0x54,
-	0xc4, 0xf2, 0x2d, 0x1f, 0x32, 0x1f, 0xc5, 0x07, 0x4c, 0x19, 0x6c, 0x46, 0xf9, 0xbb, 0x64, 0x2c,
-	0x35, 0x0b, 0x5a, 0xa4, 0x53, 0xe5, 0x25, 0xb4, 0x4a, 0x5f, 0xcc, 0x4c, 0xa2, 0x15, 0x0b, 0xf1,
-	0xa3, 0x12, 0xd2, 0xff, 0x61, 0xbb, 0xaf, 0xd3, 0x54, 0x2a, 0x93, 0xf7, 0xf5, 0xb5, 0x32, 0xac,
-	0xd2, 0x22, 0x1d, 0x9f, 0xaf, 0x93, 0xd6, 0xd3, 0x28, 0x49, 0x65, 0x6e, 0x44, 0x3a, 0x63, 0x9b,
-	0x58, 0xb1, 0x24, 0x68, 0x03, 0x60, 0x98, 0x5c, 0xc9, 0x62, 0x83, 0x2a, 0xca, 0x2b, 0x0c, 0xa5,
-	0x10, 0x44, 0xf9, 0xf1, 0x98, 0xd5, 0xd0, 0x14, 0xae, 0x6d, 0x1f, 0xc7, 0xd7, 0x66, 0xa2, 0xb3,
-	0x68, 0xc0, 0xc0, 0xf5, 0x51, 0x62, 0xdc, 0x4f, 0x5f, 0x08, 0xeb, 0x2f, 0x1a, 0xb0, 0x3a, 0xaa,
-	0x2b, 0x0c, 0xdd, 0x05, 0x7f, 0x28, 0x0c, 0xdb, 0x6a, 0x91, 0x0e, 0xe1, 0x76, 0x89, 0x8c, 0x56,
-	0x6c, 0xbb, 0x60, 0xb4, 0x6a, 0x7f, 0x25, 0xb0, 0x77, 0x36, 0xb3, 0x5f, 0x8c, 0x64, 0x3a, 0xd3,
-	0x99, 0x98, 0x46, 0xca, 0xc8, 0xec, 0x46, 0x4c, 0x6d, 0x18, 0x27, 0x89, 0xb2, 0xf6, 0x31, 0x75,
-	0x9f, 0x97, 0x10, 0x15, 0x71, 0x8b, 0x8a, 0x57, 0x28, 0x0e, 0xd2, 0x3d, 0xa8, 0x9c, 0x24, 0xca,
-	0x9e, 0xea, 0xe3, 0x19, 0x05, 0x2a, 0x79, 0xad, 0x30, 0xf1, 0x82, 0xd7, 0x0a, 0x79, 0x71, 0x6b,
-	0xeb, 0xc3, 0x82, 0x47, 0x54, 0xf2, 0x5a, 0x61, 0xce, 0x05, 0xaf, 0x55, 0xfb, 0x25, 0x84, 0xa7,
-	0x3a, 0x51, 0x86, 0x32, 0xd7, 0x9b, 0x35, 0x46, 0x7a, 0x95, 0xc5, 0xbc, 0xe9, 0x4d, 0x8d, 0xeb,
-	0x91, 0xb9, 0x1e, 0xbd, 0x15, 0x45, 0xb9, 0x5e, 0x2f, 0xa1, 0xfa, 0x5e, 0x67, 0x57, 0x78, 0x9b,
-	0x56, 0x26, 0x4d, 0xd6, 0x27, 0xbd, 0x36, 0x43, 0xef, 0xf1, 0x0c, 0x8b, 0x4c, 0xfd, 0xdf, 0x32,
-	0x0d, 0x96, 0x99, 0x7e, 0x22, 0x00, 0xaf, 0x6e, 0xa4, 0x32, 0x78, 0x1d, 0xe9, 0x13, 0xd8, 0x1c,
-	0xe9, 0xd9, 0x50, 0x5e, 0x3a, 0xbb, 0xf5, 0xe7, 0xf5, 0x2e, 0x3e, 0x02, 0x6c, 0x84, 0x97, 0x1a,
-	0x3d, 0x84, 0x7a, 0x4f, 0x1b, 0xa3, 0x53, 0x9e, 0xc4, 0x13, 0x83, 0x27, 0x3f, 0x2a, 0x5d, 0xd5,
-	0x6d, 0x03, 0xb6, 0x91, 0x3c, 0x1a, 0x30, 0xbf, 0xe5, 0xdb, 0x06, 0x0a, 0x68, 0xaf, 0xd1, 0x48,
-	0xc4, 0x39, 0x0b, 0x90, 0xc6, 0x75, 0xfb, 0x0b, 0x81, 0x10, 0x2d, 0xd1, 0xa7, 0x50, 0xe9, 0x4b,
-	0x3b, 0xe2, 0x3f, 0x98, 0xe9, 0x05, 0x77, 0xf3, 0xe6, 0x06, 0x2f, 0x0a, 0x6c, 0x12, 0x76, 0xcf,
-	0xbe, 0x1e, 0xcb, 0x9c, 0x79, 0xb8, 0xdb, 0x92, 0x78, 0x38, 0xc6, 0x5f, 0x1e, 0x43, 0xff, 0x81,
-	0x70, 0x94, 0x98, 0xa9, 0xc4, 0x34, 0x6a, 0xdc, 0x01, 0xcb, 0x9e, 0x19, 0x91, 0xb9, 0x19, 0xfb,
-	0xdc, 0x01, 0x3b, 0xe2, 0xd7, 0x89, 0x4a, 0xf2, 0x49, 0xf1, 0x94, 0x0a, 0xd4, 0xfe, 0x00, 0x3b,
-	0xc7, 0x71, 0x9c, 0xc9, 0x58, 0x18, 0x39, 0xc6, 0x59, 0x75, 0xff, 0x66, 0xb9, 0x66, 0x2d, 0x2f,
-	0xe6, 0x4d, 0x72, 0xf1, 0xe0, 0xfb, 0x5f, 0x08, 0xdd, 0x13, 0xc3, 0xe9, 0xf5, 0x42, 0xab, 0x2a,
-	0xee, 0xb8, 0xf6, 0x47, 0xb2, 0x32, 0x5f, 0x7a, 0x00, 0xc1, 0xf2, 0x82, 0xf7, 0xaa, 0x8b, 0x79,
-	0x33, 0x30, 0x49, 0x2a, 0x39, 0xb2, 0xf4, 0x19, 0xd4, 0x31, 0xd4, 0x37, 0xd7, 0xe9, 0xb9, 0xcc,
-	0x8a, 0xed, 0x6a, 0x8b, 0x79, 0x33, 0x9c, 0x59, 0x9a, 0xaf, 0xaa, 0xb4, 0x0b, 0x5b, 0x98, 0x70,
-	0x59, 0xed, 0x63, 0x35, 0x2c, 0xe6, 0xcd, 0x8a, 0x44, 0x9e, 0xaf, 0xe9, 0xbd, 0xdd, 0xbb, 0xfb,
-	0x06, 0xf9, 0x76, 0xdf, 0x20, 0x3f, 0xee, 0x1b, 0xe4, 0xf3, 0xcf, 0xc6, 0xc6, 0x79, 0x05, 0xff,
-	0xf1, 0x5e, 0xfc, 0x0a, 0x00, 0x00, 0xff, 0xff, 0xfb, 0x7e, 0xc0, 0x2b, 0x2a, 0x05, 0x00, 0x00,
+	// 711 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x54, 0xc1, 0x6e, 0xd3, 0x4a,
+	0x14, 0xed, 0xd8, 0x4e, 0xea, 0xdc, 0xb4, 0x55, 0x35, 0x7a, 0xaa, 0x46, 0x7d, 0x7d, 0x49, 0x14,
+	0xbd, 0xa7, 0xe6, 0x09, 0x48, 0x25, 0x58, 0xb2, 0x6a, 0x12, 0x10, 0x96, 0x02, 0xaa, 0xa6, 0x01,
+	0x56, 0x2c, 0xdc, 0x66, 0xea, 0x58, 0x8d, 0x3d, 0x96, 0x3d, 0xa9, 0xca, 0x0f, 0xf0, 0x0d, 0x2c,
+	0xf8, 0x00, 0x3e, 0xa5, 0x4b, 0x3e, 0x00, 0x45, 0xa8, 0xec, 0xf2, 0x15, 0x68, 0xee, 0xd8, 0x89,
+	0xd3, 0xa2, 0x8a, 0x4d, 0x74, 0xef, 0x39, 0x37, 0x73, 0xcf, 0x9c, 0x7b, 0xc7, 0xb0, 0x9b, 0xa4,
+	0x52, 0xc9, 0xa3, 0xb1, 0xaf, 0xfc, 0x2e, 0x86, 0xd4, 0xd1, 0xf1, 0xfe, 0x3f, 0xfa, 0xf7, 0x49,
+	0xa6, 0x64, 0xea, 0x07, 0xe2, 0xc8, 0x14, 0x05, 0x32, 0x90, 0xa6, 0xa8, 0xfd, 0xdd, 0x02, 0xe7,
+	0x44, 0x66, 0x8a, 0xee, 0x80, 0xe5, 0x0d, 0x18, 0x69, 0x91, 0x4e, 0x8d, 0x5b, 0xde, 0x80, 0x1e,
+	0x40, 0xed, 0x74, 0x22, 0x53, 0x75, 0x2e, 0xc7, 0x82, 0x59, 0x08, 0xaf, 0x00, 0xba, 0x0f, 0xae,
+	0x17, 0xf9, 0x81, 0x78, 0xcb, 0x87, 0xcc, 0x46, 0x72, 0x99, 0x53, 0x06, 0x9b, 0x5e, 0xf6, 0x2e,
+	0x1c, 0x0b, 0xc9, 0x9c, 0x16, 0xe9, 0xb8, 0xbc, 0x48, 0x35, 0xd3, 0xf7, 0x13, 0x15, 0xca, 0x98,
+	0x55, 0xf0, 0x4f, 0x45, 0x4a, 0xff, 0x85, 0xed, 0xbe, 0x8c, 0x22, 0x11, 0xab, 0xac, 0x2f, 0x67,
+	0xb1, 0x62, 0xd5, 0x16, 0xe9, 0xd8, 0x7c, 0x1d, 0xd4, 0x9a, 0x46, 0x61, 0x24, 0x32, 0xe5, 0x47,
+	0x09, 0xdb, 0xc4, 0x8a, 0x15, 0x40, 0x1b, 0x00, 0xc3, 0xf0, 0x52, 0xe4, 0x07, 0xb8, 0x48, 0x97,
+	0x10, 0x4a, 0xc1, 0xf1, 0xb2, 0xe3, 0x31, 0xab, 0xa1, 0x28, 0x8c, 0xf5, 0x3d, 0x8e, 0x67, 0x6a,
+	0x22, 0x53, 0x6f, 0xc0, 0xc0, 0xdc, 0xa3, 0xc8, 0xf1, 0x3c, 0x79, 0xee, 0x6b, 0x7d, 0xde, 0x80,
+	0xd5, 0x91, 0x2d, 0x21, 0x74, 0x17, 0xec, 0xa1, 0xaf, 0xd8, 0x56, 0x8b, 0x74, 0x08, 0xd7, 0x21,
+	0x22, 0x32, 0x66, 0xdb, 0x39, 0x22, 0xe3, 0xf6, 0x17, 0x02, 0x7b, 0xa7, 0x89, 0xfe, 0xc7, 0x48,
+	0x44, 0x89, 0x4c, 0xfd, 0xa9, 0x17, 0x2b, 0x91, 0x5e, 0xf9, 0x53, 0x6d, 0xc6, 0xeb, 0x30, 0xd6,
+	0xf2, 0xd1, 0x75, 0x9b, 0x17, 0x29, 0x32, 0xfe, 0x35, 0x32, 0x56, 0xce, 0x98, 0x94, 0xfe, 0x07,
+	0x9b, 0x23, 0x99, 0x0c, 0xc5, 0x85, 0x42, 0xd7, 0xeb, 0x4f, 0xeb, 0x5d, 0x1c, 0xf8, 0x89, 0x0c,
+	0x63, 0xc5, 0x0b, 0x8e, 0x1e, 0x82, 0xdb, 0x93, 0x8a, 0x87, 0xc1, 0x44, 0xe1, 0x08, 0xee, 0xd4,
+	0x2d, 0xc9, 0xf6, 0x35, 0x50, 0xa3, 0xee, 0x95, 0x9c, 0xa5, 0x4b, 0x65, 0x14, 0x1c, 0x9d, 0xe7,
+	0xb2, 0x30, 0x2e, 0x77, 0xb6, 0xfe, 0xb0, 0xb3, 0xfd, 0x50, 0xe7, 0xe7, 0x50, 0x41, 0x88, 0x32,
+	0xe3, 0xa2, 0xee, 0x45, 0x7a, 0xd5, 0xc5, 0xbc, 0x69, 0x4d, 0x95, 0x71, 0x93, 0x19, 0x37, 0xad,
+	0x12, 0x13, 0x1b, 0x57, 0x2f, 0xc0, 0x7d, 0x2f, 0xd3, 0x4b, 0xdc, 0xdb, 0xd2, 0x4e, 0x91, 0xf5,
+	0x9d, 0x5a, 0xdb, 0x16, 0xeb, 0xee, 0xb6, 0xe4, 0xd3, 0xb3, 0xef, 0x4d, 0xcf, 0x59, 0x4d, 0xef,
+	0x2b, 0x81, 0xca, 0x8b, 0x2b, 0x11, 0x2b, 0xfa, 0x3f, 0x54, 0xfb, 0x42, 0xfb, 0x83, 0x4d, 0xd6,
+	0x6f, 0xd5, 0x73, 0x6e, 0xe6, 0xcd, 0x0d, 0x9e, 0x17, 0xe8, 0xb6, 0x5a, 0x58, 0x5f, 0x8e, 0x45,
+	0xc6, 0xac, 0x96, 0xad, 0x1f, 0xce, 0x12, 0xd0, 0xde, 0x8e, 0xfc, 0x20, 0x63, 0x36, 0x12, 0x18,
+	0xd3, 0xbf, 0xa0, 0x32, 0x0a, 0xd5, 0x54, 0x60, 0xeb, 0x1a, 0x37, 0x89, 0x46, 0x4f, 0x95, 0x9f,
+	0x2a, 0x7c, 0x2a, 0x36, 0x37, 0x09, 0xdd, 0x83, 0xea, 0xcb, 0x30, 0x0e, 0xb3, 0x49, 0xfe, 0x42,
+	0xf2, 0xac, 0xfd, 0x01, 0x76, 0x8e, 0x83, 0x20, 0x15, 0x81, 0xaf, 0xc4, 0x18, 0x8d, 0xe9, 0x3e,
+	0x24, 0xb9, 0xa6, 0x25, 0x2f, 0xe6, 0x4d, 0x72, 0xbe, 0xd4, 0xfd, 0x37, 0x54, 0xcc, 0xcb, 0x41,
+	0xab, 0x7a, 0x15, 0xcd, 0xc6, 0xdc, 0x60, 0xed, 0x4f, 0xa4, 0x64, 0x26, 0x3d, 0x00, 0x67, 0xb5,
+	0xb7, 0x3d, 0x77, 0x31, 0x6f, 0x3a, 0x2a, 0x8c, 0x04, 0x47, 0x94, 0x3e, 0x82, 0xba, 0x16, 0x90,
+	0xbd, 0x99, 0x45, 0x67, 0x22, 0xcd, 0x8f, 0xab, 0x2d, 0xe6, 0xcd, 0x4a, 0xa2, 0x61, 0x5e, 0x66,
+	0x69, 0x17, 0xb6, 0xd0, 0xe1, 0xa2, 0xda, 0xc6, 0x6a, 0x58, 0xcc, 0x9b, 0x55, 0x81, 0x38, 0x5f,
+	0xe3, 0xdb, 0x11, 0xb8, 0xc5, 0x13, 0xbc, 0xf7, 0xc9, 0x5a, 0xfa, 0x68, 0x95, 0x7d, 0x3c, 0x04,
+	0xf7, 0x44, 0x66, 0x21, 0x6e, 0xc8, 0xef, 0x56, 0xb2, 0x20, 0xf5, 0x68, 0xb2, 0xe9, 0x2c, 0xc8,
+	0xa7, 0x80, 0x71, 0xfb, 0x31, 0x38, 0xfd, 0x50, 0x7d, 0x5c, 0x1d, 0x4d, 0xca, 0x47, 0x1b, 0x01,
+	0x56, 0x21, 0xa0, 0xb7, 0x7b, 0x73, 0xdb, 0x20, 0xdf, 0x6e, 0x1b, 0xe4, 0xc7, 0x6d, 0x83, 0x7c,
+	0xfe, 0xd9, 0xd8, 0x38, 0xab, 0xe2, 0x57, 0xf6, 0xd9, 0xaf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xb6,
+	0x07, 0x1f, 0xba, 0x9e, 0x05, 0x00, 0x00,
 }
 
 func (m *Post) Marshal() (dAtA []byte, err error) {
@@ -856,29 +962,29 @@ func (m *SpatioTemporalInterval) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
-	if m.MaxLon != 0 {
-		i -= 8
-		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.MaxLon))))
+	if m.BotRight != nil {
+		{
+			size, err := m.BotRight.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintData(dAtA, i, uint64(size))
+		}
 		i--
-		dAtA[i] = 0x31
+		dAtA[i] = 0x22
 	}
-	if m.MaxLat != 0 {
-		i -= 8
-		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.MaxLat))))
+	if m.TopLeft != nil {
+		{
+			size, err := m.TopLeft.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintData(dAtA, i, uint64(size))
+		}
 		i--
-		dAtA[i] = 0x29
-	}
-	if m.MinLon != 0 {
-		i -= 8
-		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.MinLon))))
-		i--
-		dAtA[i] = 0x21
-	}
-	if m.MinLat != 0 {
-		i -= 8
-		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.MinLat))))
-		i--
-		dAtA[i] = 0x19
+		dAtA[i] = 0x1a
 	}
 	if m.MaxTime != 0 {
 		i = encodeVarintData(dAtA, i, uint64(m.MaxTime))
@@ -887,6 +993,62 @@ func (m *SpatioTemporalInterval) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	}
 	if m.MinTime != 0 {
 		i = encodeVarintData(dAtA, i, uint64(m.MinTime))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SpatioHourInterval) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SpatioHourInterval) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SpatioHourInterval) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.BotRight != nil {
+		{
+			size, err := m.BotRight.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintData(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.TopLeft != nil {
+		{
+			size, err := m.TopLeft.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintData(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Hour != 0 {
+		i = encodeVarintData(dAtA, i, uint64(m.Hour))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -977,75 +1139,6 @@ func (m *WorkPost) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.Caption)
 		copy(dAtA[i:], m.Caption)
 		i = encodeVarintData(dAtA, i, uint64(len(m.Caption)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *EventShort) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *EventShort) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *EventShort) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	if len(m.Tags) > 0 {
-		for iNdEx := len(m.Tags) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.Tags[iNdEx])
-			copy(dAtA[i:], m.Tags[iNdEx])
-			i = encodeVarintData(dAtA, i, uint64(len(m.Tags[iNdEx])))
-			i--
-			dAtA[i] = 0x22
-		}
-	}
-	if len(m.PostsID) > 0 {
-		for iNdEx := len(m.PostsID) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.PostsID[iNdEx])
-			copy(dAtA[i:], m.PostsID[iNdEx])
-			i = encodeVarintData(dAtA, i, uint64(len(m.PostsID[iNdEx])))
-			i--
-			dAtA[i] = 0x1a
-		}
-	}
-	if m.BottomRight != nil {
-		{
-			size, err := m.BottomRight.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintData(dAtA, i, uint64(size))
-		}
-		i--
-		dAtA[i] = 0x12
-	}
-	if m.TopLeft != nil {
-		{
-			size, err := m.TopLeft.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintData(dAtA, i, uint64(size))
-		}
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1208,6 +1301,107 @@ func (m *Timestamp) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *Location) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Location) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *Location) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Slug) > 0 {
+		i -= len(m.Slug)
+		copy(dAtA[i:], m.Slug)
+		i = encodeVarintData(dAtA, i, uint64(len(m.Slug)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.Position != nil {
+		{
+			size, err := m.Position.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintData(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintData(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ID) > 0 {
+		i -= len(m.ID)
+		copy(dAtA[i:], m.ID)
+		i = encodeVarintData(dAtA, i, uint64(len(m.ID)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *City) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *City) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *City) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.ID) > 0 {
+		i -= len(m.ID)
+		copy(dAtA[i:], m.ID)
+		i = encodeVarintData(dAtA, i, uint64(len(m.ID)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintData(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintData(dAtA []byte, offset int, v uint64) int {
 	offset -= sovData(v)
 	base := offset
@@ -1288,17 +1482,36 @@ func (m *SpatioTemporalInterval) Size() (n int) {
 	if m.MaxTime != 0 {
 		n += 1 + sovData(uint64(m.MaxTime))
 	}
-	if m.MinLat != 0 {
-		n += 9
+	if m.TopLeft != nil {
+		l = m.TopLeft.Size()
+		n += 1 + l + sovData(uint64(l))
 	}
-	if m.MinLon != 0 {
-		n += 9
+	if m.BotRight != nil {
+		l = m.BotRight.Size()
+		n += 1 + l + sovData(uint64(l))
 	}
-	if m.MaxLat != 0 {
-		n += 9
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
-	if m.MaxLon != 0 {
-		n += 9
+	return n
+}
+
+func (m *SpatioHourInterval) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Hour != 0 {
+		n += 1 + sovData(uint64(m.Hour))
+	}
+	if m.TopLeft != nil {
+		l = m.TopLeft.Size()
+		n += 1 + l + sovData(uint64(l))
+	}
+	if m.BotRight != nil {
+		l = m.BotRight.Size()
+		n += 1 + l + sovData(uint64(l))
 	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
@@ -1342,38 +1555,6 @@ func (m *WorkPost) Size() (n int) {
 	}
 	if m.Lon != 0 {
 		n += 9
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
-}
-
-func (m *EventShort) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.TopLeft != nil {
-		l = m.TopLeft.Size()
-		n += 1 + l + sovData(uint64(l))
-	}
-	if m.BottomRight != nil {
-		l = m.BottomRight.Size()
-		n += 1 + l + sovData(uint64(l))
-	}
-	if len(m.PostsID) > 0 {
-		for _, s := range m.PostsID {
-			l = len(s)
-			n += 1 + l + sovData(uint64(l))
-		}
-	}
-	if len(m.Tags) > 0 {
-		for _, s := range m.Tags {
-			l = len(s)
-			n += 1 + l + sovData(uint64(l))
-		}
 	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
@@ -1448,6 +1629,54 @@ func (m *Timestamp) Size() (n int) {
 	}
 	if m.EventsNumber != 0 {
 		n += 1 + sovData(uint64(m.EventsNumber))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Location) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ID)
+	if l > 0 {
+		n += 1 + l + sovData(uint64(l))
+	}
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovData(uint64(l))
+	}
+	if m.Position != nil {
+		l = m.Position.Size()
+		n += 1 + l + sovData(uint64(l))
+	}
+	l = len(m.Slug)
+	if l > 0 {
+		n += 1 + l + sovData(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *City) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovData(uint64(l))
+	}
+	l = len(m.ID)
+	if l > 0 {
+		n += 1 + l + sovData(uint64(l))
 	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
@@ -1894,49 +2123,222 @@ func (m *SpatioTemporalInterval) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 3:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MinLat", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TopLeft", wireType)
 			}
-			var v uint64
-			if (iNdEx + 8) > l {
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowData
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthData
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthData
+			}
+			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-			m.MinLat = float64(math.Float64frombits(v))
+			if m.TopLeft == nil {
+				m.TopLeft = &Point{}
+			}
+			if err := m.TopLeft.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 4:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MinLon", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BotRight", wireType)
 			}
-			var v uint64
-			if (iNdEx + 8) > l {
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowData
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthData
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthData
+			}
+			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-			m.MinLon = float64(math.Float64frombits(v))
-		case 5:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxLat", wireType)
+			if m.BotRight == nil {
+				m.BotRight = &Point{}
 			}
-			var v uint64
-			if (iNdEx + 8) > l {
+			if err := m.BotRight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipData(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthData
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthData
+			}
+			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-			m.MaxLat = float64(math.Float64frombits(v))
-		case 6:
-			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxLon", wireType)
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SpatioHourInterval) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowData
 			}
-			var v uint64
-			if (iNdEx + 8) > l {
+			if iNdEx >= l {
 				return io.ErrUnexpectedEOF
 			}
-			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-			iNdEx += 8
-			m.MaxLon = float64(math.Float64frombits(v))
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SpatioHourInterval: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SpatioHourInterval: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Hour", wireType)
+			}
+			m.Hour = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowData
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Hour |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TopLeft", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowData
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthData
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthData
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TopLeft == nil {
+				m.TopLeft = &Point{}
+			}
+			if err := m.TopLeft.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BotRight", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowData
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthData
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthData
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.BotRight == nil {
+				m.BotRight = &Point{}
+			}
+			if err := m.BotRight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipData(dAtA[iNdEx:])
@@ -2140,196 +2542,6 @@ func (m *WorkPost) Unmarshal(dAtA []byte) error {
 			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
 			m.Lon = float64(math.Float64frombits(v))
-		default:
-			iNdEx = preIndex
-			skippy, err := skipData(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthData
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthData
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *EventShort) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowData
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: EventShort: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventShort: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TopLeft", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowData
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthData
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthData
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.TopLeft == nil {
-				m.TopLeft = &Point{}
-			}
-			if err := m.TopLeft.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BottomRight", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowData
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthData
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthData
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.BottomRight == nil {
-				m.BottomRight = &Point{}
-			}
-			if err := m.BottomRight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PostsID", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowData
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthData
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthData
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.PostsID = append(m.PostsID, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowData
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthData
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthData
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Tags = append(m.Tags, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipData(dAtA[iNdEx:])
@@ -2768,6 +2980,310 @@ func (m *Timestamp) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipData(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthData
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthData
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Location) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowData
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Location: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Location: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowData
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthData
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthData
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowData
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthData
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthData
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Position", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowData
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthData
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthData
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Position == nil {
+				m.Position = &Point{}
+			}
+			if err := m.Position.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Slug", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowData
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthData
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthData
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Slug = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipData(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthData
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthData
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *City) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowData
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: City: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: City: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowData
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthData
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthData
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowData
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthData
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthData
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipData(dAtA[iNdEx:])

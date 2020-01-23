@@ -58,8 +58,8 @@ func (s Set) SelectPosts(ctx context.Context, interval data.SpatioTemporalInterv
 	return response.Posts, response.Err
 }
 
-func (s Set) SelectAggrPosts(ctx context.Context, hour int64, topLeft, botRight data.Point) ([]data.AggregatedPost, error) {
-	resp, err := s.SelectAggrPostsEndpoint(ctx, proto.SelectAggrPostsRequest{Hour: hour, TopLeft: topLeft, BotRight: botRight})
+func (s Set) SelectAggrPosts(ctx context.Context, interval data.SpatioHourInterval) ([]data.AggregatedPost, error) {
+	resp, err := s.SelectAggrPostsEndpoint(ctx, proto.SelectAggrPostsRequest{Interval: interval})
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func makeSelectPostsEndpoint(s Service) endpoint.Endpoint {
 func makeSelectAggrPostsEndopoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.SelectAggrPostsRequest)
-		posts, err := s.SelectAggrPosts(ctx, req.Hour, req.TopLeft, req.BotRight)
+		posts, err := s.SelectAggrPosts(ctx, req.Interval)
 		return SelectAggrPostsResponse{Posts: posts, Err: err}, nil
 	}
 }

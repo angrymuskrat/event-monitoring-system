@@ -29,7 +29,7 @@ type Service interface {
 	// 		and error if storage can't return posts due to other reasons
 	SelectPosts(ctx context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error)
 
-	SelectAggrPosts(ctx context.Context, hour int64, topLeft, botRight data.Point) ([]data.AggregatedPost, error)
+	SelectAggrPosts(ctx context.Context, interval data.SpatioHourInterval) ([]data.AggregatedPost, error)
 
 	// input not empty id and not empty array of bytes
 	// if blob successfully added to database, return nil
@@ -54,8 +54,8 @@ func (s basicService) SelectPosts(_ context.Context, interval data.SpatioTempora
 	return s.db.SelectPosts(interval)
 }
 
-func (s basicService) SelectAggrPosts(_ context.Context, hour int64, topLeft, botRight data.Point) ([]data.AggregatedPost, error) {
-	return s.db.SelectAggrPosts(hour, topLeft, botRight)
+func (s basicService) SelectAggrPosts(_ context.Context, interval data.SpatioHourInterval) ([]data.AggregatedPost, error) {
+	return s.db.SelectAggrPosts(interval)
 }
 
 func (s basicService) PushGrid(_ context.Context, id string, blob []byte) error {

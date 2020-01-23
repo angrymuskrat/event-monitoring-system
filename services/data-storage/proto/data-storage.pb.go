@@ -28,7 +28,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-// The push request contains two parameters.
+// messages for push and select posts
 type PushPostsRequest struct {
 	Posts                []proto1.Post `protobuf:"bytes,1,rep,name=posts,proto3" json:"posts"`
 	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
@@ -233,13 +233,12 @@ func (m *SelectPostsReply) GetErr() string {
 	return ""
 }
 
+// messages for select aggr posts
 type SelectAggrPostsRequest struct {
-	Hour                 int64        `protobuf:"varint,1,opt,name=hour,proto3" json:"hour,omitempty"`
-	TopLeft              proto1.Point `protobuf:"bytes,2,opt,name=topLeft,proto3" json:"topLeft"`
-	BotRight             proto1.Point `protobuf:"bytes,3,opt,name=botRight,proto3" json:"botRight"`
-	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
-	XXX_unrecognized     []byte       `json:"-"`
-	XXX_sizecache        int32        `json:"-"`
+	Interval             proto1.SpatioHourInterval `protobuf:"bytes,1,opt,name=interval,proto3" json:"interval"`
+	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
+	XXX_unrecognized     []byte                    `json:"-"`
+	XXX_sizecache        int32                     `json:"-"`
 }
 
 func (m *SelectAggrPostsRequest) Reset()         { *m = SelectAggrPostsRequest{} }
@@ -275,25 +274,11 @@ func (m *SelectAggrPostsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SelectAggrPostsRequest proto.InternalMessageInfo
 
-func (m *SelectAggrPostsRequest) GetHour() int64 {
+func (m *SelectAggrPostsRequest) GetInterval() proto1.SpatioHourInterval {
 	if m != nil {
-		return m.Hour
+		return m.Interval
 	}
-	return 0
-}
-
-func (m *SelectAggrPostsRequest) GetTopLeft() proto1.Point {
-	if m != nil {
-		return m.TopLeft
-	}
-	return proto1.Point{}
-}
-
-func (m *SelectAggrPostsRequest) GetBotRight() proto1.Point {
-	if m != nil {
-		return m.BotRight
-	}
-	return proto1.Point{}
+	return proto1.SpatioHourInterval{}
 }
 
 type SelectAggrPostsReply struct {
@@ -351,6 +336,7 @@ func (m *SelectAggrPostsReply) GetErr() string {
 	return ""
 }
 
+// messages for pull and push grids
 type PushGridRequest struct {
 	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Blob                 []byte   `protobuf:"bytes,2,opt,name=blob,proto3" json:"blob,omitempty"`
@@ -555,11 +541,12 @@ func (m *PullGridReply) GetErr() string {
 	return ""
 }
 
+// messages gor pull and push events
 type PushEventsRequest struct {
-	Events               []proto1.EventShort `protobuf:"bytes,1,rep,name=events,proto3" json:"events"`
-	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
-	XXX_unrecognized     []byte              `json:"-"`
-	XXX_sizecache        int32               `json:"-"`
+	Events               []proto1.Event `protobuf:"bytes,1,rep,name=events,proto3" json:"events"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
 }
 
 func (m *PushEventsRequest) Reset()         { *m = PushEventsRequest{} }
@@ -595,7 +582,7 @@ func (m *PushEventsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PushEventsRequest proto.InternalMessageInfo
 
-func (m *PushEventsRequest) GetEvents() []proto1.EventShort {
+func (m *PushEventsRequest) GetEvents() []proto1.Event {
 	if m != nil {
 		return m.Events
 	}
@@ -650,10 +637,10 @@ func (m *PushEventsReply) GetErr() string {
 }
 
 type PullEventsRequest struct {
-	Interval             proto1.SpatioTemporalInterval `protobuf:"bytes,1,opt,name=interval,proto3" json:"interval"`
-	XXX_NoUnkeyedLiteral struct{}                      `json:"-"`
-	XXX_unrecognized     []byte                        `json:"-"`
-	XXX_sizecache        int32                         `json:"-"`
+	Interval             proto1.SpatioHourInterval `protobuf:"bytes,1,opt,name=interval,proto3" json:"interval"`
+	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
+	XXX_unrecognized     []byte                    `json:"-"`
+	XXX_sizecache        int32                     `json:"-"`
 }
 
 func (m *PullEventsRequest) Reset()         { *m = PullEventsRequest{} }
@@ -689,19 +676,19 @@ func (m *PullEventsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PullEventsRequest proto.InternalMessageInfo
 
-func (m *PullEventsRequest) GetInterval() proto1.SpatioTemporalInterval {
+func (m *PullEventsRequest) GetInterval() proto1.SpatioHourInterval {
 	if m != nil {
 		return m.Interval
 	}
-	return proto1.SpatioTemporalInterval{}
+	return proto1.SpatioHourInterval{}
 }
 
 type PullEventsReply struct {
-	Events               []*proto1.Event `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"`
-	Err                  string          `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
-	XXX_unrecognized     []byte          `json:"-"`
-	XXX_sizecache        int32           `json:"-"`
+	Events               []proto1.Event `protobuf:"bytes,1,rep,name=events,proto3" json:"events"`
+	Err                  string         `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
 }
 
 func (m *PullEventsReply) Reset()         { *m = PullEventsReply{} }
@@ -737,7 +724,7 @@ func (m *PullEventsReply) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PullEventsReply proto.InternalMessageInfo
 
-func (m *PullEventsReply) GetEvents() []*proto1.Event {
+func (m *PullEventsReply) GetEvents() []proto1.Event {
 	if m != nil {
 		return m.Events
 	}
@@ -745,6 +732,211 @@ func (m *PullEventsReply) GetEvents() []*proto1.Event {
 }
 
 func (m *PullEventsReply) GetErr() string {
+	if m != nil {
+		return m.Err
+	}
+	return ""
+}
+
+// messages for pull and push locations
+type PushLocationsRequest struct {
+	City                 proto1.City       `protobuf:"bytes,1,opt,name=city,proto3" json:"city"`
+	Locations            []proto1.Location `protobuf:"bytes,2,rep,name=locations,proto3" json:"locations"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *PushLocationsRequest) Reset()         { *m = PushLocationsRequest{} }
+func (m *PushLocationsRequest) String() string { return proto.CompactTextString(m) }
+func (*PushLocationsRequest) ProtoMessage()    {}
+func (*PushLocationsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{14}
+}
+func (m *PushLocationsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PushLocationsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PushLocationsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PushLocationsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PushLocationsRequest.Merge(m, src)
+}
+func (m *PushLocationsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *PushLocationsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PushLocationsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PushLocationsRequest proto.InternalMessageInfo
+
+func (m *PushLocationsRequest) GetCity() proto1.City {
+	if m != nil {
+		return m.City
+	}
+	return proto1.City{}
+}
+
+func (m *PushLocationsRequest) GetLocations() []proto1.Location {
+	if m != nil {
+		return m.Locations
+	}
+	return nil
+}
+
+type PushLocationsReply struct {
+	Err                  string   `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PushLocationsReply) Reset()         { *m = PushLocationsReply{} }
+func (m *PushLocationsReply) String() string { return proto.CompactTextString(m) }
+func (*PushLocationsReply) ProtoMessage()    {}
+func (*PushLocationsReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{15}
+}
+func (m *PushLocationsReply) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PushLocationsReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PushLocationsReply.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PushLocationsReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PushLocationsReply.Merge(m, src)
+}
+func (m *PushLocationsReply) XXX_Size() int {
+	return m.Size()
+}
+func (m *PushLocationsReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_PushLocationsReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PushLocationsReply proto.InternalMessageInfo
+
+func (m *PushLocationsReply) GetErr() string {
+	if m != nil {
+		return m.Err
+	}
+	return ""
+}
+
+type PullLocationsRequest struct {
+	CityId               string   `protobuf:"bytes,1,opt,name=cityId,proto3" json:"cityId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PullLocationsRequest) Reset()         { *m = PullLocationsRequest{} }
+func (m *PullLocationsRequest) String() string { return proto.CompactTextString(m) }
+func (*PullLocationsRequest) ProtoMessage()    {}
+func (*PullLocationsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{16}
+}
+func (m *PullLocationsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PullLocationsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PullLocationsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PullLocationsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PullLocationsRequest.Merge(m, src)
+}
+func (m *PullLocationsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *PullLocationsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PullLocationsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PullLocationsRequest proto.InternalMessageInfo
+
+func (m *PullLocationsRequest) GetCityId() string {
+	if m != nil {
+		return m.CityId
+	}
+	return ""
+}
+
+type PullLocationsReply struct {
+	Locations            []proto1.Location `protobuf:"bytes,1,rep,name=locations,proto3" json:"locations"`
+	Err                  string            `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *PullLocationsReply) Reset()         { *m = PullLocationsReply{} }
+func (m *PullLocationsReply) String() string { return proto.CompactTextString(m) }
+func (*PullLocationsReply) ProtoMessage()    {}
+func (*PullLocationsReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{17}
+}
+func (m *PullLocationsReply) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PullLocationsReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PullLocationsReply.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PullLocationsReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PullLocationsReply.Merge(m, src)
+}
+func (m *PullLocationsReply) XXX_Size() int {
+	return m.Size()
+}
+func (m *PullLocationsReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_PullLocationsReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PullLocationsReply proto.InternalMessageInfo
+
+func (m *PullLocationsReply) GetLocations() []proto1.Location {
+	if m != nil {
+		return m.Locations
+	}
+	return nil
+}
+
+func (m *PullLocationsReply) GetErr() string {
 	if m != nil {
 		return m.Err
 	}
@@ -766,6 +958,10 @@ func init() {
 	proto.RegisterType((*PushEventsReply)(nil), "proto.PushEventsReply")
 	proto.RegisterType((*PullEventsRequest)(nil), "proto.PullEventsRequest")
 	proto.RegisterType((*PullEventsReply)(nil), "proto.PullEventsReply")
+	proto.RegisterType((*PushLocationsRequest)(nil), "proto.PushLocationsRequest")
+	proto.RegisterType((*PushLocationsReply)(nil), "proto.PushLocationsReply")
+	proto.RegisterType((*PullLocationsRequest)(nil), "proto.PullLocationsRequest")
+	proto.RegisterType((*PullLocationsReply)(nil), "proto.PullLocationsReply")
 }
 
 func init() {
@@ -773,43 +969,45 @@ func init() {
 }
 
 var fileDescriptor_8ec0c2fba98f9a4b = []byte{
-	// 564 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x53, 0xc1, 0x6e, 0x13, 0x3d,
-	0x10, 0x8e, 0x93, 0xa6, 0x7f, 0x32, 0xfb, 0xd3, 0x2e, 0x56, 0x68, 0xc3, 0x42, 0x43, 0xea, 0x0a,
-	0x14, 0x09, 0x35, 0x45, 0x81, 0x5e, 0x2a, 0x81, 0x44, 0x0b, 0x02, 0xa4, 0x4a, 0x54, 0x9b, 0x9e,
-	0xb8, 0x6d, 0x58, 0xb3, 0x59, 0xc9, 0xc4, 0x8b, 0xe3, 0x54, 0xea, 0x1b, 0xf0, 0x08, 0x3c, 0x52,
-	0x8f, 0x9c, 0x39, 0x20, 0x14, 0x5e, 0x04, 0xd9, 0x5e, 0x27, 0xde, 0x24, 0x45, 0x95, 0x38, 0xad,
-	0x77, 0xfc, 0xcd, 0xf7, 0x7d, 0x33, 0x9e, 0x81, 0x87, 0x71, 0x24, 0xa3, 0xfd, 0xb1, 0xe4, 0x22,
-	0x4a, 0xe8, 0x41, 0x26, 0xb8, 0xe4, 0x07, 0x6e, 0xa8, 0xab, 0x43, 0xb8, 0xaa, 0x3f, 0xc1, 0xce,
-	0x0a, 0x74, 0xc2, 0x13, 0x6e, 0x50, 0x81, 0x3f, 0xcf, 0x37, 0x11, 0x72, 0x04, 0xfe, 0xd9, 0x64,
-	0x3c, 0x3c, 0xe3, 0x63, 0x39, 0x0e, 0xe9, 0x97, 0x09, 0x1d, 0x4b, 0xfc, 0x08, 0xaa, 0x99, 0xfa,
-	0x6f, 0xa2, 0x76, 0xa5, 0xe3, 0xf5, 0xa0, 0xab, 0xf1, 0x0a, 0x72, 0xbc, 0x76, 0xf5, 0xf3, 0x41,
-	0x29, 0x34, 0xd7, 0xe4, 0x19, 0x6c, 0x38, 0xb9, 0x19, 0xbb, 0xc4, 0x3e, 0x54, 0xd2, 0xd8, 0xe4,
-	0x55, 0x43, 0x75, 0x54, 0x11, 0x2a, 0x44, 0xb3, 0xdc, 0x46, 0x9d, 0x7a, 0xa8, 0x8e, 0xe4, 0x1c,
-	0x70, 0x9f, 0x32, 0xfa, 0x51, 0x16, 0x34, 0x5f, 0x40, 0x2d, 0x1d, 0x49, 0x2a, 0x2e, 0x22, 0xd6,
-	0x44, 0x6d, 0xd4, 0xf1, 0x7a, 0xf7, 0x8d, 0x6c, 0x3f, 0x8b, 0x64, 0xca, 0xcf, 0xe9, 0xe7, 0x8c,
-	0x8b, 0x88, 0xbd, 0xcb, 0x31, 0xb9, 0x91, 0x59, 0x0e, 0x39, 0x05, 0xbf, 0xc0, 0xaa, 0xdc, 0xdc,
-	0xb0, 0x8e, 0x15, 0x1e, 0xbf, 0x22, 0xd8, 0x32, 0x74, 0x2f, 0x93, 0x44, 0x14, 0x8c, 0x62, 0x58,
-	0x1b, 0xf2, 0x89, 0xd0, 0x26, 0x2b, 0xa1, 0x3e, 0xe3, 0xc7, 0xf0, 0x9f, 0xe4, 0xd9, 0x29, 0xfd,
-	0x24, 0x35, 0x89, 0xd7, 0xf3, 0xac, 0x54, 0x3a, 0xb2, 0x5a, 0x16, 0x81, 0xf7, 0xa1, 0x36, 0xe0,
-	0x32, 0x4c, 0x93, 0xa1, 0x6c, 0x56, 0xae, 0x43, 0xcf, 0x20, 0xe4, 0x03, 0x34, 0x96, 0x9c, 0xa8,
-	0xe2, 0x9e, 0x14, 0x8b, 0x6b, 0x18, 0x0e, 0x05, 0xa2, 0x49, 0x24, 0x69, 0x7c, 0x93, 0x32, 0x0f,
-	0x61, 0x53, 0x3d, 0xe0, 0x1b, 0x91, 0xc6, 0xb6, 0xbc, 0x0d, 0x28, 0xa7, 0xb1, 0x2e, 0xae, 0x1e,
-	0x96, 0xd3, 0x58, 0x95, 0x3b, 0x60, 0x7c, 0xa0, 0xb3, 0xfe, 0x0f, 0xf5, 0x99, 0xec, 0xc2, 0xad,
-	0x79, 0x5a, 0xfe, 0xec, 0x8a, 0x19, 0xcd, 0x99, 0x77, 0x15, 0x33, 0x63, 0x7f, 0x61, 0x26, 0x87,
-	0x8a, 0xc5, 0x42, 0x14, 0x8b, 0x95, 0x42, 0x73, 0xa9, 0x15, 0x9e, 0x4f, 0xe0, 0xb6, 0x12, 0x7f,
-	0x7d, 0x41, 0x47, 0xf3, 0x47, 0xe9, 0xc2, 0x3a, 0xd5, 0x81, 0xbc, 0x1b, 0xbe, 0xe9, 0x86, 0x06,
-	0xf5, 0x87, 0x5c, 0xd8, 0x4e, 0xe4, 0x28, 0xb2, 0x67, 0x0a, 0xb7, 0x24, 0xab, 0x6b, 0xe8, 0x2b,
-	0x25, 0xc6, 0x8a, 0x4a, 0xff, 0x3a, 0xa7, 0x6f, 0x4d, 0x63, 0x5c, 0xe5, 0xbd, 0x05, 0xf3, 0x9e,
-	0x63, 0xde, 0x3a, 0x5e, 0x6e, 0x44, 0xef, 0x47, 0x19, 0xbc, 0x57, 0x91, 0x8c, 0xfa, 0x66, 0xd9,
-	0xf1, 0x73, 0xa8, 0xcf, 0xb6, 0x11, 0x6f, 0x9b, 0xf5, 0xee, 0x2e, 0xee, 0x76, 0x70, 0x67, 0xf9,
-	0x22, 0x63, 0x97, 0xa4, 0x84, 0x4f, 0xc0, 0x73, 0x16, 0x08, 0xdf, 0xcd, 0x71, 0xcb, 0xab, 0x1a,
-	0x6c, 0xaf, 0xba, 0x32, 0x24, 0xef, 0x61, 0x73, 0x61, 0x58, 0xf1, 0x4e, 0x01, 0xbd, 0xb8, 0x4e,
-	0xc1, 0xbd, 0xeb, 0xae, 0x0d, 0xe1, 0x11, 0xd4, 0xec, 0xa8, 0xe1, 0x2d, 0xc7, 0xba, 0x33, 0x58,
-	0x41, 0x63, 0x29, 0xee, 0xe4, 0x9a, 0x01, 0x73, 0x72, 0x0b, 0x43, 0xe9, 0xe4, 0x3a, 0x93, 0x48,
-	0x4a, 0xc7, 0xfe, 0xd5, 0xb4, 0x85, 0xbe, 0x4f, 0x5b, 0xe8, 0xd7, 0xb4, 0x85, 0xbe, 0xfd, 0x6e,
-	0x95, 0x06, 0xeb, 0x1a, 0xf8, 0xf4, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x1b, 0x28, 0x60, 0xcb,
-	0x90, 0x05, 0x00, 0x00,
+	// 597 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0xcf, 0x6f, 0x12, 0x4f,
+	0x14, 0x67, 0x29, 0x90, 0xf2, 0xf8, 0x7e, 0x29, 0x4e, 0x90, 0xe2, 0x6a, 0x91, 0x8e, 0xda, 0xe0,
+	0x41, 0x6a, 0xd0, 0x5e, 0x48, 0x6c, 0x62, 0xab, 0xd1, 0x26, 0x8d, 0x6d, 0x96, 0x9e, 0x7a, 0x5b,
+	0xd8, 0xc9, 0xba, 0xc9, 0xc8, 0xac, 0xcb, 0xd0, 0x84, 0xff, 0xc4, 0x3f, 0xa9, 0x47, 0xcf, 0x1e,
+	0x8c, 0xc1, 0x7f, 0xc4, 0xcc, 0x8f, 0x65, 0x67, 0xd9, 0xad, 0x21, 0xf1, 0xc4, 0xf2, 0xe6, 0xf3,
+	0x6b, 0xdf, 0xec, 0x7b, 0xf0, 0xcc, 0x73, 0xb9, 0xfb, 0x62, 0xc6, 0x59, 0xe4, 0xfa, 0xe4, 0x30,
+	0x8c, 0x18, 0x67, 0x87, 0x66, 0xa9, 0x2f, 0x4b, 0xa8, 0x2c, 0x7f, 0xec, 0xbd, 0x1c, 0xb4, 0xcf,
+	0x7c, 0xa6, 0x50, 0x76, 0x23, 0xe1, 0xab, 0x0a, 0x1e, 0x42, 0xe3, 0x72, 0x3e, 0xfb, 0x7c, 0xc9,
+	0x66, 0x7c, 0xe6, 0x90, 0xaf, 0x73, 0x32, 0xe3, 0xe8, 0x00, 0xca, 0xa1, 0xf8, 0xdf, 0xb6, 0xba,
+	0x5b, 0xbd, 0xda, 0x00, 0xfa, 0x12, 0x2f, 0x20, 0x27, 0xa5, 0xdb, 0x9f, 0x8f, 0x0b, 0x8e, 0x3a,
+	0xc6, 0xaf, 0xa1, 0x6e, 0x70, 0x43, 0xba, 0x40, 0x0d, 0xd8, 0x0a, 0x3c, 0xc5, 0x2b, 0x3b, 0xe2,
+	0x51, 0x54, 0x48, 0x14, 0xb5, 0x8b, 0x5d, 0xab, 0x57, 0x75, 0xc4, 0x23, 0xbe, 0x02, 0x34, 0x22,
+	0x94, 0x4c, 0x78, 0xca, 0xf3, 0x18, 0xb6, 0x83, 0x29, 0x27, 0xd1, 0x8d, 0x4b, 0xdb, 0x56, 0xd7,
+	0xea, 0xd5, 0x06, 0x8f, 0x94, 0xed, 0x28, 0x74, 0x79, 0xc0, 0xae, 0xc8, 0x97, 0x90, 0x45, 0x2e,
+	0x3d, 0xd3, 0x18, 0x1d, 0x64, 0xc5, 0xc1, 0xe7, 0xd0, 0x48, 0xa9, 0x8a, 0x34, 0x1b, 0xbe, 0x47,
+	0x6e, 0xc6, 0x96, 0x52, 0x7b, 0xeb, 0xfb, 0x51, 0x2a, 0xe7, 0x30, 0x93, 0xb3, 0x6d, 0xe6, 0xfc,
+	0xc8, 0xe6, 0xd1, 0x9d, 0x19, 0xaf, 0xa1, 0x99, 0x51, 0x15, 0x39, 0x5f, 0xa6, 0x73, 0x36, 0x95,
+	0xa0, 0x00, 0x11, 0xdf, 0xe5, 0xc4, 0xdb, 0x24, 0xf1, 0x11, 0xec, 0x88, 0xbb, 0xf8, 0x10, 0x05,
+	0x5e, 0x1c, 0xb5, 0x0e, 0xc5, 0xc0, 0x93, 0x21, 0xab, 0x4e, 0x31, 0xf0, 0x10, 0x82, 0xd2, 0x98,
+	0xb2, 0xb1, 0x64, 0xfd, 0xe7, 0xc8, 0x67, 0xbc, 0x0f, 0xff, 0x27, 0x34, 0x7d, 0x83, 0x42, 0xd9,
+	0x4a, 0x94, 0xf7, 0x85, 0x32, 0xa5, 0x7f, 0x51, 0xc6, 0x47, 0x42, 0x25, 0x86, 0x08, 0x95, 0xd8,
+	0xca, 0x4a, 0xac, 0x72, 0x32, 0x1f, 0xc3, 0x3d, 0x61, 0xfe, 0xfe, 0x86, 0x4c, 0x93, 0x06, 0x3f,
+	0x87, 0x0a, 0x91, 0x05, 0xdd, 0x8d, 0x9a, 0xea, 0x86, 0x04, 0xe9, 0x26, 0x68, 0x00, 0x7e, 0xa2,
+	0xde, 0x39, 0xe6, 0xe7, 0xc7, 0xbf, 0x10, 0x26, 0x94, 0xa6, 0x4d, 0xfe, 0xe5, 0x16, 0x3f, 0xa9,
+	0x7e, 0x98, 0xae, 0x9b, 0x67, 0xce, 0xe9, 0x42, 0x08, 0x4d, 0xf1, 0x16, 0xe7, 0x6c, 0x22, 0xac,
+	0xa7, 0xab, 0x8c, 0x4f, 0xa1, 0x34, 0x09, 0xf8, 0x42, 0xe7, 0xd3, 0x1f, 0xef, 0x69, 0xc0, 0x17,
+	0x5a, 0x51, 0x9e, 0xa2, 0x01, 0x54, 0x69, 0xcc, 0x6c, 0x17, 0xa5, 0x7b, 0x5d, 0x41, 0x63, 0x41,
+	0x0d, 0x4f, 0x60, 0xf8, 0x00, 0xd0, 0x9a, 0x63, 0x7e, 0xeb, 0xfa, 0x22, 0x19, 0xa5, 0x99, 0x64,
+	0x2d, 0xa8, 0x08, 0xef, 0xb3, 0xf8, 0x13, 0xd0, 0xff, 0xf0, 0xb5, 0xd0, 0x4d, 0xe1, 0x85, 0x6e,
+	0x2a, 0xa1, 0xb5, 0x51, 0xc2, 0x6c, 0x97, 0x06, 0x3f, 0x8a, 0x50, 0x7b, 0xe7, 0x72, 0x77, 0xa4,
+	0x56, 0x1b, 0x7a, 0x03, 0xd5, 0xd5, 0xee, 0x41, 0xbb, 0x6a, 0x99, 0xf5, 0xd7, 0x37, 0x99, 0x7d,
+	0x3f, 0x7b, 0x10, 0xd2, 0x05, 0x2e, 0xa0, 0x53, 0xa8, 0x19, 0xeb, 0x02, 0x3d, 0xd0, 0xb8, 0xec,
+	0x62, 0xb2, 0x77, 0xf3, 0x8e, 0x94, 0xc8, 0x05, 0xec, 0xac, 0xcd, 0x33, 0xda, 0x4b, 0xa1, 0xd7,
+	0xb7, 0x87, 0xfd, 0xf0, 0xae, 0x63, 0x25, 0x38, 0x84, 0xed, 0x78, 0x1a, 0x51, 0xcb, 0x88, 0x6e,
+	0xcc, 0x9e, 0xdd, 0xcc, 0xd4, 0x0d, 0xae, 0x9a, 0x41, 0x83, 0x9b, 0x9a, 0x5b, 0x83, 0x6b, 0x0c,
+	0x2b, 0x2e, 0x9c, 0x34, 0x6e, 0x97, 0x1d, 0xeb, 0xfb, 0xb2, 0x63, 0xfd, 0x5a, 0x76, 0xac, 0x6f,
+	0xbf, 0x3b, 0x85, 0x71, 0x45, 0x02, 0x5f, 0xfd, 0x09, 0x00, 0x00, 0xff, 0xff, 0x88, 0x66, 0xf0,
+	0x37, 0x7e, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -824,9 +1022,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type DataStorageClient interface {
-	// Push array of posts to database
 	PushPosts(ctx context.Context, in *PushPostsRequest, opts ...grpc.CallOption) (*PushPostsReply, error)
-	// Select array from database, each element from array belongs the interval
 	SelectPosts(ctx context.Context, in *SelectPostsRequest, opts ...grpc.CallOption) (*SelectPostsReply, error)
 	SelectAggrPosts(ctx context.Context, in *SelectAggrPostsRequest, opts ...grpc.CallOption) (*SelectAggrPostsReply, error)
 	PushGrid(ctx context.Context, in *PushGridRequest, opts ...grpc.CallOption) (*PushGridReply, error)
@@ -888,9 +1084,7 @@ func (c *dataStorageClient) PullGrid(ctx context.Context, in *PullGridRequest, o
 
 // DataStorageServer is the server API for DataStorage service.
 type DataStorageServer interface {
-	// Push array of posts to database
 	PushPosts(context.Context, *PushPostsRequest) (*PushPostsReply, error)
-	// Select array from database, each element from array belongs the interval
 	SelectPosts(context.Context, *SelectPostsRequest) (*SelectPostsReply, error)
 	SelectAggrPosts(context.Context, *SelectAggrPostsRequest) (*SelectAggrPostsReply, error)
 	PushGrid(context.Context, *PushGridRequest) (*PushGridReply, error)
@@ -1244,7 +1438,7 @@ func (m *SelectAggrPostsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
 	{
-		size, err := m.BotRight.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.Interval.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -1252,22 +1446,7 @@ func (m *SelectAggrPostsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 		i = encodeVarintDataStorage(dAtA, i, uint64(size))
 	}
 	i--
-	dAtA[i] = 0x1a
-	{
-		size, err := m.TopLeft.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintDataStorage(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
-	if m.Hour != 0 {
-		i = encodeVarintDataStorage(dAtA, i, uint64(m.Hour))
-		i--
-		dAtA[i] = 0x8
-	}
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1629,6 +1808,173 @@ func (m *PullEventsReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *PushLocationsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PushLocationsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PushLocationsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Locations) > 0 {
+		for iNdEx := len(m.Locations) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Locations[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintDataStorage(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	{
+		size, err := m.City.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintDataStorage(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *PushLocationsReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PushLocationsReply) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PushLocationsReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Err) > 0 {
+		i -= len(m.Err)
+		copy(dAtA[i:], m.Err)
+		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Err)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PullLocationsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PullLocationsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PullLocationsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.CityId) > 0 {
+		i -= len(m.CityId)
+		copy(dAtA[i:], m.CityId)
+		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.CityId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PullLocationsReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PullLocationsReply) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PullLocationsReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Err) > 0 {
+		i -= len(m.Err)
+		copy(dAtA[i:], m.Err)
+		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Err)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Locations) > 0 {
+		for iNdEx := len(m.Locations) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Locations[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintDataStorage(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintDataStorage(dAtA []byte, offset int, v uint64) int {
 	offset -= sovDataStorage(v)
 	base := offset
@@ -1723,12 +2069,7 @@ func (m *SelectAggrPostsRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Hour != 0 {
-		n += 1 + sovDataStorage(uint64(m.Hour))
-	}
-	l = m.TopLeft.Size()
-	n += 1 + l + sovDataStorage(uint64(l))
-	l = m.BotRight.Size()
+	l = m.Interval.Size()
 	n += 1 + l + sovDataStorage(uint64(l))
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
@@ -1886,6 +2227,80 @@ func (m *PullEventsReply) Size() (n int) {
 	_ = l
 	if len(m.Events) > 0 {
 		for _, e := range m.Events {
+			l = e.Size()
+			n += 1 + l + sovDataStorage(uint64(l))
+		}
+	}
+	l = len(m.Err)
+	if l > 0 {
+		n += 1 + l + sovDataStorage(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *PushLocationsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.City.Size()
+	n += 1 + l + sovDataStorage(uint64(l))
+	if len(m.Locations) > 0 {
+		for _, e := range m.Locations {
+			l = e.Size()
+			n += 1 + l + sovDataStorage(uint64(l))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *PushLocationsReply) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Err)
+	if l > 0 {
+		n += 1 + l + sovDataStorage(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *PullLocationsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.CityId)
+	if l > 0 {
+		n += 1 + l + sovDataStorage(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *PullLocationsReply) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Locations) > 0 {
+		for _, e := range m.Locations {
 			l = e.Size()
 			n += 1 + l + sovDataStorage(uint64(l))
 		}
@@ -2393,27 +2808,8 @@ func (m *SelectAggrPostsRequest) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Hour", wireType)
-			}
-			m.Hour = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDataStorage
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Hour |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TopLeft", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Interval", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2440,40 +2836,7 @@ func (m *SelectAggrPostsRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.TopLeft.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BotRight", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDataStorage
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthDataStorage
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthDataStorage
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.BotRight.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Interval.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3092,7 +3455,7 @@ func (m *PushEventsRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Events = append(m.Events, proto1.EventShort{})
+			m.Events = append(m.Events, proto1.Event{})
 			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -3353,8 +3716,421 @@ func (m *PullEventsReply) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Events = append(m.Events, &proto1.Event{})
+			m.Events = append(m.Events, proto1.Event{})
 			if err := m.Events[len(m.Events)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Err = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PushLocationsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PushLocationsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PushLocationsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field City", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.City.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Locations", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Locations = append(m.Locations, proto1.Location{})
+			if err := m.Locations[len(m.Locations)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PushLocationsReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PushLocationsReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PushLocationsReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Err = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PullLocationsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PullLocationsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PullLocationsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CityId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CityId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PullLocationsReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PullLocationsReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PullLocationsReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Locations", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Locations = append(m.Locations, proto1.Location{})
+			if err := m.Locations[len(m.Locations)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

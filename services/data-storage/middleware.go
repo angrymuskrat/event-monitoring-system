@@ -34,15 +34,14 @@ func (mw loggingMiddleware) SelectPosts(ctx context.Context, interval data.Spati
 	return
 }
 
-func (mw loggingMiddleware) SelectAggrPosts(ctx context.Context, hour int64, topLeft, botRight data.Point) (posts []data.AggregatedPost, err error) {
+func (mw loggingMiddleware) SelectAggrPosts(ctx context.Context, intreval data.SpatioHourInterval) (posts []data.AggregatedPost, err error) {
 	defer func(begin time.Time) {
 		mw.logger.Info("select aggregated posts",
-			zap.Int64("hour", hour),
-			zap.Any("topLeft", topLeft),
-			zap.Any("botRight", botRight),
+			zap.Any("interval", intreval),
+			zap.Error(err),
 			zap.String("took", time.Since(begin).String()))
 	}(time.Now())
-	posts, err = mw.next.SelectAggrPosts(ctx, hour, topLeft, botRight)
+	posts, err = mw.next.SelectAggrPosts(ctx, intreval)
 	return
 }
 

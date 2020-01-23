@@ -25,7 +25,7 @@ func main() {
 	svc = storagesvc.NewGRPCClient(conn)
 
 	testPosts := GeneratePosts(2)
-	method := "selectAggrPosts"
+	method := "selectPosts"
 
 	switch method {
 	case "pushPosts":
@@ -37,8 +37,9 @@ func main() {
 		fmt.Fprintf(os.Stdout, "It is all right\n%v", res)
 
 	case "selectPosts":
-		res, err := svc.SelectPosts(context.Background(), data.SpatioTemporalInterval{ 0, 100000000000, -100,
-			-100, 100, 100, struct{}{}, nil, 0 })
+		res, err := svc.SelectPosts(context.Background(), data.SpatioTemporalInterval{MinTime: 0, MaxTime: 100000000000,
+			TopLeft:  &data.Point{Lat: -100, Lon: 100},
+			BotRight: &data.Point{Lat: 100, Lon: -100}})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
@@ -46,7 +47,9 @@ func main() {
 		fmt.Fprintf(os.Stdout, "Ok %v", len(res))
 
 	case "selectAggrPosts":
-		res, err := svc.SelectAggrPosts(context.Background(), 1579622400, data.Point{Lat: 40.6999705776032, Lon:-73.9980308623803}, data.Point{Lat:40.7098520457285 , Lon:-73.9990213882303})
+		res, err := svc.SelectAggrPosts(context.Background(), data.SpatioHourInterval{Hour: 1579622400,
+			TopLeft:  &data.Point{Lat: 40.6999705776032, Lon: -73.9980308623803},
+			BotRight: &data.Point{Lat: 40.7098520457285, Lon: -73.9990213882303}})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
@@ -84,4 +87,3 @@ func main() {
 		os.Exit(1)
 	}
 }
-

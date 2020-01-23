@@ -48,7 +48,7 @@ const SelectAggrPostsTemplate  = `
 	WHERE hour = %v AND ST_Contains(%v, center); 
 `
 
-func makePoly(topLeft, botRight data.Point) string {
+func makePoly(topLeft, botRight *data.Point) string {
 	return fmt.Sprintf("ST_Polygon('LINESTRING(%v %v, %v %v, %v %v, %v %v, %v %v)'::geometry, 4326)",
 		topLeft.Lat, topLeft.Lon,
 		topLeft.Lat, botRight.Lon,

@@ -192,7 +192,7 @@ func decodeGRPCSelectPostsRequest(_ context.Context, grpcReq interface{}) (inter
 
 func decodeGRPCSelectAggrPostsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*proto.SelectAggrPostsRequest)
-	return proto.SelectAggrPostsRequest{Hour: req.Hour, TopLeft: req.TopLeft, BotRight: req.BotRight}, nil
+	return proto.SelectAggrPostsRequest{Interval: req.Interval}, nil
 }
 
 func decodeGRPCPushGridRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -267,7 +267,7 @@ func encodeGRPCSelectPostsRequest(_ context.Context, request interface{}) (inter
 
 func encodeGRPCSelectAggrPostsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.SelectAggrPostsRequest)
-	return &proto.SelectAggrPostsRequest{Hour: req.Hour, TopLeft: req.TopLeft, BotRight: req.BotRight}, nil
+	return &proto.SelectAggrPostsRequest{Interval: req.Interval}, nil
 }
 
 func encodeGRPCPushGridRequest(_ context.Context, request interface{}) (interface{}, error) {

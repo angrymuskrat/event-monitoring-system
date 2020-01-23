@@ -143,7 +143,7 @@ func (c Storage) SelectPosts(irv data.SpatioTemporalInterval) (posts []data.Post
 		return nil, ErrDBConnecting
 	}
 
-	poly := makePoly(data.Point{Lat:irv.MinLat, Lon:irv.MinLon},data.Point{Lat:irv.MaxLat, Lon:irv.MaxLon})
+	poly := makePoly(irv.TopLeft, irv.BotRight)
 
 	statement := fmt.Sprintf(`
 		SELECT ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, 
@@ -179,14 +179,14 @@ func (c Storage) SelectPosts(irv data.SpatioTemporalInterval) (posts []data.Post
 	return posts, nil
 }
 
-func (c Storage) SelectAggrPosts(hour int64, topLeft, botRight data.Point) (posts []data.AggregatedPost, err error) {
+func (c Storage) SelectAggrPosts(interval data.SpatioHourInterval) (posts []data.AggregatedPost, err error) {
 	err = c.db.Ping()
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return nil, ErrDBConnecting
 	}
-	poly := makePoly(topLeft, botRight)
-	statement := fmt.Sprintf(SelectAggrPostsTemplate, hour, poly)
+	poly := makePoly(interval.TopLeft, interval.BotRight)
+	statement := fmt.Sprintf(SelectAggrPostsTemplate, interval.Hour, poly)
 
 	rows, err := c.db.Query(statement)
 	if err != nil {
