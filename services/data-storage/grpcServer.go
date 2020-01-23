@@ -12,10 +12,11 @@ import (
 )
 
 type grpcServer struct {
-	pushPosts   grpctransport.Handler
-	selectPosts grpctransport.Handler
-	pushGrid    grpctransport.Handler
-	pullGrid    grpctransport.Handler
+	pushPosts       grpctransport.Handler
+	selectPosts     grpctransport.Handler
+	selectAggrPosts grpctransport.Handler
+	pushGrid        grpctransport.Handler
+	pullGrid        grpctransport.Handler
 }
 
 func NewGRPCServer(endpoints Set) proto.DataStorageServer {
@@ -30,6 +31,11 @@ func NewGRPCServer(endpoints Set) proto.DataStorageServer {
 			endpoints.SelectPostsEndpoint,
 			decodeGRPCSelectPostsRequest,
 			encodeGRPCSelectPostsResponse,
+		),
+		selectAggrPosts: grpctransport.NewServer(
+			endpoints.SelectAggrPostsEndpoint,
+			decodeGRPCSelectAggrPostsRequest,
+			encodeGRPCSelectAggrPostsResponse,
 		),
 		pushGrid: grpctransport.NewServer(
 			endpoints.PushGridEndpoint,
@@ -58,6 +64,14 @@ func (s *grpcServer) SelectPosts(ctx context.Context, req *proto.SelectPostsRequ
 		return nil, err
 	}
 	return rep.(*proto.SelectPostsReply), nil
+}
+
+func (s *grpcServer) SelectAggrPosts(ctx context.Context, req *proto.SelectAggrPostsRequest) (*proto.SelectAggrPostsReply, error) {
+	_, rep, err := s.selectAggrPosts.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*proto.SelectAggrPostsReply), nil
 }
 
 func (s *grpcServer) PushGrid(ctx context.Context, req *proto.PushGridRequest) (*proto.PushGridReply, error) {
@@ -98,7 +112,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 		selectPostsEndpoint = grpctransport.NewClient(
 			conn,
 			"proto.DataStorage",
-			"Select",
+			"SelectPosts",
 			encodeGRPCSelectPostsRequest,
 			decodeGRPCSelectPostsResponse,
 			proto.SelectPostsReply{},
@@ -107,6 +121,22 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 			Name:    "SelectPosts",
 			Timeout: TimeWaitingClient,
 		}))(selectPostsEndpoint)
+	}
+
+	var selectAggrPostsEndpoint endpoint.Endpoint
+	{
+		selectAggrPostsEndpoint = grpctransport.NewClient(
+			conn,
+			"proto.DataStorage",
+			"SelectAggrPosts",
+			encodeGRPCSelectAggrPostsRequest,
+			decodeGRPCSelectAggrPostsResponse,
+			proto.SelectAggrPostsReply{},
+		).Endpoint()
+		selectAggrPostsEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "SelectAggrPosts",
+			Timeout: TimeWaitingClient,
+		}))(selectAggrPostsEndpoint)
 	}
 
 	var pushGridEndpoint endpoint.Endpoint
@@ -142,10 +172,11 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 	}
 
 	return Set{
-		PushPostsEndpoint:   pushPostsEndpoint,
-		SelectPostsEndpoint: selectPostsEndpoint,
-		PushGridEndpoint:    pushGridEndpoint,
-		PullGridEndpoint:    pullGridEndpoint,
+		PushPostsEndpoint:       pushPostsEndpoint,
+		SelectPostsEndpoint:     selectPostsEndpoint,
+		SelectAggrPostsEndpoint: selectAggrPostsEndpoint,
+		PushGridEndpoint:        pushGridEndpoint,
+		PullGridEndpoint:        pullGridEndpoint,
 	}
 }
 
@@ -157,6 +188,11 @@ func decodeGRPCPushPostsRequest(_ context.Context, grpcReq interface{}) (interfa
 func decodeGRPCSelectPostsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*proto.SelectPostsRequest)
 	return proto.SelectPostsRequest{Interval: req.Interval}, nil
+}
+
+func decodeGRPCSelectAggrPostsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.SelectAggrPostsRequest)
+	return proto.SelectAggrPostsRequest{Hour: req.Hour, TopLeft: req.TopLeft, BotRight: req.BotRight}, nil
 }
 
 func decodeGRPCPushGridRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -179,6 +215,11 @@ func decodeGRPCSelectPostsResponse(_ context.Context, grpcReply interface{}) (in
 	return SelectPostsResponse{Posts: reply.Posts, Err: str2err(reply.Err)}, nil
 }
 
+func decodeGRPCSelectAggrPostsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.SelectAggrPostsReply)
+	return SelectAggrPostsResponse{Posts: reply.Posts, Err: str2err(reply.Err)}, nil
+}
+
 func decodeGRPCPushGridResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*proto.PushGridReply)
 	return PushGridResponse{Err: str2err(reply.Err)}, nil
@@ -199,6 +240,11 @@ func encodeGRPCSelectPostsResponse(_ context.Context, response interface{}) (int
 	return &proto.SelectPostsReply{Posts: resp.Posts, Err: err2str(resp.Err)}, nil
 }
 
+func encodeGRPCSelectAggrPostsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(SelectAggrPostsResponse)
+	return &proto.SelectAggrPostsReply{Posts: resp.Posts, Err: err2str(resp.Err)}, nil
+}
+
 func encodeGRPCPushGridResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(PushGridResponse)
 	return &proto.PushGridReply{Err: err2str(resp.Err)}, nil
@@ -217,6 +263,11 @@ func encodeGRPCPushPostsRequest(_ context.Context, request interface{}) (interfa
 func encodeGRPCSelectPostsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.SelectPostsRequest)
 	return &proto.SelectPostsRequest{Interval: req.Interval}, nil
+}
+
+func encodeGRPCSelectAggrPostsRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(proto.SelectAggrPostsRequest)
+	return &proto.SelectAggrPostsRequest{Hour: req.Hour, TopLeft: req.TopLeft, BotRight: req.BotRight}, nil
 }
 
 func encodeGRPCPushGridRequest(_ context.Context, request interface{}) (interface{}, error) {

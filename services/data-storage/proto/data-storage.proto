@@ -12,6 +12,8 @@ service DataStorage {
     // Select array from database, each element from array belongs the interval
     rpc SelectPosts (SelectPostsRequest) returns (SelectPostsReply) {}
 
+    rpc SelectAggrPosts (SelectAggrPostsRequest) returns (SelectAggrPostsReply) {}
+
     rpc PushGrid (PushGridRequest) returns (PushGridReply) {}
 
     rpc PullGrid (PullGridRequest) returns (PullGridReply) {}
@@ -33,6 +35,17 @@ message SelectPostsRequest {
 
 message SelectPostsReply {
     repeated data.Post posts = 1 [(gogoproto.nullable) = false];
+    string err = 2;
+}
+
+message SelectAggrPostsRequest {
+    int64 hour = 1;
+    data.Point topLeft = 2 [(gogoproto.nullable) = false];
+    data.Point botRight = 3 [(gogoproto.nullable) = false];
+}
+
+message SelectAggrPostsReply {
+    repeated data.AggregatedPost posts = 1 [(gogoproto.nullable) = false];
     string err = 2;
 }
 

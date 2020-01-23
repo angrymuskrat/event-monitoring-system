@@ -9,14 +9,13 @@ import (
 )
 
 var (
-	ErrSelectInterval = errors.New("incorrect interval")
-	ErrEmptyGridId    = errors.New("empty grid id")
-	ErrEmptyGrid      = errors.New("empty grid")
+	ErrEmptyGridId = errors.New("empty grid id")
+	ErrEmptyGrid   = errors.New("empty grid")
 )
 
 const (
 	TimeWaitingClient = 30 * time.Second // in seconds
-	MaxMsgSize = 1000000000 // in bytes
+	MaxMsgSize        = 1000000000       // in bytes
 )
 
 type Service interface {
@@ -27,8 +26,10 @@ type Service interface {
 
 	// input SpatioTemporalInterval
 	// return array of post, every of which satisfy the interval conditions
-	// 		and error if interval is incorrect or storage can't return posts due to other reasons
+	// 		and error if storage can't return posts due to other reasons
 	SelectPosts(ctx context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error)
+
+	SelectAggrPosts(ctx context.Context, hour int64, topLeft, botRight data.Point) ([]data.AggregatedPost, error)
 
 	// input not empty id and not empty array of bytes
 	// if blob successfully added to database, return nil
@@ -50,10 +51,11 @@ func (s basicService) PushPosts(_ context.Context, posts []data.Post) ([]int32, 
 }
 
 func (s basicService) SelectPosts(_ context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error) {
-	if interval.MaxLon < interval.MinLon || interval.MaxLat < interval.MinLat || interval.MaxTime < interval.MinTime {
-		return nil, ErrSelectInterval
-	}
 	return s.db.SelectPosts(interval)
+}
+
+func (s basicService) SelectAggrPosts(_ context.Context, hour int64, topLeft, botRight data.Point) ([]data.AggregatedPost, error) {
+	return s.db.SelectAggrPosts(hour, topLeft, botRight)
 }
 
 func (s basicService) PushGrid(_ context.Context, id string, blob []byte) error {

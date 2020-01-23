@@ -12,10 +12,11 @@ import (
 // be used as a helper struct, to collect all of the endpoints into a single
 // parameter.
 type Set struct {
-	PushPostsEndpoint   endpoint.Endpoint
-	SelectPostsEndpoint endpoint.Endpoint
-	PushGridEndpoint    endpoint.Endpoint
-	PullGridEndpoint    endpoint.Endpoint
+	PushPostsEndpoint       endpoint.Endpoint
+	SelectPostsEndpoint     endpoint.Endpoint
+	SelectAggrPostsEndpoint endpoint.Endpoint
+	PushGridEndpoint        endpoint.Endpoint
+	PullGridEndpoint        endpoint.Endpoint
 }
 
 // New returns a Set that wraps the provided server, and wires in all of the
@@ -23,13 +24,15 @@ type Set struct {
 func NewEndpoint(svc Service) Set {
 	var pushPostsEndpoint = makePushPostsEndpoint(svc)
 	var selectPostsEndpoint = makeSelectPostsEndpoint(svc)
+	var selectAggrPostsEndopoint = makeSelectAggrPostsEndopoint(svc)
 	var pushGridEndpoint = makePushGridEndpoint(svc)
 	var pullGridEndpoint = makePullGridEndpoint(svc)
 	return Set{
-		PushPostsEndpoint:   pushPostsEndpoint,
-		SelectPostsEndpoint: selectPostsEndpoint,
-		PushGridEndpoint:    pushGridEndpoint,
-		PullGridEndpoint:    pullGridEndpoint,
+		PushPostsEndpoint:       pushPostsEndpoint,
+		SelectPostsEndpoint:     selectPostsEndpoint,
+		SelectAggrPostsEndpoint: selectAggrPostsEndopoint,
+		PushGridEndpoint:        pushGridEndpoint,
+		PullGridEndpoint:        pullGridEndpoint,
 	}
 }
 
@@ -52,6 +55,15 @@ func (s Set) SelectPosts(ctx context.Context, interval data.SpatioTemporalInterv
 		return nil, err
 	}
 	response := resp.(SelectPostsResponse)
+	return response.Posts, response.Err
+}
+
+func (s Set) SelectAggrPosts(ctx context.Context, hour int64, topLeft, botRight data.Point) ([]data.AggregatedPost, error) {
+	resp, err := s.SelectAggrPostsEndpoint(ctx, proto.SelectAggrPostsRequest{Hour: hour, TopLeft: topLeft, BotRight: botRight})
+	if err != nil {
+		return nil, err
+	}
+	response := resp.(SelectAggrPostsResponse)
 	return response.Posts, response.Err
 }
 
@@ -95,6 +107,14 @@ func makeSelectPostsEndpoint(s Service) endpoint.Endpoint {
 	}
 }
 
+func makeSelectAggrPostsEndopoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(proto.SelectAggrPostsRequest)
+		posts, err := s.SelectAggrPosts(ctx, req.Hour, req.TopLeft, req.BotRight)
+		return SelectAggrPostsResponse{Posts: posts, Err: err}, nil
+	}
+}
+
 // makePushGridEndpoint constructs a PushGrid endpoint wrapping the service.
 func makePushGridEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
@@ -117,6 +137,7 @@ func makePullGridEndpoint(s Service) endpoint.Endpoint {
 var (
 	_ endpoint.Failer = PushPostsResponse{}
 	_ endpoint.Failer = SelectPostsResponse{}
+	_ endpoint.Failer = SelectAggrPostsResponse{}
 	_ endpoint.Failer = PushGridResponse{}
 	_ endpoint.Failer = PullGridResponse{}
 )
@@ -138,6 +159,15 @@ type SelectPostsResponse struct {
 
 // Failed implements endpoint.Failer.
 func (r SelectPostsResponse) Failed() error { return r.Err }
+
+// SelectAggrPostsResponse collects the response values for the Select method.
+type SelectAggrPostsResponse struct {
+	Posts []data.AggregatedPost `json:"posts"`
+	Err   error                 `json:"-"`
+}
+
+// Failed implements endpoint.Failer.
+func (r SelectAggrPostsResponse) Failed() error { return r.Err }
 
 // PushPostsResponse collects the response values for the Push method.
 type PushGridResponse struct {
