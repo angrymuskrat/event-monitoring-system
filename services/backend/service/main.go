@@ -54,11 +54,23 @@ func Start(confPath string) {
 		encodeResponse,
 		httptransport.ServerBefore(httptransport.PopulateRequestContext),
 	))
-	http.Handle("/", r)
+	http.Handle("/", accessControl(r))
 	err = http.ListenAndServe(conf.Address, nil)
 	if err != nil {
 		unilog.Logger().Error("error in service handler", zap.Error(err))
 	}
+}
+
+func accessControl(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		if r.Method == "OPTIONS" {
+			return
+		}
+		h.ServeHTTP(w, r)
+	})
 }
 
 func decodeHeatmapRequest(_ context.Context, r *http.Request) (interface{}, error) {
