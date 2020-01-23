@@ -37,60 +37,7 @@ func NewStorage(confPath string) (*Storage, error) {
 	}
 	dbc := &Storage{db: db, config: conf}
 
-	// create needed extension for PostGIS and TimescaleDB
-	_, err = dbc.db.Exec(ExtensionTimescaleDB)
-	if err != nil {
-		dbc.Close()
-		return nil, err
-	}
-	_, err = dbc.db.Exec(ExtensionPostGIS)
-	if err != nil {
-		dbc.Close()
-		return nil, err
-	}
-	_, err = dbc.db.Exec(ExtensionPostGISTopology)
-	if err != nil {
-		dbc.Close()
-		return nil, err
-	}
-
-	// create table posts with it's environment (hypertable and integer time now function)
-	_, err = dbc.db.Exec(PostTable)
-	if err != nil {
-		dbc.Close()
-		return nil, err
-	}
-	_, err = dbc.db.Exec(CreateHyperTablePosts)
-	if err != nil {
-		dbc.Close()
-		return nil, err
-	}
-	_, err = dbc.db.Exec(CreateTimeFunction)
-	if err != nil {
-		dbc.Close()
-		return nil, err
-	}
-	_, err = dbc.db.Exec(SetTimeFunctionForPosts)
-	if err != nil {
-		dbc.Close()
-		return nil, err
-	}
-
-	// create continuous aggregation of posts
-	_, err = dbc.db.Exec(DropAggregationPosts)
-	if err != nil {
-		dbc.Close()
-		return nil, err
-	}
-	createAggregationPosts := fmt.Sprintf(AggregationPosts, conf.AggrPostsGRIDSize, conf.AggrPostsGRIDSize) // set grid size
-	_, err = dbc.db.Exec(createAggregationPosts)
-	if err != nil {
-		dbc.Close()
-		return nil, err
-	}
-
-	// create table for grids
-	_, err = dbc.db.Exec(GridTable)
+	err = setDBEnvironment(dbc, conf.AggrPostsGRIDSize)
 	if err != nil {
 		dbc.Close()
 		return nil, err
@@ -98,6 +45,83 @@ func NewStorage(confPath string) (*Storage, error) {
 
 	unilog.Logger().Info("db connector has started")
 	return dbc, nil
+}
+
+func setDBEnvironment(dbc *Storage, GRIDSize float64) (err error) {
+	// create needed extension for PostGIS and TimescaleDB
+	_, err = dbc.db.Exec(ExtensionTimescaleDB)
+	if err != nil {
+		return
+	}
+	_, err = dbc.db.Exec(ExtensionPostGIS)
+	if err != nil {
+		return
+	}
+	_, err = dbc.db.Exec(ExtensionPostGISTopology)
+	if err != nil {
+		return
+	}
+
+	_, err = dbc.db.Exec(CreateTimeFunction)
+	if err != nil {
+		return
+	}
+
+	// create table posts with it's environment (hypertable and integer time now function)
+	_, err = dbc.db.Exec(PostTable)
+	if err != nil {
+		return
+	}
+	_, err = dbc.db.Exec(CreateHyperTablePosts)
+	if err != nil {
+		return
+	}
+	_, err = dbc.db.Exec(SetTimeFunctionForPosts)
+	if err != nil {
+		return
+	}
+
+	// create continuous aggregation of posts
+	_, err = dbc.db.Exec(DropAggregationPosts)
+	if err != nil {
+		return
+	}
+	createAggregationPosts := fmt.Sprintf(AggregationPosts, GRIDSize, GRIDSize) // set grid size
+	_, err = dbc.db.Exec(createAggregationPosts)
+	if err != nil {
+		return
+	}
+
+	// create events table
+	_, err = dbc.db.Exec(EventsTable)
+	if err != nil {
+		return
+	}
+	_, err = dbc.db.Exec(CreateHyperTableEvents)
+	if err != nil {
+		return
+	}
+	_, err = dbc.db.Exec(SetTimeFunctionForEvents)
+	if err != nil {
+		return
+	}
+
+	// create tables for cities and locations
+	_, err = dbc.db.Exec(CitiesTable)
+	if err != nil {
+		return
+	}
+	_, err = dbc.db.Exec(LocationsTable)
+	if err != nil {
+		return
+	}
+
+	// create table for grids
+	_, err = dbc.db.Exec(GridTable)
+	if err != nil {
+		return
+	}
+	return nil
 }
 
 func (c *Storage) PushPosts(posts []data.Post) (ids []int32, err error) {

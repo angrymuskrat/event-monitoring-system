@@ -1,2 +1,2 @@
 AuthDB = "database=testgisdb user=myuser password=mypass sslmode=disable"
-AggrPostsGRIDSize = 50
+AggrPostsGRIDSize = 50.0
