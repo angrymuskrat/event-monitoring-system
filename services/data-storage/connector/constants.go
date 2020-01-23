@@ -5,6 +5,10 @@ import (
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 )
 
+const ExtensionTimescaleDB = "CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;"
+const ExtensionPostGIS = "CREATE EXTENSION IF NOT EXISTS postgis;"
+const ExtensionPostGISTopology = "CREATE EXTENSION IF NOT EXISTS postgis_topology;"
+
 const PostTable = `
 	CREATE TABLE IF NOT EXISTS posts(
 		ID VARCHAR (30) NOT NULL,
@@ -22,6 +26,11 @@ const PostTable = `
 		PRIMARY KEY (Shortcode, Timestamp)
 	);`
 
+const CreateHyperTablePosts = "SELECT create_hypertable('posts', 'timestamp', chunk_time_interval => 86400, if_not_exists => TRUE);"
+const CreateTimeFunction = "CREATE OR REPLACE FUNCTION unix_now() returns BIGINT LANGUAGE SQL STABLE as $$ SELECT extract(epoch from now())::BIGINT $$;"
+const SetTimeFunctionForPosts = "SELECT set_integer_now_func('posts', 'unix_now', replace_if_exists => true);"
+
+const DropAggregationPosts = "DROP VIEW aggr_posts CASCADE;"
 const AggregationPosts = `
 	CREATE VIEW aggr_posts
 	WITH (timescaledb.continuous)
@@ -39,6 +48,25 @@ const GridTable = `
 		Blob BYTEA NOT NULL
 	);`
 
+
+const PushPostsTemplate = `
+	INSERT INTO posts 
+		(ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, Location)
+	VALUES 
+		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, ST_SetSRID( ST_Point($12, $13), 4326));
+`
+
+const SelectPostsTemplate = `
+	SELECT 
+		ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, 
+		ST_X(Location) as Lat, 
+		ST_Y(Location) as Lon
+	FROM posts
+	WHERE 
+		ST_Contains(%v, Location) 
+		AND (Timestamp BETWEEN %v AND %v)
+	`
+
 const SelectAggrPostsTemplate  = `
 	SELECT
 		count,
@@ -47,6 +75,13 @@ const SelectAggrPostsTemplate  = `
 	FROM aggr_posts
 	WHERE hour = %v AND ST_Contains(%v, center); 
 `
+
+const PushGridTemplate = `
+	INSERT INTO grids(ID, Blob)
+	VALUES ($1, $2);
+`
+
+const PullGridTemplate = `SELECT Blob FROM grids WHERE '%v' = Id;`
 
 func makePoly(topLeft, botRight *data.Point) string {
 	return fmt.Sprintf("ST_Polygon('LINESTRING(%v %v, %v %v, %v %v, %v %v, %v %v)'::geometry, 4326)",

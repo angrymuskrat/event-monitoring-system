@@ -39,17 +39,17 @@ func NewStorage(confPath string) (*Storage, error) {
 	dbc := &Storage{db: db, config: conf}
 
 	// create needed extension for PostGIS and TimescaleDB
-	_, err = dbc.db.Exec("CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;")
+	_, err = dbc.db.Exec(ExtensionTimescaleDB)
 	if err != nil {
 		dbc.Close()
 		return nil, err
 	}
-	_, err = dbc.db.Exec("CREATE EXTENSION IF NOT EXISTS postgis;")
+	_, err = dbc.db.Exec(ExtensionPostGIS)
 	if err != nil {
 		dbc.Close()
 		return nil, err
 	}
-	_, err = dbc.db.Exec("CREATE EXTENSION IF NOT EXISTS postgis_topology;")
+	_, err = dbc.db.Exec(ExtensionPostGISTopology)
 	if err != nil {
 		dbc.Close()
 		return nil, err
@@ -61,24 +61,24 @@ func NewStorage(confPath string) (*Storage, error) {
 		dbc.Close()
 		return nil, err
 	}
-	_, err = dbc.db.Exec("SELECT create_hypertable('posts', 'timestamp', chunk_time_interval => 86400, if_not_exists => TRUE);")
+	_, err = dbc.db.Exec(CreateHyperTablePosts)
 	if err != nil {
 		dbc.Close()
 		return nil, err
 	}
-	_, err = dbc.db.Exec("CREATE OR REPLACE FUNCTION unix_now() returns BIGINT LANGUAGE SQL STABLE as $$ SELECT extract(epoch from now())::BIGINT $$;")
+	_, err = dbc.db.Exec(CreateTimeFunction)
 	if err != nil {
 		dbc.Close()
 		return nil, err
 	}
-	_, err = dbc.db.Exec("SELECT set_integer_now_func('posts', 'unix_now', replace_if_exists => true);")
+	_, err = dbc.db.Exec(SetTimeFunctionForPosts)
 	if err != nil {
 		dbc.Close()
 		return nil, err
 	}
 
 	// create continuous aggregation of posts
-	_, err = dbc.db.Exec("DROP VIEW aggr_posts CASCADE;")
+	_, err = dbc.db.Exec(DropAggregationPosts)
 	if err != nil {
 		dbc.Close()
 		return nil, err
@@ -109,13 +109,9 @@ func (c *Storage) PushPosts(posts []data.Post) (ids []int32, err error) {
 	}
 	wasError := false
 	for _, v := range posts {
-		statement := `
-			INSERT INTO posts (ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, 
-				AuthorID, LocationID, Location)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, ST_GeometryFromText($12, 4326));`
-		point := fmt.Sprintf("POINT(%v %v)", v.Lat, v.Lon)
+		statement := PushPostsTemplate
 		_, err = c.db.Exec(statement, v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp,
-			v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, point)
+			v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lat, v.Lon)
 		if err != nil {
 			if strings.Contains(err.Error(), "duplicate key") {
 				ids = append(ids, types.DuplicatedPostId.Int32())
@@ -144,13 +140,7 @@ func (c Storage) SelectPosts(irv data.SpatioTemporalInterval) (posts []data.Post
 	}
 
 	poly := makePoly(irv.TopLeft, irv.BotRight)
-
-	statement := fmt.Sprintf(`
-		SELECT ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, 
-			LocationID, ST_X(Location) as Lat, ST_Y(Location) as Lon
-		FROM posts
-		WHERE ST_Contains(%v, Location) AND (Timestamp BETWEEN %v AND %v)
-	`, poly, irv.MinTime, irv.MaxTime)
+	statement := fmt.Sprintf(SelectPostsTemplate, poly, irv.MinTime, irv.MaxTime)
 
 	rows, err := c.db.Query(statement)
 	if err != nil {
@@ -225,9 +215,7 @@ func (c *Storage) PushGrid(id string, blob []byte) (err error) {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return ErrDBConnecting
 	}
-	statement := `
-			INSERT INTO grids(ID, Blob)
-			VALUES ($1, $2);`
+	statement := PushGridTemplate
 
 	_, err = c.db.Exec(statement, id, blob)
 	if err != nil {
@@ -246,7 +234,7 @@ func (c *Storage) PullGrid(id string) (blob []byte, err error) {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return nil, ErrDBConnecting
 	}
-	statement := fmt.Sprintf("SELECT Blob FROM grids WHERE '%v' = Id;", id)
+	statement := fmt.Sprintf(PullGridTemplate, id)
 	rows, err := c.db.Query(statement)
 	if err != nil {
 		unilog.Logger().Error("error in pull grid", zap.Error(err))

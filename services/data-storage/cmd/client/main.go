@@ -24,8 +24,8 @@ func main() {
 	defer conn.Close()
 	svc = storagesvc.NewGRPCClient(conn)
 
-	testPosts := GeneratePosts(2)
-	method := "selectPosts"
+	testPosts := GeneratePosts(5)
+	method := "pullGrid"
 
 	switch method {
 	case "pushPosts":
@@ -75,7 +75,7 @@ func main() {
 		fmt.Fprintf(os.Stdout, "It is all right")
 
 	case "pullGrid":
-		res, err := svc.PullGrid(context.Background(), "adcdf")
+		res, err := svc.PullGrid(context.Background(), "adeeycdf")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
