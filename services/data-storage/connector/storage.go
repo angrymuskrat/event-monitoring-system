@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"go.uber.org/zap"
 	"github.com/visheratin/unilog"
+	"go.uber.org/zap"
 	"strings"
 
 	types "github.com/angrymuskrat/event-monitoring-system/services/data-storage/data"
@@ -18,13 +18,12 @@ type Storage struct {
 	config Configuration
 }
 
-
 var (
-	ErrDBConnecting = errors.New("do not be able to connect with db")
-	ErrPushStatement = errors.New("one or more posts wasn't pushed")
-	ErrSelectStatement = errors.New("don't be able to return posts")
+	ErrDBConnecting      = errors.New("do not be able to connect with db")
+	ErrPushStatement     = errors.New("one or more posts wasn't pushed")
+	ErrSelectStatement   = errors.New("don't be able to return posts")
 	ErrPullGridStatement = errors.New("don't be able to return grid")
-	ErrDuplicatedKey = errors.New("duplicated id, object hadn't saved to db")
+	ErrDuplicatedKey     = errors.New("duplicated id, object hadn't saved to db")
 )
 
 func NewStorage(confPath string) (*Storage, error) {
@@ -192,10 +191,10 @@ func (c Storage) SelectAggrPosts(interval data.SpatioHourInterval) (posts []data
 	}()
 
 	for rows.Next() {
-		p := new(struct{
+		p := new(struct {
 			count int64
-			lat float64
-			lon float64
+			lat   float64
+			lon   float64
 		})
 		//(ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, Location)
 		err = rows.Scan(&p.count, &p.lat, &p.lon)
@@ -203,7 +202,7 @@ func (c Storage) SelectAggrPosts(interval data.SpatioHourInterval) (posts []data
 			unilog.Logger().Error("error in select aggr_posts", zap.Error(err))
 			return nil, ErrSelectStatement
 		}
-		post := data.AggregatedPost{Count:p.count, Center: data.Point{ Lat:p.lat, Lon:p.lon }}
+		post := data.AggregatedPost{Count: p.count, Center: data.Point{Lat: p.lat, Lon: p.lon}}
 		posts = append(posts, post)
 	}
 	return posts, nil
@@ -248,7 +247,7 @@ func (c *Storage) PullGrid(id string) (blob []byte, err error) {
 		}
 	}()
 
-	ans := new(struct{Blob []byte})
+	ans := new(struct{ Blob []byte })
 	for rows.Next() {
 		err = rows.Scan(&ans.Blob)
 		if err != nil {
@@ -261,10 +260,25 @@ func (c *Storage) PullGrid(id string) (blob []byte, err error) {
 	return
 }
 
+func (c *Storage) PushEvents(events []data.Event) (err error) {
+	return
+}
+
+func (c *Storage) PullEvents(interval data.SpatioHourInterval) (events []data.Event, err error) {
+	return
+}
+
+func (c *Storage) PushLocations(city data.City, locations []data.Location) (err error) {
+	return
+}
+
+func (c *Storage) PullLocations(cityId string) (locations []data.Location, err error) {
+	return
+}
+
 func (c *Storage) Close() {
 	err := c.db.Close()
 	if err != nil {
 		unilog.Logger().Error("don't be able to close db", zap.Error(err))
 	}
 }
-

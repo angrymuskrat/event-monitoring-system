@@ -40,6 +40,14 @@ type Service interface {
 	// if there are exist some blob with the id in database return the blob
 	// else return error
 	PullGrid(ctx context.Context, id string) ([]byte, error)
+
+	PushEvents(ctx context.Context, events []data.Event) error
+
+	PullEvents(ctx context.Context, interval data.SpatioHourInterval) ([]data.Event, error)
+
+	PushLocations(ctx context.Context, city data.City, locations []data.Location) error
+
+	PullLocations(ctx context.Context, cityId string) ([]data.Location, error)
 }
 
 type basicService struct {
@@ -73,4 +81,20 @@ func (s basicService) PullGrid(_ context.Context, id string) ([]byte, error) {
 		return nil, ErrEmptyGridId
 	}
 	return s.db.PullGrid(id)
+}
+
+func (s basicService) PushEvents(_ context.Context, events []data.Event) error {
+	return s.db.PushEvents(events)
+}
+
+func (s basicService) PullEvents(_ context.Context, interval data.SpatioHourInterval) ([]data.Event, error) {
+	return s.db.PullEvents(interval)
+}
+
+func (s basicService) PushLocations(_ context.Context, city data.City, locations []data.Location) error {
+	return s.db.PushLocations(city, locations)
+}
+
+func (s basicService) PullLocations(_ context.Context, cityId string) ([]data.Location, error) {
+	return s.db.PullLocations(cityId)
 }

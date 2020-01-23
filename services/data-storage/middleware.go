@@ -67,3 +67,48 @@ func (mw loggingMiddleware) PullGrid(ctx context.Context, id string) (blob []byt
 	blob, err = mw.next.PullGrid(ctx, id)
 	return
 }
+
+func (mw loggingMiddleware) PushEvents(ctx context.Context, events []data.Event) (err error) {
+	defer func(begin time.Time) {
+		mw.logger.Info("push events",
+			zap.Int("len of events", len(events)),
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	err = mw.next.PushEvents(ctx, events)
+	return
+}
+
+func (mw loggingMiddleware) PullEvents(ctx context.Context, interval data.SpatioHourInterval) (events []data.Event, err error) {
+	defer func(begin time.Time) {
+		mw.logger.Info("pull events",
+			zap.Any("interval", interval),
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	events, err = mw.next.PullEvents(ctx, interval)
+	return
+}
+
+func (mw loggingMiddleware) PushLocations(ctx context.Context, city data.City, locations []data.Location) (err error) {
+	defer func(begin time.Time) {
+		mw.logger.Info("push locations",
+			zap.Any("city", city),
+			zap.Int("locations size", len(locations)),
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	err = mw.next.PushLocations(ctx, city, locations)
+	return
+}
+
+func (mw loggingMiddleware) PullLocations(ctx context.Context, cityId string) (locations []data.Location, err error) {
+	defer func(begin time.Time) {
+		mw.logger.Info("pull locations",
+			zap.String("city id", cityId),
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	locations, err = mw.next.PullLocations(ctx, cityId)
+	return
+}

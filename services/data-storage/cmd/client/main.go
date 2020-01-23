@@ -24,11 +24,11 @@ func main() {
 	defer conn.Close()
 	svc = storagesvc.NewGRPCClient(conn)
 
-	testPosts := GeneratePosts(5)
-	method := "pullGrid"
+	method := "pushLocations"
 
 	switch method {
 	case "pushPosts":
+		testPosts := GeneratePosts(5)
 		res, err := svc.PushPosts(context.Background(), testPosts)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -48,13 +48,13 @@ func main() {
 
 	case "selectAggrPosts":
 		res, err := svc.SelectAggrPosts(context.Background(), data.SpatioHourInterval{Hour: 1579622400,
-			TopLeft:  &data.Point{Lat: 40.6999705776032, Lon: -73.9980308623803},
-			BotRight: &data.Point{Lat: 40.7098520457285, Lon: -73.9990213882303}})
+			TopLeft:  &data.Point{Lat: 40, Lon: -73},
+			BotRight: &data.Point{Lat: 41, Lon: -74}})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Fprintf(os.Stdout, "Ok %v", res)
+		fmt.Fprintf(os.Stdout, "Ok %v", len(res))
 
 	case "pushGrid":
 		bucket, err := fileblob.OpenBucket("tests/", nil)
@@ -67,21 +67,36 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = svc.PushGrid(context.Background(), "adeeycdf", b)
+		id := RandString(20)
+		err = svc.PushGrid(context.Background(), id, b)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Fprintf(os.Stdout, "It is all right")
+		fmt.Fprintf(os.Stdout, "It is all right, id: %v", id)
 
 	case "pullGrid":
-		res, err := svc.PullGrid(context.Background(), "adeeycdf")
+		res, err := svc.PullGrid(context.Background(), "asasasas")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Fprintf(os.Stdout, "It is all right, len of res - \n%v", len(res))
 
+	case "pushEvents" :
+		err := svc.PushEvents(context.Background(),  nil)
+		fmt.Print(err)
+	case "pullEvents" :
+		res, err := svc.PullEvents(context.Background(), data.SpatioHourInterval{Hour: 1579622400,
+			TopLeft:  &data.Point{Lat: 40, Lon: -73},
+			BotRight: &data.Point{Lat: 41, Lon: -74}})
+		fmt.Printf("res: %v, err: %v", res, err)
+	case "pushLocations":
+		err := svc.PushLocations(context.Background(),  data.City{}, nil)
+		fmt.Print(err)
+	case "pullLocations":
+		res, err := svc.PullLocations(context.Background(), "cityId")
+		fmt.Printf("res: %v, err: %v", res, err)
 	default:
 		fmt.Fprintf(os.Stderr, "error: invalid method %q\n", method)
 		os.Exit(1)

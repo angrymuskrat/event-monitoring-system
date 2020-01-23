@@ -48,7 +48,6 @@ const GridTable = `
 		Blob BYTEA NOT NULL
 	);`
 
-
 const PushPostsTemplate = `
 	INSERT INTO posts 
 		(ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, Location)
@@ -67,7 +66,7 @@ const SelectPostsTemplate = `
 		AND (Timestamp BETWEEN %v AND %v)
 	`
 
-const SelectAggrPostsTemplate  = `
+const SelectAggrPostsTemplate = `
 	SELECT
 		count,
 		ST_X(center) as lat,

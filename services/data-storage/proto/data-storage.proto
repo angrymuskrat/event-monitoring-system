@@ -14,11 +14,11 @@ service DataStorage {
     rpc PushGrid (PushGridRequest) returns (PushGridReply) {}
     rpc PullGrid (PullGridRequest) returns (PullGridReply) {}
 
-    //rpc PushEvents (PushEventsRequest) returns (PushEventsReply) {}
-    //rpc PullEvents (PullEventsRequest) returns (PullEventsReply) {}
+    rpc PushEvents (PushEventsRequest) returns (PushEventsReply) {}
+    rpc PullEvents (PullEventsRequest) returns (PullEventsReply) {}
 
-    //rpc PushLocations (PushLocationsRequest) returns (PushLocationsReply) {}
-    //rpc PullLocations (PullLocationsRequest) returns (PullLocationsReply) {}
+    rpc PushLocations (PushLocationsRequest) returns (PushLocationsReply) {}
+    rpc PullLocations (PullLocationsRequest) returns (PullLocationsReply) {}
 }
 
 
