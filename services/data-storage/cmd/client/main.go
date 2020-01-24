@@ -24,17 +24,17 @@ func main() {
 	defer conn.Close()
 	svc = storagesvc.NewGRPCClient(conn)
 
-	method := "pushLocations"
+	method := "pullLocations"
 
 	switch method {
 	case "pushPosts":
-		testPosts := GeneratePosts(5)
+		testPosts := GeneratePosts(2000)
 		res, err := svc.PushPosts(context.Background(), testPosts)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Fprintf(os.Stdout, "It is all right\n%v", res)
+		fmt.Fprintf(os.Stdout, "It is all right\n%v", len(res))
 
 	case "selectPosts":
 		res, err := svc.SelectPosts(context.Background(), data.SpatioTemporalInterval{MinTime: 0, MaxTime: 100000000000,
@@ -48,8 +48,8 @@ func main() {
 
 	case "selectAggrPosts":
 		res, err := svc.SelectAggrPosts(context.Background(), data.SpatioHourInterval{Hour: 1579622400,
-			TopLeft:  &data.Point{Lat: 40, Lon: -73},
-			BotRight: &data.Point{Lat: 41, Lon: -74}})
+			TopLeft:  &data.Point{Lat: -100, Lon: -100},
+			BotRight: &data.Point{Lat: 100, Lon: 100}})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
@@ -84,18 +84,28 @@ func main() {
 		fmt.Fprintf(os.Stdout, "It is all right, len of res - \n%v", len(res))
 
 	case "pushEvents" :
-		err := svc.PushEvents(context.Background(),  nil)
+		events := []data.Event{
+			{Title: "test", Start: 10000, Finish: 100, Center: data.Point{Lat: 10, Lon: 10}, PostCodes: []string{"ffdsfs", "sfdsdfsf", "sfsfsf"}, Tags: []string{"#tag1", "#tag2"}},
+			{Title: "test2", Start: 1, Finish: 100, Center: data.Point{Lat: 9, Lon: 9}, PostCodes: []string{"ffdsfs", "sfdsdfsf", "sfsfsf"}, Tags: []string{"#tag1", "#tag2"}},
+		}
+		err := svc.PushEvents(context.Background(), events)
 		fmt.Print(err)
 	case "pullEvents" :
-		res, err := svc.PullEvents(context.Background(), data.SpatioHourInterval{Hour: 1579622400,
-			TopLeft:  &data.Point{Lat: 40, Lon: -73},
-			BotRight: &data.Point{Lat: 41, Lon: -74}})
+		res, err := svc.PullEvents(context.Background(), data.SpatioHourInterval{Hour: 9000,
+			TopLeft:  &data.Point{Lat: 1, Lon: 1},
+			BotRight: &data.Point{Lat: 100, Lon: 100}})
 		fmt.Printf("res: %v, err: %v", res, err)
 	case "pushLocations":
-		err := svc.PushLocations(context.Background(),  data.City{}, nil)
+		city := data.City{Title:"New York", ID:"nyc"}
+		locations := []data.Location{
+			{Title:"loc1", ID:"5", Slug:"slug1", Position: &data.Point{Lat:1, Lon:1}},
+			//{Title:"loc2", ID:"2", Slug:"slug2", Position: &data.Point{Lat:2, Lon:2}},
+			//{Title:"loc4", ID:"4", Slug:"slug4", Position: &data.Point{Lat:3, Lon:3}},
+		}
+		err := svc.PushLocations(context.Background(),  city, locations)
 		fmt.Print(err)
 	case "pullLocations":
-		res, err := svc.PullLocations(context.Background(), "cityId")
+		res, err := svc.PullLocations(context.Background(), "nyc")
 		fmt.Printf("res: %v, err: %v", res, err)
 	default:
 		fmt.Fprintf(os.Stderr, "error: invalid method %q\n", method)

@@ -10,7 +10,7 @@ import (
 
 	types "github.com/angrymuskrat/event-monitoring-system/services/data-storage/data"
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
 
 type Storage struct {
@@ -20,10 +20,16 @@ type Storage struct {
 
 var (
 	ErrDBConnecting      = errors.New("do not be able to connect with db")
+	ErrDBTransaction     = errors.New("error with transaction")
 	ErrPushStatement     = errors.New("one or more posts wasn't pushed")
 	ErrSelectStatement   = errors.New("don't be able to return posts")
 	ErrPullGridStatement = errors.New("don't be able to return grid")
 	ErrDuplicatedKey     = errors.New("duplicated id, object hadn't saved to db")
+	ErrPushEvents        = errors.New("do not be able to insert events")
+	ErrSelectEvents = errors.New("don't be able to return events")
+	ErrPushCity        = errors.New("do not be able to insert city")
+	ErrPushLocations        = errors.New("do not be able to insert locations")
+	ErrSelectLocations = errors.New("don't be able to return locations")
 )
 
 func NewStorage(confPath string) (*Storage, error) {
@@ -215,19 +221,17 @@ func (c Storage) SelectAggrPosts(interval data.SpatioHourInterval) (posts []data
 	}()
 
 	for rows.Next() {
-		p := new(struct {
-			count int64
-			lat   float64
-			lon   float64
-		})
+		p := new(data.Point)
+		ap := new(data.AggregatedPost)
+
 		//(ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, Location)
-		err = rows.Scan(&p.count, &p.lat, &p.lon)
+		err = rows.Scan(&ap.Count, &p.Lat, &p.Lon)
 		if err != nil {
 			unilog.Logger().Error("error in select aggr_posts", zap.Error(err))
 			return nil, ErrSelectStatement
 		}
-		post := data.AggregatedPost{Count: p.count, Center: data.Point{Lat: p.lat, Lon: p.lon}}
-		posts = append(posts, post)
+		ap.Center = *p;
+		posts = append(posts, *ap)
 	}
 	return posts, nil
 }
@@ -285,18 +289,143 @@ func (c *Storage) PullGrid(id string) (blob []byte, err error) {
 }
 
 func (c *Storage) PushEvents(events []data.Event) (err error) {
+	err = c.db.Ping()
+	if err != nil {
+		unilog.Logger().Error("db error", zap.Error(err))
+		return ErrDBConnecting
+	}
+	tx, err := c.db.Begin()
+	if err != nil {
+		unilog.Logger().Error("can not begin transaction", zap.Error(err))
+		return ErrDBTransaction
+	}
+	defer tx.Rollback()
+	stmt, err := tx.Prepare(PushEventsTemplate)
+	if err != nil {
+		unilog.Logger().Error("can not prepare statement", zap.Error(err))
+		return ErrDBTransaction
+	}
+	for _, event := range events {
+		_, err = stmt.Exec(event.Title, event.Start, event.Finish, event.Center.Lat, event.Center.Lon, pq.Array(event.PostCodes), pq.Array(event.Tags));
+		if err != nil {
+			unilog.Logger().Error("is not able to exec event", zap.Error(err))
+			return ErrPushEvents
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		unilog.Logger().Error("is not able to commit events transaction", zap.Error(err))
+		return ErrPushEvents
+	}
 	return
 }
 
 func (c *Storage) PullEvents(interval data.SpatioHourInterval) (events []data.Event, err error) {
+	err = c.db.Ping()
+	if err != nil {
+		unilog.Logger().Error("db error", zap.Error(err))
+		return nil, ErrDBConnecting
+	}
+
+	poly := makePoly(interval.TopLeft, interval.BotRight)
+	statement := fmt.Sprintf(SelectEventsTemplate, poly, interval.Hour, interval.Hour + Hour)
+	rows, err := c.db.Query(statement)
+
+	if err != nil {
+		unilog.Logger().Error("error in select events", zap.Error(err))
+		return nil, ErrSelectEvents
+	}
+
+	defer func() {
+		errClose := rows.Close()
+		if errClose != nil {
+			unilog.Logger().Error("don't be able to close rows in select events", zap.Error(err))
+		}
+	}()
+
+	for rows.Next() {
+		e := new(data.Event)
+		p := new(data.Point)
+		err = rows.Scan(&e.Title, &e.Start, &e.Finish, pq.Array(&e.PostCodes), pq.Array(&e.Tags), &p.Lat, &p.Lon)
+		if err != nil {
+			unilog.Logger().Error("error in select events", zap.Error(err))
+			return nil, ErrSelectEvents
+		}
+		e.Center = *p
+		events = append(events, *e)
+	}
 	return
 }
 
 func (c *Storage) PushLocations(city data.City, locations []data.Location) (err error) {
+	err = c.db.Ping()
+	if err != nil {
+		unilog.Logger().Error("db error", zap.Error(err))
+		return ErrDBConnecting
+	}
+	_, err = c.db.Exec(PushCityIfNotExists, city.Title, city.ID)
+	if err != nil {
+		unilog.Logger().Error("is not able to insert city", zap.Error(err))
+		return ErrPushCity
+	}
+
+	tx, err := c.db.Begin()
+	if err != nil {
+		unilog.Logger().Error("can not begin transaction", zap.Error(err))
+		return ErrDBTransaction
+	}
+	defer tx.Rollback()
+	stmt, err := tx.Prepare(PushLocationTemplate)
+	if err != nil {
+		unilog.Logger().Error("can not prepare statement", zap.Error(err))
+		return ErrDBTransaction
+	}
+	for _, l := range locations {
+		_, err = stmt.Exec(l.ID, city.ID, l.Position.Lat, l.Position.Lon, l.Title, l.Slug);
+		if err != nil {
+			unilog.Logger().Error("is not able to exec location", zap.Error(err))
+			return ErrPushLocations
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		unilog.Logger().Error("is not able to commit events transaction", zap.Error(err))
+		return ErrPushLocations
+	}
 	return
 }
 
 func (c *Storage) PullLocations(cityId string) (locations []data.Location, err error) {
+	err = c.db.Ping()
+	if err != nil {
+		unilog.Logger().Error("db error", zap.Error(err))
+		return nil, ErrDBConnecting
+	}
+
+	statement := fmt.Sprintf(SelectLocationsTemplate, cityId)
+	rows, err := c.db.Query(statement)
+
+	if err != nil {
+		unilog.Logger().Error("error in select locations", zap.Error(err))
+		return nil, ErrSelectLocations
+	}
+
+	defer func() {
+		errClose := rows.Close()
+		if errClose != nil {
+			unilog.Logger().Error("don't be able to close rows in select locations", zap.Error(err))
+		}
+	}()
+
+	for rows.Next() {
+		l := new(data.Location)
+		p := new(data.Point)
+		err = rows.Scan(&l.ID, &l.Title, &l.Slug, &p.Lat, &p.Lon)
+		if err != nil {
+			unilog.Logger().Error("error in select events", zap.Error(err))
+			return nil, ErrSelectLocations
+		}
+		l.Position = p
+		locations = append(locations, *l)
+	}
 	return
 }
 

@@ -66,7 +66,7 @@ const CitiesTable = `
 `
 const LocationsTable = `
 	CREATE TABLE IF NOT EXISTS locations (
-		ID VARCHAR(20),
+		ID VARCHAR(20) NOT NULL PRIMARY KEY,
 		CityId VARCHAR(20),
 		Position geometry,
 		Title VARCHAR(100),
@@ -85,6 +85,7 @@ const PushPostsTemplate = `
 		(ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, Location)
 	VALUES 
 		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, ST_SetSRID( ST_Point($12, $13), 4326));
+	ON CONFLICT (Shortcode, Timestamp) DO NOTHING;
 `
 
 const SelectPostsTemplate = `
@@ -94,7 +95,7 @@ const SelectPostsTemplate = `
 		ST_Y(Location) as Lon
 	FROM posts
 	WHERE 
-		ST_Contains(%v, Location) 
+		ST_Covers(%v, Location) 
 		AND (Timestamp BETWEEN %v AND %v)
 	`
 
@@ -114,6 +115,49 @@ const PushGridTemplate = `
 
 const PullGridTemplate = `SELECT Blob FROM grids WHERE '%v' = Id;`
 
+const PushEventsTemplate = `
+	INSERT INTO events
+		(Title, Start, Finish, Center, PostCodes, Tags)
+	VALUES
+		($1, $2, $3, ST_SetSRID( ST_Point($4, $5), 4326), $6, $7)
+`
+const Hour = 60 * 60
+const SelectEventsTemplate = `
+	SELECT 
+		Title, Start, Finish, PostCodes, Tags,  
+		ST_X(Center) as Lat, 
+		ST_Y(Center) as Lon
+	FROM events
+	WHERE 
+		ST_Covers(%v, Center) 
+		AND (Start BETWEEN %v AND %v)
+	`
+
+const PushCityIfNotExists = `
+	INSERT INTO cities
+		(Title, Id)
+	VALUES
+		($1, $2)
+	ON CONFLICT (Id) DO NOTHING;
+`
+
+const PushLocationTemplate = `
+	INSERT INTO locations 
+		(ID, CityId, Position, Title, Slug)
+	VALUES
+		($1, $2, ST_SetSRID( ST_Point($3, $4), 4326), $5, $6)
+	ON CONFLICT (ID) DO NOTHING;
+`
+
+const SelectLocationsTemplate = `
+	SELECT 
+		ID, Title, Slug,
+		ST_X(Position) as Lat,
+		ST_Y(Position) as Lon
+	FROM locations
+	WHERE CityId = '%v';
+`
+
 func makePoly(topLeft, botRight *data.Point) string {
 	return fmt.Sprintf("ST_Polygon('LINESTRING(%v %v, %v %v, %v %v, %v %v, %v %v)'::geometry, 4326)",
 		topLeft.Lat, topLeft.Lon,
@@ -122,3 +166,4 @@ func makePoly(topLeft, botRight *data.Point) string {
 		botRight.Lat, topLeft.Lon,
 		topLeft.Lat, topLeft.Lon)
 }
+

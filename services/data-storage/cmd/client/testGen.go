@@ -43,3 +43,13 @@ func GeneratePosts(n int) []data.Post {
 	return posts;
 }
 
+func GeneratePostsFast(n int) []data.Post {
+	posts := *new([]data.Post)
+	for i := 0; i < n; i++ {
+		posts = append(posts, data.Post{ ID: RandString(20), Shortcode: "sfsfhhsgfhsf", ImageURL: "RandString(30)",
+			IsVideo: false, Caption: "RandString(100)", CommentsCount: 1000, Timestamp: 1000,
+			LikesCount: 1000, IsAd: false, AuthorID: "RandString(15)", LocationID: "RandString(15)",
+			Lat: 0, Lon: 0 })
+	}
+	return posts;
+}
