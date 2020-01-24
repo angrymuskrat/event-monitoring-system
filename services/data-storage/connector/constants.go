@@ -81,10 +81,10 @@ const GridTable = `
 	);`
 
 const PushPostsTemplate = `
-	INSERT INTO posts 
+	INSERT INTO posts
 		(ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, Location)
 	VALUES 
-		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, ST_SetSRID( ST_Point($12, $13), 4326));
+		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, ST_SetSRID( ST_Point($12, $13), 4326))
 	ON CONFLICT (Shortcode, Timestamp) DO NOTHING;
 `
 

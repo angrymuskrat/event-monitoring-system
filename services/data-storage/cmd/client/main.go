@@ -24,11 +24,11 @@ func main() {
 	defer conn.Close()
 	svc = storagesvc.NewGRPCClient(conn)
 
-	method := "pullLocations"
+	method := "pushPosts"
 
 	switch method {
 	case "pushPosts":
-		testPosts := GeneratePosts(2000)
+		testPosts := GeneratePosts(1000)
 		res, err := svc.PushPosts(context.Background(), testPosts)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)

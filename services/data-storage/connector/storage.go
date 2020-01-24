@@ -21,9 +21,9 @@ type Storage struct {
 var (
 	ErrDBConnecting      = errors.New("do not be able to connect with db")
 	ErrDBTransaction     = errors.New("error with transaction")
-	ErrPushStatement     = errors.New("one or more posts wasn't pushed")
-	ErrSelectStatement   = errors.New("don't be able to return posts")
-	ErrPullGridStatement = errors.New("don't be able to return grid")
+	ErrPushPosts     = errors.New("one or more posts wasn't pushed")
+	ErrSelectPosts   = errors.New("don't be able to return posts")
+	ErrPullGrid = errors.New("don't be able to return grid")
 	ErrDuplicatedKey     = errors.New("duplicated id, object hadn't saved to db")
 	ErrPushEvents        = errors.New("do not be able to insert events")
 	ErrSelectEvents = errors.New("don't be able to return events")
@@ -136,29 +136,32 @@ func (c *Storage) PushPosts(posts []data.Post) (ids []int32, err error) {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return nil, ErrDBConnecting
 	}
-	wasError := false
+	tx, err := c.db.Begin()
+	if err != nil {
+		unilog.Logger().Error("can not begin transaction", zap.Error(err))
+		return nil, ErrDBTransaction
+	}
+	defer tx.Rollback()
+	stmt, err := tx.Prepare(PushPostsTemplate)
+	if err != nil {
+		unilog.Logger().Error("can not prepare statement", zap.Error(err))
+		return nil, ErrDBTransaction
+	}
+
 	for _, v := range posts {
-		statement := PushPostsTemplate
-		_, err = c.db.Exec(statement, v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp,
-			v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lat, v.Lon)
+		_, err = stmt.Exec(v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp, v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lat, v.Lon)
 		if err != nil {
-			if strings.Contains(err.Error(), "duplicate key") {
-				ids = append(ids, types.DuplicatedPostId.Int32())
-			} else {
-				unilog.Logger().Error("don't be able to push post", zap.Any("post Shortcode", v.Shortcode), zap.Error(err))
-				wasError = true
-				ids = append(ids, types.DBError.Int32())
-			}
+			unilog.Logger().Error("is not able to exec event", zap.Error(err))
+			return nil, ErrPushPosts
 		} else {
-			ids = append(ids, types.PostPushed.Int32())
+			ids = append(ids, types.PostPushed.Int32()) // TODO now this is useless
 		}
 	}
-	if wasError {
-		err = ErrPushStatement
-	} else {
-		err = nil
+	if err := tx.Commit(); err != nil {
+		unilog.Logger().Error("is not able to commit events transaction", zap.Error(err))
+		return nil, ErrPushPosts
 	}
-	return ids, err
+	return
 }
 
 func (c Storage) SelectPosts(irv data.SpatioTemporalInterval) (posts []data.Post, err error) {
@@ -174,7 +177,7 @@ func (c Storage) SelectPosts(irv data.SpatioTemporalInterval) (posts []data.Post
 	rows, err := c.db.Query(statement)
 	if err != nil {
 		unilog.Logger().Error("error in select posts", zap.Error(err))
-		return nil, ErrSelectStatement
+		return nil, ErrSelectPosts
 	}
 
 	defer func() {
@@ -191,11 +194,11 @@ func (c Storage) SelectPosts(irv data.SpatioTemporalInterval) (posts []data.Post
 			&p.LikesCount, &p.IsAd, &p.AuthorID, &p.LocationID, &p.Lat, &p.Lon)
 		if err != nil {
 			unilog.Logger().Error("error in select posts", zap.Error(err))
-			return nil, ErrSelectStatement
+			return nil, ErrSelectPosts
 		}
 		posts = append(posts, *p)
 	}
-	return posts, nil
+	return
 }
 
 func (c Storage) SelectAggrPosts(interval data.SpatioHourInterval) (posts []data.AggregatedPost, err error) {
@@ -210,7 +213,7 @@ func (c Storage) SelectAggrPosts(interval data.SpatioHourInterval) (posts []data
 	rows, err := c.db.Query(statement)
 	if err != nil {
 		unilog.Logger().Error("error in select aggr_posts", zap.Error(err))
-		return nil, ErrSelectStatement
+		return nil, ErrSelectPosts
 	}
 
 	defer func() {
@@ -228,9 +231,9 @@ func (c Storage) SelectAggrPosts(interval data.SpatioHourInterval) (posts []data
 		err = rows.Scan(&ap.Count, &p.Lat, &p.Lon)
 		if err != nil {
 			unilog.Logger().Error("error in select aggr_posts", zap.Error(err))
-			return nil, ErrSelectStatement
+			return nil, ErrSelectPosts
 		}
-		ap.Center = *p;
+		ap.Center = *p
 		posts = append(posts, *ap)
 	}
 	return posts, nil
@@ -265,7 +268,7 @@ func (c *Storage) PullGrid(id string) (blob []byte, err error) {
 	rows, err := c.db.Query(statement)
 	if err != nil {
 		unilog.Logger().Error("error in pull grid", zap.Error(err))
-		return nil, ErrPullGridStatement
+		return nil, ErrPullGrid
 	}
 
 	defer func() {
@@ -280,7 +283,7 @@ func (c *Storage) PullGrid(id string) (blob []byte, err error) {
 		err = rows.Scan(&ans.Blob)
 		if err != nil {
 			unilog.Logger().Error("error in select", zap.Error(err))
-			return nil, ErrPullGridStatement
+			return nil, ErrPullGrid
 		}
 		break
 	}
@@ -306,7 +309,7 @@ func (c *Storage) PushEvents(events []data.Event) (err error) {
 		return ErrDBTransaction
 	}
 	for _, event := range events {
-		_, err = stmt.Exec(event.Title, event.Start, event.Finish, event.Center.Lat, event.Center.Lon, pq.Array(event.PostCodes), pq.Array(event.Tags));
+		_, err = stmt.Exec(event.Title, event.Start, event.Finish, event.Center.Lat, event.Center.Lon, pq.Array(event.PostCodes), pq.Array(event.Tags))
 		if err != nil {
 			unilog.Logger().Error("is not able to exec event", zap.Error(err))
 			return ErrPushEvents
@@ -380,7 +383,7 @@ func (c *Storage) PushLocations(city data.City, locations []data.Location) (err 
 		return ErrDBTransaction
 	}
 	for _, l := range locations {
-		_, err = stmt.Exec(l.ID, city.ID, l.Position.Lat, l.Position.Lon, l.Title, l.Slug);
+		_, err = stmt.Exec(l.ID, city.ID, l.Position.Lat, l.Position.Lon, l.Title, l.Slug)
 		if err != nil {
 			unilog.Logger().Error("is not able to exec location", zap.Error(err))
 			return ErrPushLocations
