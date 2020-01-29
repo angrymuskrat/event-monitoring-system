@@ -11,6 +11,8 @@ service DataStorage {
 
     rpc SelectAggrPosts (SelectAggrPostsRequest) returns (SelectAggrPostsReply) {}
 
+    rpc PullTimeline (PullTimelineRequest) returns (PullTimelineReply) {}
+
     rpc PushGrid (PushGridRequest) returns (PushGridReply) {}
     rpc PullGrid (PullGridRequest) returns (PullGridReply) {}
 
@@ -49,6 +51,19 @@ message SelectAggrPostsRequest {
 
 message SelectAggrPostsReply {
     repeated data.AggregatedPost posts = 1 [(gogoproto.nullable) = false];
+    string err = 2;
+}
+
+
+// messages for pull timelines
+message PullTimelineRequest {
+    string cityId = 1;
+    int64 start = 2;
+    int64 finish = 3;
+}
+
+message PullTimelineReply {
+    repeated data.Timestamp timeline = 1 [(gogoproto.nullable) = false];
     string err = 2;
 }
 

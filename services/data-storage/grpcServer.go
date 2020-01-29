@@ -10,6 +10,7 @@ type grpcServer struct {
 	pushPosts       grpctransport.Handler
 	selectPosts     grpctransport.Handler
 	selectAggrPosts grpctransport.Handler
+	pullTimeline    grpctransport.Handler
 	pushGrid        grpctransport.Handler
 	pullGrid        grpctransport.Handler
 	pushEvents      grpctransport.Handler
@@ -35,6 +36,11 @@ func NewGRPCServer(endpoints Set) proto.DataStorageServer {
 			endpoints.SelectAggrPostsEndpoint,
 			decodeGRPCSelectAggrPostsRequest,
 			encodeGRPCSelectAggrPostsResponse,
+		),
+		pullTimeline: grpctransport.NewServer(
+			endpoints.PullTimelineEndpoint,
+			decodeGRPCPullTimelineRequest,
+			encodeGRPCPullTimelineResponse,
 		),
 		pushGrid: grpctransport.NewServer(
 			endpoints.PushGridEndpoint,
@@ -92,6 +98,14 @@ func (s *grpcServer) SelectAggrPosts(ctx context.Context, req *proto.SelectAggrP
 		return nil, err
 	}
 	return rep.(*proto.SelectAggrPostsReply), nil
+}
+
+func (s *grpcServer) PullTimeline(ctx context.Context, req *proto.PullTimelineRequest) (*proto.PullTimelineReply, error) {
+	_, rep, err := s.pullTimeline.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*proto.PullTimelineReply), nil
 }
 
 func (s *grpcServer) PushGrid(ctx context.Context, req *proto.PushGridRequest) (*proto.PushGridReply, error) {

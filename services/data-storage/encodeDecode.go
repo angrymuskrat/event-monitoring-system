@@ -60,6 +60,24 @@ func encodeGRPCSelectAggrPostsRequest(_ context.Context, request interface{}) (i
 	return &proto.SelectAggrPostsRequest{Interval: req.Interval}, nil
 }
 
+// encode/decode for PullTimeline
+func decodeGRPCPullTimelineRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PullTimelineRequest)
+	return proto.PullTimelineRequest{CityId: req.CityId, Start: req.Start, Finish: req.Finish}, nil
+}
+func decodeGRPCPullTimelineResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PullTimelineReply)
+	return PullTimelineResponse{Timeline: reply.Timeline, Err: str2err(reply.Err)}, nil
+}
+func encodeGRPCPullTimelineResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(PullTimelineResponse)
+	return &proto.PullTimelineReply{Timeline: resp.Timeline, Err: err2str(resp.Err)}, nil
+}
+func encodeGRPCPullTimelineRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(proto.PullTimelineRequest)
+	return &proto.PullTimelineRequest{CityId: req.CityId, Start: req.Start, Finish: req.Finish}, nil
+}
+
 // encode/decode for PushGrid
 func decodeGRPCPushGridRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*proto.PushGridRequest)

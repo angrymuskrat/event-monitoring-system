@@ -51,6 +51,20 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 		}))(selectAggrPostsEndpoint)
 	}
 
+	var pullTimelineEndpoint endpoint.Endpoint
+	{
+		pullTimelineEndpoint = grpctransport.NewClient(
+			conn, "proto.DataStorage", "PullTimeline",
+			encodeGRPCPullTimelineRequest,
+			decodeGRPCPullTimelineResponse,
+			proto.PullTimelineReply{},
+		).Endpoint()
+		pullTimelineEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:    "PullTimeline",
+			Timeout: TimeWaitingClient,
+		}))(pullTimelineEndpoint)
+	}
+
 	var pushGridEndpoint endpoint.Endpoint
 	{
 		pushGridEndpoint = grpctransport.NewClient(
@@ -136,6 +150,7 @@ func NewGRPCClient(conn *grpc.ClientConn) Service {
 		PushPostsEndpoint:       pushPostsEndpoint,
 		SelectPostsEndpoint:     selectPostsEndpoint,
 		SelectAggrPostsEndpoint: selectAggrPostsEndpoint,
+		PullTimelineEndpoint:    pullTimelineEndpoint,
 		PushGridEndpoint:        pushGridEndpoint,
 		PullGridEndpoint:        pullGridEndpoint,
 		PushEventsEndpoint:      pushEventsEndpoint,

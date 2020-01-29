@@ -24,7 +24,7 @@ func main() {
 	defer conn.Close()
 	svc = storagesvc.NewGRPCClient(conn)
 
-	method := "pushPosts"
+	method := "pullTimeline"
 
 	switch method {
 	case "pushPosts":
@@ -55,6 +55,14 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Fprintf(os.Stdout, "Ok %v", len(res))
+
+	case "pullTimeline":
+		res, err := svc.PullTimeline(context.Background(), "cityId", 0, 3600)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stdout, "Ok %v", res)
 
 	case "pushGrid":
 		bucket, err := fileblob.OpenBucket("tests/", nil)

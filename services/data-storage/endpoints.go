@@ -13,6 +13,7 @@ type Set struct {
 	PushPostsEndpoint       endpoint.Endpoint
 	SelectPostsEndpoint     endpoint.Endpoint
 	SelectAggrPostsEndpoint endpoint.Endpoint
+	PullTimelineEndpoint    endpoint.Endpoint
 	PushGridEndpoint        endpoint.Endpoint
 	PullGridEndpoint        endpoint.Endpoint
 	PushEventsEndpoint      endpoint.Endpoint
@@ -25,7 +26,8 @@ func NewEndpoint(svc Service) Set {
 	return Set{
 		PushPostsEndpoint:       makePushPostsEndpoint(svc),
 		SelectPostsEndpoint:     makeSelectPostsEndpoint(svc),
-		SelectAggrPostsEndpoint: makeSelectAggrPostsEndopoint(svc),
+		SelectAggrPostsEndpoint: makeSelectAggrPostsEndpoint(svc),
+		PullTimelineEndpoint:    makePullTimelineEndpoint(svc),
 		PushGridEndpoint:        makePushGridEndpoint(svc),
 		PullGridEndpoint:        makePullGridEndpoint(svc),
 		PushEventsEndpoint:      makePushEventsEndpoint(svc),
@@ -60,6 +62,15 @@ func (s Set) SelectAggrPosts(ctx context.Context, interval data.SpatioHourInterv
 	}
 	response := resp.(SelectAggrPostsResponse)
 	return response.Posts, response.Err
+}
+
+func (s Set) PullTimeline(ctx context.Context, cityId string, start, finish int64) ([]data.Timestamp, error) {
+	resp, err := s.PullTimelineEndpoint(ctx, proto.PullTimelineRequest{CityId:cityId, Start:start, Finish:finish})
+	if err != nil {
+		return nil, err
+	}
+	response := resp.(PullTimelineResponse)
+	return response.Timeline, response.Err
 }
 
 func (s Set) PushGrid(ctx context.Context, id string, blob []byte) error {
@@ -133,11 +144,19 @@ func makeSelectPostsEndpoint(s Service) endpoint.Endpoint {
 	}
 }
 
-func makeSelectAggrPostsEndopoint(s Service) endpoint.Endpoint {
+func makeSelectAggrPostsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.SelectAggrPostsRequest)
 		posts, err := s.SelectAggrPosts(ctx, req.Interval)
 		return SelectAggrPostsResponse{Posts: posts, Err: err}, nil
+	}
+}
+
+func makePullTimelineEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(proto.PullTimelineRequest)
+		timeline, err := s.PullTimeline(ctx, req.CityId, req.Start, req.Finish)
+		return PullTimelineResponse{Timeline: timeline, Err: err}, nil
 	}
 }
 
@@ -196,6 +215,8 @@ var (
 
 	_ endpoint.Failer = SelectAggrPostsResponse{}
 
+	_ endpoint.Failer = PullTimelineResponse{}
+
 	_ endpoint.Failer = PushGridResponse{}
 	_ endpoint.Failer = PullGridResponse{}
 
@@ -218,6 +239,11 @@ type SelectPostsResponse struct {
 type SelectAggrPostsResponse struct {
 	Posts []data.AggregatedPost `json:"posts"`
 	Err   error                 `json:"-"`
+}
+
+type PullTimelineResponse struct {
+	Timeline []data.Timestamp `json:"timeline"`
+	Err      error            `json:"-"`
 }
 
 type PushGridResponse struct {
@@ -248,6 +274,8 @@ func (r PushPostsResponse) Failed() error   { return r.Err }
 func (r SelectPostsResponse) Failed() error { return r.Err }
 
 func (r SelectAggrPostsResponse) Failed() error { return r.Err }
+
+func (r PullTimelineResponse) Failed() error { return r.Err }
 
 func (r PushGridResponse) Failed() error { return r.Err }
 func (r PullGridResponse) Failed() error { return r.Err }

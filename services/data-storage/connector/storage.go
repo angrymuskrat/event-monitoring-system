@@ -19,16 +19,16 @@ type Storage struct {
 }
 
 var (
-	ErrDBConnecting      = errors.New("do not be able to connect with db")
-	ErrDBTransaction     = errors.New("error with transaction")
-	ErrPushPosts     = errors.New("one or more posts wasn't pushed")
-	ErrSelectPosts   = errors.New("don't be able to return posts")
-	ErrPullGrid = errors.New("don't be able to return grid")
-	ErrDuplicatedKey     = errors.New("duplicated id, object hadn't saved to db")
-	ErrPushEvents        = errors.New("do not be able to insert events")
-	ErrSelectEvents = errors.New("don't be able to return events")
+	ErrDBConnecting    = errors.New("do not be able to connect with db")
+	ErrDBTransaction   = errors.New("error with transaction")
+	ErrPushPosts       = errors.New("one or more posts wasn't pushed")
+	ErrSelectPosts     = errors.New("don't be able to return posts")
+	ErrPullGrid        = errors.New("don't be able to return grid")
+	ErrDuplicatedKey   = errors.New("duplicated id, object hadn't saved to db")
+	ErrPushEvents      = errors.New("do not be able to insert events")
+	ErrSelectEvents    = errors.New("don't be able to return events")
 	ErrPushCity        = errors.New("do not be able to insert city")
-	ErrPushLocations        = errors.New("do not be able to insert locations")
+	ErrPushLocations   = errors.New("do not be able to insert locations")
 	ErrSelectLocations = errors.New("don't be able to return locations")
 )
 
@@ -239,6 +239,10 @@ func (c Storage) SelectAggrPosts(interval data.SpatioHourInterval) (posts []data
 	return posts, nil
 }
 
+func (c *Storage) PullTimeline(cityId string, start, finish int64) (timeline []data.Timestamp, err error) {
+	return nil, nil
+}
+
 func (c *Storage) PushGrid(id string, blob []byte) (err error) {
 	err = c.db.Ping()
 	if err != nil {
@@ -330,7 +334,7 @@ func (c *Storage) PullEvents(interval data.SpatioHourInterval) (events []data.Ev
 	}
 
 	poly := makePoly(interval.TopLeft, interval.BotRight)
-	statement := fmt.Sprintf(SelectEventsTemplate, poly, interval.Hour, interval.Hour + Hour)
+	statement := fmt.Sprintf(SelectEventsTemplate, poly, interval.Hour, interval.Hour+Hour)
 	rows, err := c.db.Query(statement)
 
 	if err != nil {
