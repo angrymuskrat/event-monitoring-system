@@ -27,6 +27,7 @@ service DataStorage {
 // messages for push and select posts
 message PushPostsRequest {
     repeated data.Post posts = 1 [(gogoproto.nullable) = false];
+    string cityId = 2;
 }
 
 message PushPostsReply {
@@ -36,6 +37,7 @@ message PushPostsReply {
 
 message SelectPostsRequest {
     data.SpatioTemporalInterval interval = 1 [(gogoproto.nullable) = false];
+    string cityId = 2;
 }
 
 message SelectPostsReply {
@@ -47,6 +49,7 @@ message SelectPostsReply {
 // messages for select aggr posts
 message SelectAggrPostsRequest {
     data.SpatioHourInterval interval = 1 [(gogoproto.nullable) = false];
+    string cityId = 2;
 }
 
 message SelectAggrPostsReply {
@@ -72,6 +75,7 @@ message PullTimelineReply {
 message PushGridRequest {
     string id = 1;
     bytes blob = 2;
+    string cityId = 3;
 }
 
 message PushGridReply {
@@ -80,6 +84,7 @@ message PushGridReply {
 
 message PullGridRequest {
     string id = 1;
+    string cityId = 2;
 }
 
 message PullGridReply {
@@ -91,6 +96,7 @@ message PullGridReply {
 // messages gor pull and push events
 message PushEventsRequest {
     repeated data.Event events = 1 [(gogoproto.nullable) = false];
+    string cityId = 2;
 }
 
 message PushEventsReply {
@@ -99,6 +105,7 @@ message PushEventsReply {
 
 message PullEventsRequest {
     data.SpatioHourInterval interval = 1 [(gogoproto.nullable) = false];
+    string cityId = 2;
 }
 
 message PullEventsReply {
@@ -109,7 +116,7 @@ message PullEventsReply {
 
 // messages for pull and push locations
 message PushLocationsRequest {
-    data.City city = 1 [(gogoproto.nullable) = false];
+    string cityId = 1;
     repeated data.Location locations = 2 [(gogoproto.nullable) = false];
 }
 

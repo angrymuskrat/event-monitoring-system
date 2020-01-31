@@ -37,8 +37,8 @@ func NewEndpoint(svc Service) Set {
 	}
 }
 
-func (s Set) PushPosts(ctx context.Context, posts []data.Post) ([]int32, error) {
-	resp, err := s.PushPostsEndpoint(ctx, proto.PushPostsRequest{Posts: posts})
+func (s Set) PushPosts(ctx context.Context, cityId string, posts []data.Post) ([]int32, error) {
+	resp, err := s.PushPostsEndpoint(ctx, proto.PushPostsRequest{CityId: cityId, Posts: posts})
 	if err != nil {
 		return nil, err
 	}
@@ -46,8 +46,8 @@ func (s Set) PushPosts(ctx context.Context, posts []data.Post) ([]int32, error) 
 	return response.Ids, response.Err
 }
 
-func (s Set) SelectPosts(ctx context.Context, interval data.SpatioTemporalInterval) ([]data.Post, error) {
-	resp, err := s.SelectPostsEndpoint(ctx, proto.SelectPostsRequest{Interval: interval})
+func (s Set) SelectPosts(ctx context.Context, cityId string, interval data.SpatioTemporalInterval) ([]data.Post, error) {
+	resp, err := s.SelectPostsEndpoint(ctx, proto.SelectPostsRequest{CityId: cityId, Interval: interval})
 	if err != nil {
 		return nil, err
 	}
@@ -55,8 +55,8 @@ func (s Set) SelectPosts(ctx context.Context, interval data.SpatioTemporalInterv
 	return response.Posts, response.Err
 }
 
-func (s Set) SelectAggrPosts(ctx context.Context, interval data.SpatioHourInterval) ([]data.AggregatedPost, error) {
-	resp, err := s.SelectAggrPostsEndpoint(ctx, proto.SelectAggrPostsRequest{Interval: interval})
+func (s Set) SelectAggrPosts(ctx context.Context, cityId string, interval data.SpatioHourInterval) ([]data.AggregatedPost, error) {
+	resp, err := s.SelectAggrPostsEndpoint(ctx, proto.SelectAggrPostsRequest{CityId: cityId, Interval: interval})
 	if err != nil {
 		return nil, err
 	}
@@ -73,8 +73,8 @@ func (s Set) PullTimeline(ctx context.Context, cityId string, start, finish int6
 	return response.Timeline, response.Err
 }
 
-func (s Set) PushGrid(ctx context.Context, id string, blob []byte) error {
-	resp, err := s.PushGridEndpoint(ctx, proto.PushGridRequest{Id: id, Blob: blob})
+func (s Set) PushGrid(ctx context.Context, cityId string, id string, blob []byte) error {
+	resp, err := s.PushGridEndpoint(ctx, proto.PushGridRequest{CityId: cityId, Id: id, Blob: blob})
 	if err != nil {
 		return err
 	}
@@ -82,8 +82,8 @@ func (s Set) PushGrid(ctx context.Context, id string, blob []byte) error {
 	return response.Err
 }
 
-func (s Set) PullGrid(ctx context.Context, id string) ([]byte, error) {
-	resp, err := s.PullGridEndpoint(ctx, proto.PullGridRequest{Id: id})
+func (s Set) PullGrid(ctx context.Context, cityId string, id string) ([]byte, error) {
+	resp, err := s.PullGridEndpoint(ctx, proto.PullGridRequest{CityId: cityId, Id: id})
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +91,8 @@ func (s Set) PullGrid(ctx context.Context, id string) ([]byte, error) {
 	return response.Blob, response.Err
 }
 
-func (s Set) PushEvents(ctx context.Context, events []data.Event) error {
-	resp, err := s.PushEventsEndpoint(ctx, proto.PushEventsRequest{Events: events})
+func (s Set) PushEvents(ctx context.Context, cityId string, events []data.Event) error {
+	resp, err := s.PushEventsEndpoint(ctx, proto.PushEventsRequest{CityId: cityId, Events: events})
 	if err != nil {
 		return err
 	}
@@ -100,8 +100,8 @@ func (s Set) PushEvents(ctx context.Context, events []data.Event) error {
 	return response.Err
 }
 
-func (s Set) PullEvents(ctx context.Context, interval data.SpatioHourInterval) ([]data.Event, error) {
-	resp, err := s.PullEventsEndpoint(ctx, proto.PullEventsRequest{Interval: interval})
+func (s Set) PullEvents(ctx context.Context, cityId string, interval data.SpatioHourInterval) ([]data.Event, error) {
+	resp, err := s.PullEventsEndpoint(ctx, proto.PullEventsRequest{CityId: cityId, Interval: interval})
 	if err != nil {
 		return nil, err
 	}
@@ -109,8 +109,8 @@ func (s Set) PullEvents(ctx context.Context, interval data.SpatioHourInterval) (
 	return response.Events, response.Err
 }
 
-func (s Set) PushLocations(ctx context.Context, city data.City, locations []data.Location) error {
-	resp, err := s.PushLocationsEndpoint(ctx, proto.PushLocationsRequest{City: city, Locations: locations})
+func (s Set) PushLocations(ctx context.Context, cityId string, locations []data.Location) error {
+	resp, err := s.PushLocationsEndpoint(ctx, proto.PushLocationsRequest{CityId: cityId, Locations: locations})
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (s Set) PullLocations(ctx context.Context, cityId string) ([]data.Location,
 func makePushPostsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PushPostsRequest)
-		ids, err := s.PushPosts(ctx, req.Posts)
+		ids, err := s.PushPosts(ctx, req.CityId, req.Posts)
 		return PushPostsResponse{Ids: ids, Err: err}, nil
 	}
 }
@@ -139,7 +139,7 @@ func makePushPostsEndpoint(s Service) endpoint.Endpoint {
 func makeSelectPostsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.SelectPostsRequest)
-		posts, err := s.SelectPosts(ctx, req.Interval)
+		posts, err := s.SelectPosts(ctx, req.CityId, req.Interval)
 		return SelectPostsResponse{Posts: posts, Err: err}, nil
 	}
 }
@@ -147,7 +147,7 @@ func makeSelectPostsEndpoint(s Service) endpoint.Endpoint {
 func makeSelectAggrPostsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.SelectAggrPostsRequest)
-		posts, err := s.SelectAggrPosts(ctx, req.Interval)
+		posts, err := s.SelectAggrPosts(ctx, req.CityId, req.Interval)
 		return SelectAggrPostsResponse{Posts: posts, Err: err}, nil
 	}
 }
@@ -163,7 +163,7 @@ func makePullTimelineEndpoint(s Service) endpoint.Endpoint {
 func makePushGridEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PushGridRequest)
-		err = s.PushGrid(ctx, req.Id, req.Blob)
+		err = s.PushGrid(ctx, req.CityId, req.Id, req.Blob)
 		return PushGridResponse{Err: err}, nil
 	}
 }
@@ -171,7 +171,7 @@ func makePushGridEndpoint(s Service) endpoint.Endpoint {
 func makePullGridEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PullGridRequest)
-		blob, err := s.PullGrid(ctx, req.Id)
+		blob, err := s.PullGrid(ctx, req.CityId, req.Id)
 		return PullGridResponse{Blob: blob, Err: err}, nil
 	}
 }
@@ -179,7 +179,7 @@ func makePullGridEndpoint(s Service) endpoint.Endpoint {
 func makePushEventsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PushEventsRequest)
-		err = s.PushEvents(ctx, req.Events)
+		err = s.PushEvents(ctx, req.CityId, req.Events)
 		return PushEventsResponse{Err: err}, nil
 	}
 }
@@ -187,7 +187,7 @@ func makePushEventsEndpoint(s Service) endpoint.Endpoint {
 func makePullEventsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PullEventsRequest)
-		events, err := s.PullEvents(ctx, req.Interval)
+		events, err := s.PullEvents(ctx, req.CityId, req.Interval)
 		return PullEventsResponse{Events: events, Err: err}, nil
 	}
 }
@@ -195,7 +195,7 @@ func makePullEventsEndpoint(s Service) endpoint.Endpoint {
 func makePushLocationsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PushLocationsRequest)
-		err = s.PushLocations(ctx, req.City, req.Locations)
+		err = s.PushLocations(ctx, req.CityId, req.Locations)
 		return PushLocationsResponse{Err: err}, nil
 	}
 }

@@ -19,16 +19,16 @@ type Storage struct {
 }
 
 var (
-	ErrDBConnecting    = errors.New("do not be able to connect with db")
-	ErrDBTransaction   = errors.New("error with transaction")
-	ErrPushPosts       = errors.New("one or more posts wasn't pushed")
-	ErrSelectPosts     = errors.New("don't be able to return posts")
-	ErrPullGrid        = errors.New("don't be able to return grid")
-	ErrDuplicatedKey   = errors.New("duplicated id, object hadn't saved to db")
-	ErrPushEvents      = errors.New("do not be able to insert events")
-	ErrSelectEvents    = errors.New("don't be able to return events")
+	ErrDBConnecting      = errors.New("do not be able to connect with db")
+	ErrDBTransaction     = errors.New("error with transaction")
+	ErrPushPosts     = errors.New("one or more posts wasn't pushed")
+	ErrSelectPosts   = errors.New("don't be able to return posts")
+	ErrPullGrid = errors.New("don't be able to return grid")
+	ErrDuplicatedKey     = errors.New("duplicated id, object hadn't saved to db")
+	ErrPushEvents        = errors.New("do not be able to insert events")
+	ErrSelectEvents = errors.New("don't be able to return events")
 	ErrPushCity        = errors.New("do not be able to insert city")
-	ErrPushLocations   = errors.New("do not be able to insert locations")
+	ErrPushLocations        = errors.New("do not be able to insert locations")
 	ErrSelectLocations = errors.New("don't be able to return locations")
 )
 
@@ -334,7 +334,7 @@ func (c *Storage) PullEvents(interval data.SpatioHourInterval) (events []data.Ev
 	}
 
 	poly := makePoly(interval.TopLeft, interval.BotRight)
-	statement := fmt.Sprintf(SelectEventsTemplate, poly, interval.Hour, interval.Hour+Hour)
+	statement := fmt.Sprintf(SelectEventsTemplate, poly, interval.Hour, interval.Hour + Hour)
 	rows, err := c.db.Query(statement)
 
 	if err != nil {
@@ -363,13 +363,13 @@ func (c *Storage) PullEvents(interval data.SpatioHourInterval) (events []data.Ev
 	return
 }
 
-func (c *Storage) PushLocations(city data.City, locations []data.Location) (err error) {
+func (c *Storage) PushLocations(cityId string, locations []data.Location) (err error) {
 	err = c.db.Ping()
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return ErrDBConnecting
 	}
-	_, err = c.db.Exec(PushCityIfNotExists, city.Title, city.ID)
+	_, err = c.db.Exec(PushCityIfNotExists, cityId, cityId)
 	if err != nil {
 		unilog.Logger().Error("is not able to insert city", zap.Error(err))
 		return ErrPushCity
@@ -387,7 +387,7 @@ func (c *Storage) PushLocations(city data.City, locations []data.Location) (err 
 		return ErrDBTransaction
 	}
 	for _, l := range locations {
-		_, err = stmt.Exec(l.ID, city.ID, l.Position.Lat, l.Position.Lon, l.Title, l.Slug)
+		_, err = stmt.Exec(l.ID, cityId, l.Position.Lat, l.Position.Lon, l.Title, l.Slug)
 		if err != nil {
 			unilog.Logger().Error("is not able to exec location", zap.Error(err))
 			return ErrPushLocations
@@ -430,7 +430,7 @@ func (c *Storage) PullLocations(cityId string) (locations []data.Location, err e
 			unilog.Logger().Error("error in select events", zap.Error(err))
 			return nil, ErrSelectLocations
 		}
-		l.Position = p
+		l.Position = *p
 		locations = append(locations, *l)
 	}
 	return

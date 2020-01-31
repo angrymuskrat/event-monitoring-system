@@ -9,7 +9,7 @@ import (
 // encode/decode for PushPosts
 func decodeGRPCPushPostsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*proto.PushPostsRequest)
-	return proto.PushPostsRequest{Posts: req.Posts}, nil
+	return proto.PushPostsRequest{CityId: req.CityId, Posts: req.Posts}, nil
 }
 func decodeGRPCPushPostsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*proto.PushPostsReply)
@@ -21,13 +21,13 @@ func encodeGRPCPushPostsResponse(_ context.Context, response interface{}) (inter
 }
 func encodeGRPCPushPostsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PushPostsRequest)
-	return &proto.PushPostsRequest{Posts: req.Posts}, nil
+	return &proto.PushPostsRequest{CityId: req.CityId, Posts: req.Posts}, nil
 }
 
 // encode/decode for SelectPosts
 func decodeGRPCSelectPostsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*proto.SelectPostsRequest)
-	return proto.SelectPostsRequest{Interval: req.Interval}, nil
+	return proto.SelectPostsRequest{CityId: req.CityId, Interval: req.Interval}, nil
 }
 func decodeGRPCSelectPostsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*proto.SelectPostsReply)
@@ -39,13 +39,13 @@ func encodeGRPCSelectPostsResponse(_ context.Context, response interface{}) (int
 }
 func encodeGRPCSelectPostsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.SelectPostsRequest)
-	return &proto.SelectPostsRequest{Interval: req.Interval}, nil
+	return &proto.SelectPostsRequest{CityId: req.CityId, Interval: req.Interval}, nil
 }
 
 // encode/decode for SelectAggrPosts
 func decodeGRPCSelectAggrPostsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*proto.SelectAggrPostsRequest)
-	return proto.SelectAggrPostsRequest{Interval: req.Interval}, nil
+	return proto.SelectAggrPostsRequest{CityId: req.CityId, Interval: req.Interval}, nil
 }
 func decodeGRPCSelectAggrPostsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*proto.SelectAggrPostsReply)
@@ -57,7 +57,7 @@ func encodeGRPCSelectAggrPostsResponse(_ context.Context, response interface{}) 
 }
 func encodeGRPCSelectAggrPostsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.SelectAggrPostsRequest)
-	return &proto.SelectAggrPostsRequest{Interval: req.Interval}, nil
+	return &proto.SelectAggrPostsRequest{CityId: req.CityId, Interval: req.Interval}, nil
 }
 
 // encode/decode for PullTimeline
@@ -81,7 +81,7 @@ func encodeGRPCPullTimelineRequest(_ context.Context, request interface{}) (inte
 // encode/decode for PushGrid
 func decodeGRPCPushGridRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*proto.PushGridRequest)
-	return proto.PushGridRequest{Id: req.Id, Blob: req.Blob}, nil
+	return proto.PushGridRequest{CityId: req.CityId, Id: req.Id, Blob: req.Blob}, nil
 }
 func decodeGRPCPushGridResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*proto.PushGridReply)
@@ -93,13 +93,13 @@ func encodeGRPCPushGridResponse(_ context.Context, response interface{}) (interf
 }
 func encodeGRPCPushGridRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PushGridRequest)
-	return &proto.PushGridRequest{Id: req.Id, Blob: req.Blob}, nil
+	return &proto.PushGridRequest{CityId: req.CityId, Id: req.Id, Blob: req.Blob}, nil
 }
 
 // encode/decode for PullGrid
 func decodeGRPCPullGridRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*proto.PullGridRequest)
-	return proto.PullGridRequest{Id: req.Id}, nil
+	return proto.PullGridRequest{CityId: req.CityId, Id: req.Id}, nil
 }
 func decodeGRPCPullGridResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*proto.PullGridReply)
@@ -111,13 +111,13 @@ func encodeGRPCPullGridResponse(_ context.Context, response interface{}) (interf
 }
 func encodeGRPCPullGridRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PullGridRequest)
-	return &proto.PullGridRequest{Id: req.Id}, nil
+	return &proto.PullGridRequest{CityId: req.CityId, Id: req.Id}, nil
 }
 
 // encode/decode for PushEvents
 func decodeGRPCPushEventsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*proto.PushEventsRequest)
-	return proto.PushEventsRequest{Events: req.Events}, nil
+	return proto.PushEventsRequest{CityId: req.CityId, Events: req.Events}, nil
 }
 func decodeGRPCPushEventsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*proto.PushEventsReply)
@@ -129,13 +129,13 @@ func encodeGRPCPushEventsResponse(_ context.Context, response interface{}) (inte
 }
 func encodeGRPCPushEventsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PushEventsRequest)
-	return &proto.PushEventsRequest{Events: req.Events}, nil
+	return &proto.PushEventsRequest{CityId: req.CityId, Events: req.Events}, nil
 }
 
 // encode/decode for PullEvents
 func decodeGRPCPullEventsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*proto.PullEventsRequest)
-	return proto.PullEventsRequest{Interval: req.Interval}, nil
+	return proto.PullEventsRequest{CityId: req.CityId, Interval: req.Interval}, nil
 }
 func decodeGRPCPullEventsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*proto.PullEventsReply)
@@ -147,13 +147,13 @@ func encodeGRPCPullEventsResponse(_ context.Context, response interface{}) (inte
 }
 func encodeGRPCPullEventsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PullEventsRequest)
-	return &proto.PullEventsRequest{Interval: req.Interval}, nil
+	return &proto.PullEventsRequest{CityId: req.CityId, Interval: req.Interval}, nil
 }
 
 // encode/decode for PushLocations
 func decodeGRPCPushLocationsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
 	req := grpcReq.(*proto.PushLocationsRequest)
-	return proto.PushLocationsRequest{City: req.City, Locations: req.Locations}, nil
+	return proto.PushLocationsRequest{CityId: req.CityId, Locations: req.Locations}, nil
 }
 func decodeGRPCPushLocationsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*proto.PushLocationsReply)
@@ -165,7 +165,7 @@ func encodeGRPCPushLocationsResponse(_ context.Context, response interface{}) (i
 }
 func encodeGRPCPushLocationsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PushLocationsRequest)
-	return &proto.PushLocationsRequest{City: req.City, Locations: req.Locations}, nil
+	return &proto.PushLocationsRequest{CityId: req.CityId, Locations: req.Locations}, nil
 }
 
 // encode/decode for PullLocations

@@ -30,7 +30,7 @@ const CreateHyperTablePosts = "SELECT create_hypertable('posts', 'timestamp', ch
 const CreateTimeFunction = "CREATE OR REPLACE FUNCTION unix_now() returns BIGINT LANGUAGE SQL STABLE as $$ SELECT extract(epoch from now())::BIGINT $$;"
 const SetTimeFunctionForPosts = "SELECT set_integer_now_func('posts', 'unix_now', replace_if_exists => true);"
 
-const DropAggregationPosts = "DROP VIEW aggr_posts CASCADE;"
+const DropAggregationPosts = "DROP VIEW IF EXISTS aggr_posts CASCADE;"
 const AggregationPosts = `
 	CREATE VIEW aggr_posts
 	WITH (timescaledb.continuous)
@@ -39,7 +39,7 @@ const AggregationPosts = `
  		time_bucket('3600', timestamp) as hour,
  		COUNT(*) as count,
  		ST_Transform(ST_SnapToGrid(ST_Transform(location, 3857), %v, %v), 4326) as center
-		FROM posts
+	FROM posts
 	GROUP BY hour, center;`
 
 const EventsTable = `
@@ -158,7 +158,7 @@ const SelectLocationsTemplate = `
 	WHERE CityId = '%v';
 `
 
-func makePoly(topLeft, botRight *data.Point) string {
+func makePoly(topLeft, botRight data.Point) string {
 	return fmt.Sprintf("ST_Polygon('LINESTRING(%v %v, %v %v, %v %v, %v %v, %v %v)'::geometry, 4326)",
 		topLeft.Lat, topLeft.Lon,
 		topLeft.Lat, botRight.Lon,

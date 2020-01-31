@@ -23,26 +23,19 @@ message Post {
 message SpatioTemporalInterval {
     int64 MinTime = 1;
     int64 MaxTime = 2;
-    Point TopLeft = 3;
-    Point BotRight = 4;
+    Point TopLeft = 3 [(gogoproto.nullable) = false];
+    Point BotRight = 4 [(gogoproto.nullable) = false];
 }
 
 message SpatioHourInterval {
     int64 Hour = 1;
-    Point TopLeft = 2;
-    Point BotRight = 3;
+    Point TopLeft = 2 [(gogoproto.nullable) = false];
+    Point BotRight = 3 [(gogoproto.nullable) = false];
 }
 
 message Point {
     double Lat = 1 [(gogoproto.jsontag) = "lt"];
     double Lon = 2 [(gogoproto.jsontag) = "ln"];
-}
-
-message WorkPost {
-    string Caption = 1;
-    int64 Timestamp = 2;
-    double Lat = 3;
-    double Lon = 4;
 }
 
 message Event {
@@ -68,7 +61,7 @@ message Timestamp {
 message Location {
     string ID = 1;
     string Title = 2;
-    Point Position = 3;
+    Point Position = 3 [(gogoproto.nullable) = false];
     string slug = 4;
 }
 
