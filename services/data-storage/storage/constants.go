@@ -1,4 +1,4 @@
-package connector
+package storage
 
 import (
 	"fmt"
@@ -166,4 +166,3 @@ func makePoly(topLeft, botRight data.Point) string {
 		botRight.Lat, topLeft.Lon,
 		topLeft.Lat, topLeft.Lon)
 }
-

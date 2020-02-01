@@ -4,16 +4,15 @@ import (
 	"flag"
 	"fmt"
 	storagesvc "github.com/angrymuskrat/event-monitoring-system/services/data-storage"
-	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/connector"
+	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/storage"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
 )
 
-
 func main() {
 	aLog := flag.String("al", "services/data-storage/app.log", "path to application log file")
 	serviceConfig := flag.String("sc", "services/data-storage/cmd/service/service.toml", "path to service configuration file")
-	connectorConfig := flag.String("cc", "services/data-storage/cmd/service/connector.toml", "path to db connector configuration file")
+	connectorConfig := flag.String("cc", "services/data-storage/cmd/service/storage.toml", "path to db storage configuration file")
 	flag.Parse()
 
 	logCfg := unilog.DefaultConfig()
@@ -24,8 +23,7 @@ func main() {
 	}
 	unilog.InitLog(logCfg)
 
-
-	dbConnector, err := connector.NewStorage(*connectorConfig)
+	dbConnector, err := storage.NewStorage(*connectorConfig)
 	if err != nil {
 		fmt.Print(err)
 		return
@@ -33,4 +31,3 @@ func main() {
 
 	storagesvc.Start(*serviceConfig, dbConnector)
 }
-

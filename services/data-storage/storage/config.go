@@ -1,4 +1,4 @@
-package connector
+package storage
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 )
 
 type Configuration struct {
-	AuthDB string
+	AuthDB            string
 	AggrPostsGRIDSize float64
 }
 

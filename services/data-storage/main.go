@@ -2,8 +2,8 @@ package service
 
 import (
 	"fmt"
-	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/connector"
 	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/proto"
+	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/storage"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"github.com/oklog/oklog/pkg/group"
 	"github.com/visheratin/unilog"
@@ -16,7 +16,7 @@ import (
 	"syscall"
 )
 
-func Start (confPath string, dbc *connector.Storage) {
+func Start(confPath string, dbc *storage.Storage) {
 	conf, err := readConfig(confPath)
 	if err != nil {
 		return
@@ -27,7 +27,7 @@ func Start (confPath string, dbc *connector.Storage) {
 		db: dbc,
 	}
 	svc = &loggingMiddleware{logger, svc}
-	endpoints  := NewEndpoint(svc)
+	endpoints := NewEndpoint(svc)
 	grpcServer := NewGRPCServer(endpoints)
 
 	var g group.Group
@@ -42,7 +42,7 @@ func Start (confPath string, dbc *connector.Storage) {
 		baseServer := grpc.NewServer(
 			grpc.UnaryInterceptor(kitgrpc.Interceptor),
 			grpc.MaxRecvMsgSize(MaxMsgSize),
-			)
+		)
 		proto.RegisterDataStorageServer(baseServer, grpcServer)
 		return baseServer.Serve(grpcListener)
 	}, func(error) {

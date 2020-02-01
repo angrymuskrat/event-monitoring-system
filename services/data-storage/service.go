@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/connector"
+	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/storage"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"time"
 )
@@ -54,7 +54,7 @@ type Service interface {
 }
 
 type basicService struct {
-	db *connector.Storage
+	db *storage.Storage
 }
 
 func (s basicService) PushPosts(_ context.Context, cityId string, posts []data.Post) ([]int32, error) {
