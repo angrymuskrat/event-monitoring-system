@@ -11,7 +11,7 @@ import (
 	storagesvc "github.com/angrymuskrat/event-monitoring-system/services/data-storage"
 	dsdata "github.com/angrymuskrat/event-monitoring-system/services/data-storage/data"
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
-	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/storage"
+	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/storage"
 	protodata "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"github.com/google/uuid"
 	"github.com/visheratin/unilog"
@@ -305,7 +305,13 @@ func (cr *Crawler) sendPostsToDataStorage(posts []data.Post, sessionID string) e
 	for _, post := range posts {
 		protoPosts = append(protoPosts, convertToProtoPost(post))
 	}
-	statuses, err := cr.dataStorage.PushPosts(context.Background(), protoPosts)
+	var cityID string
+	for _, sess := range cr.sessions {
+		if sess.ID == sessionID {
+			cityID = sess.Params.CityID
+		}
+	}
+	statuses, err := cr.dataStorage.PushPosts(context.Background(), cityID, protoPosts)
 	if err != nil {
 		unilog.Logger().Error("error while sending to data storage", zap.Error(err))
 		return err
