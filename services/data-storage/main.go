@@ -27,8 +27,7 @@ func Start(confPath string, dbc *storage.Storage) {
 		db: dbc,
 	}
 	svc = &loggingMiddleware{logger, svc}
-	endpoints := NewEndpoint(svc)
-	grpcServer := NewGRPCServer(endpoints)
+	grpcServer := NewGRPCServer(svc)
 
 	var g group.Group
 

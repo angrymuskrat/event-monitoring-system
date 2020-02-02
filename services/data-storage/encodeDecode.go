@@ -2,200 +2,206 @@ package service
 
 import (
 	"context"
-	"errors"
+
 	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/proto"
 )
 
-// encode/decode for PushPosts
-func decodeGRPCPushPostsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*proto.PushPostsRequest)
-	return proto.PushPostsRequest{CityId: req.CityId, Posts: req.Posts}, nil
-}
-func decodeGRPCPushPostsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*proto.PushPostsReply)
-	return PushPostsResponse{Ids: reply.Ids, Err: str2err(reply.Err)}, nil
-}
-func encodeGRPCPushPostsResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(PushPostsResponse)
-	return &proto.PushPostsReply{Ids: resp.Ids, Err: err2str(resp.Err)}, nil
-}
 func encodeGRPCPushPostsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PushPostsRequest)
-	return &proto.PushPostsRequest{CityId: req.CityId, Posts: req.Posts}, nil
+	return &req, nil
 }
 
-// encode/decode for SelectPosts
-func decodeGRPCSelectPostsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*proto.SelectPostsRequest)
-	return proto.SelectPostsRequest{CityId: req.CityId, Interval: req.Interval}, nil
+func decodeGRPCPushPostsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PushPostsRequest)
+	return *req, nil
 }
-func decodeGRPCSelectPostsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*proto.SelectPostsReply)
-	return SelectPostsResponse{Posts: reply.Posts, Err: str2err(reply.Err)}, nil
+
+func encodeGRPCPushPostsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.PushPostsReply)
+	return resp, nil
 }
-func encodeGRPCSelectPostsResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(SelectPostsResponse)
-	return &proto.SelectPostsReply{Posts: resp.Posts, Err: err2str(resp.Err)}, nil
+
+func decodeGRPCPushPostsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PushPostsReply)
+	return *reply, nil
 }
+
 func encodeGRPCSelectPostsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.SelectPostsRequest)
-	return &proto.SelectPostsRequest{CityId: req.CityId, Interval: req.Interval}, nil
+	return &req, nil
 }
 
-// encode/decode for SelectAggrPosts
-func decodeGRPCSelectAggrPostsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*proto.SelectAggrPostsRequest)
-	return proto.SelectAggrPostsRequest{CityId: req.CityId, Interval: req.Interval}, nil
+func decodeGRPCSelectPostsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.SelectPostsRequest)
+	return *req, nil
 }
-func decodeGRPCSelectAggrPostsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*proto.SelectAggrPostsReply)
-	return SelectAggrPostsResponse{Posts: reply.Posts, Err: str2err(reply.Err)}, nil
+
+func encodeGRPCSelectPostsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.SelectPostsReply)
+	return &resp, nil
 }
-func encodeGRPCSelectAggrPostsResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(SelectAggrPostsResponse)
-	return &proto.SelectAggrPostsReply{Posts: resp.Posts, Err: err2str(resp.Err)}, nil
+
+func decodeGRPCSelectPostsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.SelectPostsReply)
+	return *reply, nil
 }
+
 func encodeGRPCSelectAggrPostsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.SelectAggrPostsRequest)
-	return &proto.SelectAggrPostsRequest{CityId: req.CityId, Interval: req.Interval}, nil
+	return &req, nil
 }
 
-// encode/decode for PullTimeline
-func decodeGRPCPullTimelineRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*proto.PullTimelineRequest)
-	return proto.PullTimelineRequest{CityId: req.CityId, Start: req.Start, Finish: req.Finish}, nil
+func decodeGRPCSelectAggrPostsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.SelectAggrPostsRequest)
+	return *req, nil
 }
-func decodeGRPCPullTimelineResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*proto.PullTimelineReply)
-	return PullTimelineResponse{Timeline: reply.Timeline, Err: str2err(reply.Err)}, nil
+
+func encodeGRPCSelectAggrPostsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.SelectAggrPostsReply)
+	return &resp, nil
 }
-func encodeGRPCPullTimelineResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(PullTimelineResponse)
-	return &proto.PullTimelineReply{Timeline: resp.Timeline, Err: err2str(resp.Err)}, nil
+
+func decodeGRPCSelectAggrPostsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.SelectAggrPostsReply)
+	return *reply, nil
 }
+
 func encodeGRPCPullTimelineRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PullTimelineRequest)
-	return &proto.PullTimelineRequest{CityId: req.CityId, Start: req.Start, Finish: req.Finish}, nil
+	return &req, nil
 }
 
-// encode/decode for PushGrid
-func decodeGRPCPushGridRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*proto.PushGridRequest)
-	return proto.PushGridRequest{CityId: req.CityId, Id: req.Id, Blob: req.Blob}, nil
+func decodeGRPCPullTimelineRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PullTimelineRequest)
+	return *req, nil
 }
-func decodeGRPCPushGridResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*proto.PushGridReply)
-	return PushGridResponse{Err: str2err(reply.Err)}, nil
+
+func encodeGRPCPullTimelineResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.PullTimelineReply)
+	return &resp, nil
 }
-func encodeGRPCPushGridResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(PushGridResponse)
-	return &proto.PushGridReply{Err: err2str(resp.Err)}, nil
+
+func decodeGRPCPullTimelineResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PullTimelineReply)
+	return *reply, nil
 }
+
 func encodeGRPCPushGridRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PushGridRequest)
-	return &proto.PushGridRequest{CityId: req.CityId, Id: req.Id, Blob: req.Blob}, nil
+	return &req, nil
 }
 
-// encode/decode for PullGrid
-func decodeGRPCPullGridRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*proto.PullGridRequest)
-	return proto.PullGridRequest{CityId: req.CityId, Id: req.Id}, nil
+func decodeGRPCPushGridRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PushGridRequest)
+	return *req, nil
 }
-func decodeGRPCPullGridResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*proto.PullGridReply)
-	return PullGridResponse{Blob: reply.Blob, Err: str2err(reply.Err)}, nil
+
+func encodeGRPCPushGridResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.PushGridReply)
+	return &resp, nil
 }
-func encodeGRPCPullGridResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(PullGridResponse)
-	return &proto.PullGridReply{Blob: resp.Blob, Err: err2str(resp.Err)}, nil
+
+func decodeGRPCPushGridResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PushGridReply)
+	return *reply, nil
 }
+
 func encodeGRPCPullGridRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PullGridRequest)
-	return &proto.PullGridRequest{CityId: req.CityId, Id: req.Id}, nil
+	return &req, nil
 }
 
-// encode/decode for PushEvents
-func decodeGRPCPushEventsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*proto.PushEventsRequest)
-	return proto.PushEventsRequest{CityId: req.CityId, Events: req.Events}, nil
+func decodeGRPCPullGridRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PullGridRequest)
+	return *req, nil
 }
-func decodeGRPCPushEventsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*proto.PushEventsReply)
-	return PushEventsResponse{Err: str2err(reply.Err)}, nil
+
+func encodeGRPCPullGridResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.PullGridReply)
+	return &resp, nil
 }
-func encodeGRPCPushEventsResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(PushEventsResponse)
-	return &proto.PushEventsReply{Err: err2str(resp.Err)}, nil
+
+func decodeGRPCPullGridResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PullGridReply)
+	return *reply, nil
 }
+
 func encodeGRPCPushEventsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PushEventsRequest)
-	return &proto.PushEventsRequest{CityId: req.CityId, Events: req.Events}, nil
+	return &req, nil
 }
 
-// encode/decode for PullEvents
-func decodeGRPCPullEventsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*proto.PullEventsRequest)
-	return proto.PullEventsRequest{CityId: req.CityId, Interval: req.Interval}, nil
+func decodeGRPCPushEventsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PushEventsRequest)
+	return *req, nil
 }
-func decodeGRPCPullEventsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*proto.PullEventsReply)
-	return PullEventsResponse{Events: reply.Events, Err: str2err(reply.Err)}, nil
+
+func encodeGRPCPushEventsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.PushEventsReply)
+	return &resp, nil
 }
-func encodeGRPCPullEventsResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(PullEventsResponse)
-	return &proto.PullEventsReply{Events: resp.Events, Err: err2str(resp.Err)}, nil
+
+func decodeGRPCPushEventsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PushEventsReply)
+	return *reply, nil
 }
+
 func encodeGRPCPullEventsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PullEventsRequest)
-	return &proto.PullEventsRequest{CityId: req.CityId, Interval: req.Interval}, nil
+	return &req, nil
 }
 
-// encode/decode for PushLocations
-func decodeGRPCPushLocationsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*proto.PushLocationsRequest)
-	return proto.PushLocationsRequest{CityId: req.CityId, Locations: req.Locations}, nil
+func decodeGRPCPullEventsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PullEventsRequest)
+	return *req, nil
 }
-func decodeGRPCPushLocationsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*proto.PushLocationsReply)
-	return PushLocationsResponse{Err: str2err(reply.Err)}, nil
+
+func encodeGRPCPullEventsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.PullEventsReply)
+	return &resp, nil
 }
-func encodeGRPCPushLocationsResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(PushLocationsResponse)
-	return &proto.PushLocationsReply{Err: err2str(resp.Err)}, nil
+
+func decodeGRPCPullEventsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PullEventsReply)
+	return *reply, nil
 }
+
 func encodeGRPCPushLocationsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PushLocationsRequest)
-	return &proto.PushLocationsRequest{CityId: req.CityId, Locations: req.Locations}, nil
+	return &req, nil
 }
 
-// encode/decode for PullLocations
-func decodeGRPCPullLocationsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
-	req := grpcReq.(*proto.PullLocationsRequest)
-	return proto.PullLocationsRequest{CityId: req.CityId}, nil
+func decodeGRPCPushLocationsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PushLocationsRequest)
+	return *req, nil
 }
-func decodeGRPCPullLocationsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
-	reply := grpcReply.(*proto.PullLocationsReply)
-	return PullLocationsResponse{Locations: reply.Locations, Err: str2err(reply.Err)}, nil
+
+func encodeGRPCPushLocationsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.PushEventsReply)
+	return &resp, nil
 }
-func encodeGRPCPullLocationsResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(PullLocationsResponse)
-	return &proto.PullLocationsReply{Locations: resp.Locations, Err: err2str(resp.Err)}, nil
+
+func decodeGRPCPushLocationsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PushLocationsReply)
+	return *reply, nil
 }
+
 func encodeGRPCPullLocationsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PullLocationsRequest)
-	return &proto.PullLocationsRequest{CityId: req.CityId}, nil
+	return &req, nil
 }
 
-// encode/decode errors
-func str2err(s string) error {
-	if s == "" {
-		return nil
-	}
-	return errors.New(s)
+func decodeGRPCPullLocationsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PullLocationsRequest)
+	return *req, nil
 }
-func err2str(err error) string {
-	if err == nil {
-		return ""
-	}
-	return err.Error()
+
+func encodeGRPCPullLocationsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.PullLocationsReply)
+	return &resp, nil
+}
+
+func decodeGRPCPullLocationsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PullLocationsReply)
+	return *reply, nil
 }

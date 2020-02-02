@@ -19,60 +19,58 @@ type grpcServer struct {
 	pullLocations   grpctransport.Handler
 }
 
-func NewGRPCServer(endpoints Set) proto.DataStorageServer {
-
+func NewGRPCServer(svc Service) proto.DataStorageServer {
 	return &grpcServer{
 		pushPosts: grpctransport.NewServer(
-			endpoints.PushPostsEndpoint,
+			makePushPostsEndpoint(svc),
 			decodeGRPCPushPostsRequest,
 			encodeGRPCPushPostsResponse,
 		),
 		selectPosts: grpctransport.NewServer(
-			endpoints.SelectPostsEndpoint,
+			makeSelectPostsEndpoint(svc),
 			decodeGRPCSelectPostsRequest,
 			encodeGRPCSelectPostsResponse,
 		),
 		selectAggrPosts: grpctransport.NewServer(
-			endpoints.SelectAggrPostsEndpoint,
+			makeSelectAggrPostsEndpoint(svc),
 			decodeGRPCSelectAggrPostsRequest,
 			encodeGRPCSelectAggrPostsResponse,
 		),
 		pullTimeline: grpctransport.NewServer(
-			endpoints.PullTimelineEndpoint,
+			makePullTimelineEndpoint(svc),
 			decodeGRPCPullTimelineRequest,
 			encodeGRPCPullTimelineResponse,
 		),
 		pushGrid: grpctransport.NewServer(
-			endpoints.PushGridEndpoint,
+			makePushGridEndpoint(svc),
 			decodeGRPCPushGridRequest,
 			encodeGRPCPushGridResponse,
 		),
 		pullGrid: grpctransport.NewServer(
-			endpoints.PullGridEndpoint,
+			makePullGridEndpoint(svc),
 			decodeGRPCPullGridRequest,
 			encodeGRPCPullGridResponse,
 		),
 		pushEvents: grpctransport.NewServer(
-			endpoints.PushEventsEndpoint,
+			makePushEventsEndpoint(svc),
 			decodeGRPCPushEventsRequest,
 			encodeGRPCPushEventsResponse,
 		),
 		pullEvents: grpctransport.NewServer(
-			endpoints.PullEventsEndpoint,
+			makePullEventsEndpoint(svc),
 			decodeGRPCPullEventsRequest,
 			encodeGRPCPullEventsResponse,
 		),
 		pushLocations: grpctransport.NewServer(
-			endpoints.PushLocationsEndpoint,
+			makePushLocationsEndpoint(svc),
 			decodeGRPCPushLocationsRequest,
 			encodeGRPCPushLocationsResponse,
 		),
 		pullLocations: grpctransport.NewServer(
-			endpoints.PullLocationsEndpoint,
+			makePullLocationsEndpoint(svc),
 			decodeGRPCPullLocationsRequest,
 			encodeGRPCPullLocationsResponse,
 		),
-
 	}
 }
 
@@ -155,4 +153,3 @@ func (s *grpcServer) PullLocations(ctx context.Context, req *proto.PullLocations
 	}
 	return rep.(*proto.PullLocationsReply), nil
 }
-
