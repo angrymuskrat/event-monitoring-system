@@ -1,0 +1,5 @@
+RootDir                 = "/home/mikhail/workplace/test"
+CheckpointUpdateTimeout = "1m"
+WorkersNumber           = 10
+DataStorageURL          = "localhost:8082"
+UseDataStorage          = true
