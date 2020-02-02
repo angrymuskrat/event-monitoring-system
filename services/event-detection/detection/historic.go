@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func GenerateGrid(data []data.Post, topLeft, bottomRight data.Point, maxPoints int, tz string, gridSize float64) (convtree.ConvTree, error) {
+func HistoricGrid(data []data.Post, topLeft, bottomRight data.Point, maxPoints int, tz string, gridSize float64) (convtree.ConvTree, error) {
 	posts, numDays, err := splitPosts(data, tz, topLeft, gridSize)
 	if err != nil {
 		unilog.Logger().Error("unable to split posts", zap.Error(err))

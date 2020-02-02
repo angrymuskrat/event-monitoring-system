@@ -1,5 +1,5 @@
 protoc --gofast_out=plugins=grpc:. proto/data.proto
-protoc --gofast_out=plugins=grpc:. proto/config.proto
+protoc --gofast_out=plugins=grpc:. event-detection/proto/service.proto
 protoc --gofast_out=plugins=grpc:. data-storage/proto/data-storage.proto
 
 # service do not compile due to data-storage/proto/data-storage.pb.go cannot see "data", but with absolute go module path it worksbash

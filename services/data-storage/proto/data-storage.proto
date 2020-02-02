@@ -24,7 +24,7 @@ service DataStorage {
 }
 
 
-// messages for push and select posts
+// PushPostsRequest represents a request for loading posts from crawler to data storage.
 message PushPostsRequest {
     repeated data.Post posts = 1 [(gogoproto.nullable) = false];
     string cityId = 2;
@@ -45,7 +45,6 @@ message SelectPostsReply {
     string err = 2;
 }
 
-
 // messages for select aggr posts
 message SelectAggrPostsRequest {
     data.SpatioHourInterval interval = 1 [(gogoproto.nullable) = false];
@@ -56,7 +55,6 @@ message SelectAggrPostsReply {
     repeated data.AggregatedPost posts = 1 [(gogoproto.nullable) = false];
     string err = 2;
 }
-
 
 // messages for pull timelines
 message PullTimelineRequest {
@@ -69,7 +67,6 @@ message PullTimelineReply {
     repeated data.Timestamp timeline = 1 [(gogoproto.nullable) = false];
     string err = 2;
 }
-
 
 // messages for pull and push grids
 message PushGridRequest {
@@ -92,7 +89,6 @@ message PullGridReply {
     string err = 2;
 }
 
-
 // messages gor pull and push events
 message PushEventsRequest {
     repeated data.Event events = 1 [(gogoproto.nullable) = false];
@@ -112,7 +108,6 @@ message PullEventsReply {
     repeated data.Event events = 1 [(gogoproto.nullable) = false];
     string err = 2;
 }
-
 
 // messages for pull and push locations
 message PushLocationsRequest {

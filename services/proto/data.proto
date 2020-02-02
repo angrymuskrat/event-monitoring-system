@@ -49,7 +49,7 @@ message Event {
 
 message AggregatedPost {
     Point Center = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "c"];
-    int64 Count = 2[(gogoproto.jsontag) = "n"];
+    int64 Count = 2 [(gogoproto.jsontag) = "n"];
 }
 
 message Timestamp {

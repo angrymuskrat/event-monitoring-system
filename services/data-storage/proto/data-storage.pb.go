@@ -6,6 +6,7 @@ package proto
 import (
 	context "context"
 	fmt "fmt"
+	proto1 "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
@@ -14,7 +15,6 @@ import (
 	io "io"
 	math "math"
 	math_bits "math/bits"
-	proto1 "github.com/angrymuskrat/event-monitoring-system/services/proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -28,7 +28,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-// messages for push and select posts
+// PushPostsRequest represents a request for loading posts from crawler to data storage.
 type PushPostsRequest struct {
 	Posts                []proto1.Post `protobuf:"bytes,1,rep,name=posts,proto3" json:"posts"`
 	CityId               string        `protobuf:"bytes,2,opt,name=cityId,proto3" json:"cityId,omitempty"`

@@ -13,7 +13,7 @@ func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints int, fi
 		return nil, err
 	}
 	splitGrid(&candGrid, maxPoints)
-	events := iterateGrid(&candGrid, maxPoints, filterTags, start, finish)
+	events := treeEvents(&candGrid, maxPoints, filterTags, start, finish)
 	return events, nil
 }
 
@@ -30,7 +30,7 @@ func splitGrid(tree *convtree.ConvTree, maxPoints int) {
 	}
 }
 
-func iterateGrid(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bool, start, finish int64) []data.Event {
+func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bool, start, finish int64) []data.Event {
 	if tree.IsLeaf {
 		result := []data.Event{}
 		if len(tree.Points) >= maxPoints {
@@ -156,10 +156,10 @@ func iterateGrid(tree *convtree.ConvTree, maxPoints int, filterTags map[string]b
 		return result
 	} else {
 		result := []data.Event{}
-		result = append(result, iterateGrid(tree.ChildBottomLeft, maxPoints, filterTags, start, finish)...)
-		result = append(result, iterateGrid(tree.ChildBottomRight, maxPoints, filterTags, start, finish)...)
-		result = append(result, iterateGrid(tree.ChildTopLeft, maxPoints, filterTags, start, finish)...)
-		result = append(result, iterateGrid(tree.ChildTopRight, maxPoints, filterTags, start, finish)...)
+		result = append(result, treeEvents(tree.ChildBottomLeft, maxPoints, filterTags, start, finish)...)
+		result = append(result, treeEvents(tree.ChildBottomRight, maxPoints, filterTags, start, finish)...)
+		result = append(result, treeEvents(tree.ChildTopLeft, maxPoints, filterTags, start, finish)...)
+		result = append(result, treeEvents(tree.ChildTopRight, maxPoints, filterTags, start, finish)...)
 		return result
 	}
 }

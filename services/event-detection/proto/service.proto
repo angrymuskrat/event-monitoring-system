@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package proto;
+
+service EventDetection {
+    rpc HistoricGrids (HistoricRequest) returns (HistoricResponse) { }
+    rpc HistoricStatus (StatusRequest) returns (StatusResponse) { }
+    rpc FindEvents (EventRequest) returns (EventResponse) { }
+    rpc EventsStatus (StatusRequest) returns (StatusResponse) { }
+}
+
+// HistoricRequest represents a request for generating historic grids for event detection.
+message HistoricRequest {
+    string timezone = 1;
+    string city = 2;
+    int64 startTime = 3;
+    int64 finishDate = 4;
+    double gridSize = 5;
+}
+
+// HistoricResponse represents a response containing historic generation session ID.
+message HistoricResponse {
+    string id = 1;
+    string err = 2;
+}
+
+message EventRequest {
+    string timezone = 1;
+    string city = 2;
+    int64 startTime = 3;
+    int64 finishDate = 4;
+}
+
+message EventResponse {
+    string id = 1;
+    string err = 2;
+}
+
+message StatusRequest {
+    string id = 1;
+}
+
+message StatusResponse {
+    string status = 1;
+    string err = 2;
+}
