@@ -135,7 +135,7 @@ func (c *Storage) setDBEnvironment(ctx context.Context, conf Configuration) (err
 	return nil
 }
 
-func (c *Storage) PushPosts(ctx context.Context, posts []data.Post) (ids []int32, err error) {
+func (c *Storage) PushPosts(ctx context.Context, cityId string, posts []data.Post) (ids []int32, err error) {
 	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
@@ -164,7 +164,7 @@ func (c *Storage) PushPosts(ctx context.Context, posts []data.Post) (ids []int32
 	return
 }
 
-func (c Storage) SelectPosts(ctx context.Context, irv data.SpatioTemporalInterval) (posts []data.Post, err error) {
+func (c Storage) SelectPosts(ctx context.Context, cityId string, irv data.SpatioTemporalInterval) (posts []data.Post, err error) {
 	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
@@ -195,7 +195,7 @@ func (c Storage) SelectPosts(ctx context.Context, irv data.SpatioTemporalInterva
 	return
 }
 
-func (c Storage) SelectAggrPosts(ctx context.Context, interval data.SpatioHourInterval) (posts []data.AggregatedPost, err error) {
+func (c Storage) SelectAggrPosts(ctx context.Context, cityId string, interval data.SpatioHourInterval) (posts []data.AggregatedPost, err error) {
 	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
@@ -232,7 +232,7 @@ func (c *Storage) PullTimeline(ctx context.Context, cityId string, start, finish
 	return nil, nil
 }
 
-func (c *Storage) PushGrid(ctx context.Context, id string, blob []byte) (err error) {
+func (c *Storage) PushGrid(ctx context.Context, cityId string, id string, blob []byte) (err error) {
 	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
@@ -250,7 +250,7 @@ func (c *Storage) PushGrid(ctx context.Context, id string, blob []byte) (err err
 	return err
 }
 
-func (c *Storage) PullGrid(ctx context.Context, id string) (blob []byte, err error) {
+func (c *Storage) PullGrid(ctx context.Context, cityId string, id string) (blob []byte, err error) {
 	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
@@ -277,7 +277,7 @@ func (c *Storage) PullGrid(ctx context.Context, id string) (blob []byte, err err
 	return
 }
 
-func (c *Storage) PushEvents(ctx context.Context, events []data.Event) (err error) {
+func (c *Storage) PushEvents(ctx context.Context, cityId string, events []data.Event) (err error) {
 	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
@@ -307,7 +307,7 @@ func (c *Storage) PushEvents(ctx context.Context, events []data.Event) (err erro
 	return
 }
 
-func (c *Storage) PullEvents(ctx context.Context, interval data.SpatioHourInterval) (events []data.Event, err error) {
+func (c *Storage) PullEvents(ctx context.Context, cityId string, interval data.SpatioHourInterval) (events []data.Event, err error) {
 	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
