@@ -164,20 +164,19 @@ func (c *Storage) PushPosts(ctx context.Context, cityId string, posts []data.Pos
 	return
 }
 
-func (c Storage) SelectPosts(ctx context.Context, cityId string, irv data.SpatioTemporalInterval) (posts []data.Post, err error) {
+func (c Storage) SelectPosts(ctx context.Context, cityId string, startTime, finishTime int64) (posts []data.Post, cityArea *data.Area, err error) {
 	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
-		return nil, ErrDBConnecting
+		return nil, nil, ErrDBConnecting
 	}
 
-	poly := makePoly(irv.TopLeft, irv.BotRight)
-	statement := fmt.Sprintf(SelectPosts, poly, irv.MinTime, irv.MaxTime)
+	statement := fmt.Sprintf(SelectPosts, startTime, finishTime)
 
 	rows, err := c.db.Query(ctx, statement)
 	if err != nil {
 		unilog.Logger().Error("error in select posts", zap.Error(err))
-		return nil, ErrSelectPosts
+		return nil, nil, ErrSelectPosts
 	}
 	defer rows.Close()
 
@@ -188,7 +187,7 @@ func (c Storage) SelectPosts(ctx context.Context, cityId string, irv data.Spatio
 			&p.LikesCount, &p.IsAd, &p.AuthorID, &p.LocationID, &p.Lat, &p.Lon)
 		if err != nil {
 			unilog.Logger().Error("error in select posts", zap.Error(err))
-			return nil, ErrSelectPosts
+			return nil, nil, ErrSelectPosts
 		}
 		posts = append(posts, *p)
 	}
@@ -201,7 +200,7 @@ func (c Storage) SelectAggrPosts(ctx context.Context, cityId string, interval da
 		unilog.Logger().Error("db error", zap.Error(err))
 		return nil, ErrDBConnecting
 	}
-	poly := makePoly(interval.TopLeft, interval.BotRight)
+	poly := makePoly(interval.Area)
 	statement := fmt.Sprintf(SelectAggrPosts, interval.Hour, poly)
 
 	rows, err := c.db.Query(ctx, statement)
@@ -232,48 +231,54 @@ func (c *Storage) PullTimeline(ctx context.Context, cityId string, start, finish
 	return nil, nil
 }
 
-func (c *Storage) PushGrid(ctx context.Context, cityId string, id string, blob []byte) (err error) {
+func (c *Storage) PushGrid(ctx context.Context, cityId string, ids []int64, blobs [][]byte) (err error) {
 	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return ErrDBConnecting
 	}
 
-	_, err = c.db.Exec(ctx, PushGrid, id, blob)
-	if err != nil {
-		if strings.Contains(err.Error(), "duplicate key") {
-			return ErrDuplicatedKey
-		} else {
-			unilog.Logger().Error("don't be able to push grid", zap.String("id", id), zap.Error(err))
+	for i, blob := range blobs {
+		id := ids[i]
+		_, err = c.db.Exec(ctx, PushGrid, id, blob)
+		if err != nil {
+			if strings.Contains(err.Error(), "duplicate key") {
+				return ErrDuplicatedKey
+			} else {
+				unilog.Logger().Error("don't be able to push grid", zap.Int64("id", id), zap.Error(err))
+			}
+			return err
 		}
 	}
 	return err
 }
 
-func (c *Storage) PullGrid(ctx context.Context, cityId string, id string) (blob []byte, err error) {
+func (c *Storage) PullGrid(ctx context.Context, cityId string, startId, finishId int64) (ids []int64, blobs [][]byte, err error) {
 	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
-		return nil, ErrDBConnecting
+		return nil, nil, ErrDBConnecting
 	}
-	statement := fmt.Sprintf(PullGrid, id)
+	statement := fmt.Sprintf(PullGrid, startId, finishId)
 	rows, err := c.db.Query(ctx, statement)
 	if err != nil {
 		unilog.Logger().Error("error in pull grid", zap.Error(err))
-		return nil, ErrPullGrid
+		return nil, nil, ErrPullGrid
 	}
 	defer rows.Close()
 
-	ans := new(struct{ Blob []byte })
+	var id int64
+	var blob []byte
 	for rows.Next() {
-		err = rows.Scan(&ans.Blob)
+		err = rows.Scan(&id, &blob)
 		if err != nil {
 			unilog.Logger().Error("error in select", zap.Error(err))
-			return nil, ErrPullGrid
+			return nil,nil, ErrPullGrid
 		}
-		break
+		ids = append(ids, id)
+		blobs = append(blobs, blob)
+
 	}
-	blob = ans.Blob
 	return
 }
 
@@ -314,7 +319,7 @@ func (c *Storage) PullEvents(ctx context.Context, cityId string, interval data.S
 		return nil, ErrDBConnecting
 	}
 
-	poly := makePoly(interval.TopLeft, interval.BotRight)
+	poly := makePoly(interval.Area)
 	statement := fmt.Sprintf(SelectEvents, poly, interval.Hour, interval.Hour+Hour)
 	rows, err := c.db.Query(ctx, statement)
 

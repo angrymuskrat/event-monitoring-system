@@ -21,12 +21,12 @@ func makePushPostsEndpoint(s Service) endpoint.Endpoint {
 func makeSelectPostsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.SelectPostsRequest)
-		posts, err := s.SelectPosts(ctx, req.CityId, req.Interval)
+		posts, area, err := s.SelectPosts(ctx, req.CityId, req.StartTime, req.FinishTime)
 		var msg string
 		if err != nil {
 			msg = err.Error()
 		}
-		return proto.SelectPostsReply{Posts: posts, Err: msg}, nil
+		return proto.SelectPostsReply{Posts: posts, Area: area, Err: msg}, nil
 	}
 }
 
@@ -57,7 +57,7 @@ func makePullTimelineEndpoint(s Service) endpoint.Endpoint {
 func makePushGridEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PushGridRequest)
-		err = s.PushGrid(ctx, req.CityId, req.Id, req.Blob)
+		err = s.PushGrid(ctx, req.CityId, req.Ids, req.Blobs)
 		var msg string
 		if err != nil {
 			msg = err.Error()
@@ -69,12 +69,12 @@ func makePushGridEndpoint(s Service) endpoint.Endpoint {
 func makePullGridEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PullGridRequest)
-		blob, err := s.PullGrid(ctx, req.CityId, req.Id)
+		ids, blobs, err := s.PullGrid(ctx, req.CityId, req.StartId, req.FinishId)
 		var msg string
 		if err != nil {
 			msg = err.Error()
 		}
-		return proto.PullGridReply{Blob: blob, Err: msg}, nil
+		return proto.PullGridReply{Ids: ids, Blobs: blobs, Err: msg}, nil
 	}
 }
 

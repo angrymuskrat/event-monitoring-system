@@ -24,15 +24,16 @@ func (mw loggingMiddleware) PushPosts(ctx context.Context, cityId string, posts 
 	return
 }
 
-func (mw loggingMiddleware) SelectPosts(ctx context.Context, cityId string, interval data.SpatioTemporalInterval) (posts []data.Post, err error) {
+func (mw loggingMiddleware) SelectPosts(ctx context.Context, cityId string, startTime, finishTime int64) (posts []data.Post, area *data.Area, err error) {
 	defer func(begin time.Time) {
 		mw.logger.Info("select posts",
-			zap.Any("interval", interval),
+			zap.Int64("start time", startTime),
+			zap.Int64("finish time", finishTime),
 			zap.String("city id", cityId),
 			zap.Error(err),
 			zap.String("took", time.Since(begin).String()))
 	}(time.Now())
-	posts, err = mw.next.SelectPosts(ctx, cityId, interval)
+	posts, area, err = mw.next.SelectPosts(ctx, cityId, startTime, finishTime)
 	return
 }
 
@@ -62,28 +63,29 @@ func (mw loggingMiddleware) PullTimeline(ctx context.Context, cityId string, sta
 	return
 }
 
-func (mw loggingMiddleware) PushGrid(ctx context.Context, cityId string, id string, blob []byte) (err error) {
+func (mw loggingMiddleware) PushGrid(ctx context.Context, cityId string, ids []int64, blobs [][]byte) (err error) {
 	defer func(begin time.Time) {
 		mw.logger.Info("push grid",
-			zap.String("id", id),
-			zap.Int("capacity", len(blob)),
+			zap.Int("len ids", len(ids)),
+			zap.Int("len blobs", len(blobs)),
 			zap.String("city id", cityId),
 			zap.Error(err),
 			zap.String("took", time.Since(begin).String()))
 	}(time.Now())
-	err = mw.next.PushGrid(ctx, cityId, id, blob)
+	err = mw.next.PushGrid(ctx, cityId, ids, blobs)
 	return
 }
 
-func (mw loggingMiddleware) PullGrid(ctx context.Context, cityId string, id string) (blob []byte, err error) {
+func (mw loggingMiddleware) PullGrid(ctx context.Context, cityId string, startId, finishId int64) (ids []int64, blobs [][]byte, err error) {
 	defer func(begin time.Time) {
 		mw.logger.Info("pull grid",
-			zap.String("id", id),
+			zap.Int64("start id", startId),
+			zap.Int64("start id", finishId),
 			zap.String("city id", cityId),
 			zap.Error(err),
 			zap.String("took", time.Since(begin).String()))
 	}(time.Now())
-	blob, err = mw.next.PullGrid(ctx, cityId, id)
+	ids, blobs, err = mw.next.PullGrid(ctx, cityId, startId, finishId)
 	return
 }
 

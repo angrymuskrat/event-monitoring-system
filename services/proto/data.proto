@@ -20,17 +20,20 @@ message Post {
     double Lon = 13;
 }
 
+message Area {
+    Point TopLeft = 1;
+    Point BotRight = 2;
+}
+
 message SpatioTemporalInterval {
     int64 MinTime = 1;
     int64 MaxTime = 2;
-    Point TopLeft = 3 [(gogoproto.nullable) = false];
-    Point BotRight = 4 [(gogoproto.nullable) = false];
+    Area  Area = 3[(gogoproto.nullable) = false];
 }
 
 message SpatioHourInterval {
     int64 Hour = 1;
-    Point TopLeft = 2 [(gogoproto.nullable) = false];
-    Point BotRight = 3 [(gogoproto.nullable) = false];
+    Area  Area = 2[(gogoproto.nullable) = false];
 }
 
 message Point {
@@ -68,4 +71,5 @@ message Location {
 message City {
     string Title = 1;
     string ID = 2;
+    Area Area = 3[(gogoproto.nullable) = false];
 }

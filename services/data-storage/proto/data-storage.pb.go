@@ -6,7 +6,6 @@ package proto
 import (
 	context "context"
 	fmt "fmt"
-	proto1 "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
@@ -15,6 +14,7 @@ import (
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	proto1 "github.com/angrymuskrat/event-monitoring-system/services/proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -140,11 +140,13 @@ func (m *PushPostsReply) GetErr() string {
 }
 
 type SelectPostsRequest struct {
-	Interval             proto1.SpatioTemporalInterval `protobuf:"bytes,1,opt,name=interval,proto3" json:"interval"`
-	CityId               string                        `protobuf:"bytes,2,opt,name=cityId,proto3" json:"cityId,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                      `json:"-"`
-	XXX_unrecognized     []byte                        `json:"-"`
-	XXX_sizecache        int32                         `json:"-"`
+	//data.SpatioTemporalInterval interval = 1 [(gogoproto.nullable) = false];
+	StartTime            int64    `protobuf:"varint,1,opt,name=startTime,proto3" json:"startTime,omitempty"`
+	FinishTime           int64    `protobuf:"varint,2,opt,name=finishTime,proto3" json:"finishTime,omitempty"`
+	CityId               string   `protobuf:"bytes,3,opt,name=cityId,proto3" json:"cityId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *SelectPostsRequest) Reset()         { *m = SelectPostsRequest{} }
@@ -180,11 +182,18 @@ func (m *SelectPostsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SelectPostsRequest proto.InternalMessageInfo
 
-func (m *SelectPostsRequest) GetInterval() proto1.SpatioTemporalInterval {
+func (m *SelectPostsRequest) GetStartTime() int64 {
 	if m != nil {
-		return m.Interval
+		return m.StartTime
 	}
-	return proto1.SpatioTemporalInterval{}
+	return 0
+}
+
+func (m *SelectPostsRequest) GetFinishTime() int64 {
+	if m != nil {
+		return m.FinishTime
+	}
+	return 0
 }
 
 func (m *SelectPostsRequest) GetCityId() string {
@@ -196,7 +205,8 @@ func (m *SelectPostsRequest) GetCityId() string {
 
 type SelectPostsReply struct {
 	Posts                []proto1.Post `protobuf:"bytes,1,rep,name=posts,proto3" json:"posts"`
-	Err                  string        `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
+	Area                 *proto1.Area  `protobuf:"bytes,2,opt,name=area,proto3" json:"area,omitempty"`
+	Err                  string        `protobuf:"bytes,3,opt,name=err,proto3" json:"err,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
 	XXX_unrecognized     []byte        `json:"-"`
 	XXX_sizecache        int32         `json:"-"`
@@ -238,6 +248,13 @@ var xxx_messageInfo_SelectPostsReply proto.InternalMessageInfo
 func (m *SelectPostsReply) GetPosts() []proto1.Post {
 	if m != nil {
 		return m.Posts
+	}
+	return nil
+}
+
+func (m *SelectPostsReply) GetArea() *proto1.Area {
+	if m != nil {
+		return m.Area
 	}
 	return nil
 }
@@ -481,8 +498,8 @@ func (m *PullTimelineReply) GetErr() string {
 
 // messages for pull and push grids
 type PushGridRequest struct {
-	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Blob                 []byte   `protobuf:"bytes,2,opt,name=blob,proto3" json:"blob,omitempty"`
+	Ids                  []int64  `protobuf:"varint,1,rep,packed,name=ids,proto3" json:"ids,omitempty"`
+	Blobs                [][]byte `protobuf:"bytes,2,rep,name=blobs,proto3" json:"blobs,omitempty"`
 	CityId               string   `protobuf:"bytes,3,opt,name=cityId,proto3" json:"cityId,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -522,16 +539,16 @@ func (m *PushGridRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PushGridRequest proto.InternalMessageInfo
 
-func (m *PushGridRequest) GetId() string {
+func (m *PushGridRequest) GetIds() []int64 {
 	if m != nil {
-		return m.Id
+		return m.Ids
 	}
-	return ""
+	return nil
 }
 
-func (m *PushGridRequest) GetBlob() []byte {
+func (m *PushGridRequest) GetBlobs() [][]byte {
 	if m != nil {
-		return m.Blob
+		return m.Blobs
 	}
 	return nil
 }
@@ -591,8 +608,9 @@ func (m *PushGridReply) GetErr() string {
 }
 
 type PullGridRequest struct {
-	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	CityId               string   `protobuf:"bytes,2,opt,name=cityId,proto3" json:"cityId,omitempty"`
+	StartId              int64    `protobuf:"varint,1,opt,name=startId,proto3" json:"startId,omitempty"`
+	FinishId             int64    `protobuf:"varint,2,opt,name=finishId,proto3" json:"finishId,omitempty"`
+	CityId               string   `protobuf:"bytes,3,opt,name=cityId,proto3" json:"cityId,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -631,11 +649,18 @@ func (m *PullGridRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PullGridRequest proto.InternalMessageInfo
 
-func (m *PullGridRequest) GetId() string {
+func (m *PullGridRequest) GetStartId() int64 {
 	if m != nil {
-		return m.Id
+		return m.StartId
 	}
-	return ""
+	return 0
+}
+
+func (m *PullGridRequest) GetFinishId() int64 {
+	if m != nil {
+		return m.FinishId
+	}
+	return 0
 }
 
 func (m *PullGridRequest) GetCityId() string {
@@ -646,8 +671,9 @@ func (m *PullGridRequest) GetCityId() string {
 }
 
 type PullGridReply struct {
-	Blob                 []byte   `protobuf:"bytes,1,opt,name=blob,proto3" json:"blob,omitempty"`
-	Err                  string   `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
+	Ids                  []int64  `protobuf:"varint,1,rep,packed,name=ids,proto3" json:"ids,omitempty"`
+	Blobs                [][]byte `protobuf:"bytes,2,rep,name=blobs,proto3" json:"blobs,omitempty"`
+	Err                  string   `protobuf:"bytes,3,opt,name=err,proto3" json:"err,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -686,9 +712,16 @@ func (m *PullGridReply) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PullGridReply proto.InternalMessageInfo
 
-func (m *PullGridReply) GetBlob() []byte {
+func (m *PullGridReply) GetIds() []int64 {
 	if m != nil {
-		return m.Blob
+		return m.Ids
+	}
+	return nil
+}
+
+func (m *PullGridReply) GetBlobs() [][]byte {
+	if m != nil {
+		return m.Blobs
 	}
 	return nil
 }
@@ -1146,54 +1179,57 @@ func init() {
 }
 
 var fileDescriptor_8ec0c2fba98f9a4b = []byte{
-	// 744 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0xcf, 0x6e, 0xd3, 0x4e,
-	0x10, 0x8e, 0x93, 0xa6, 0x6a, 0x27, 0xfd, 0xb5, 0xf9, 0x2d, 0x21, 0x75, 0x5d, 0x1a, 0x8a, 0x11,
-	0x55, 0x39, 0x90, 0x42, 0x80, 0x03, 0x95, 0x40, 0x50, 0xfe, 0x56, 0x2a, 0x50, 0xb9, 0x15, 0x42,
-	0xe5, 0xe4, 0xd4, 0x8b, 0x6b, 0x69, 0x1b, 0x1b, 0x7b, 0x53, 0xa9, 0x6f, 0xc2, 0xc3, 0xf0, 0x00,
-	0x3d, 0xf2, 0x04, 0x08, 0x85, 0x17, 0x41, 0xeb, 0xdd, 0x8d, 0x77, 0x6d, 0x07, 0xd2, 0x03, 0xa7,
-	0xd8, 0x33, 0xdf, 0x7c, 0xf3, 0xcd, 0x64, 0x66, 0x0c, 0xb7, 0x3c, 0x97, 0xba, 0x77, 0x12, 0x1a,
-	0xc6, 0xae, 0x8f, 0xb7, 0xa2, 0x38, 0xa4, 0xe1, 0x96, 0x6a, 0xea, 0xa6, 0x26, 0x54, 0x4f, 0x7f,
-	0xac, 0xb5, 0x12, 0xb4, 0x1f, 0xfa, 0x21, 0x47, 0x59, 0xcd, 0x2c, 0x9e, 0x5b, 0x6c, 0x07, 0x9a,
-	0xfb, 0xc3, 0xe4, 0x64, 0x3f, 0x4c, 0x68, 0xe2, 0xe0, 0x2f, 0x43, 0x9c, 0x50, 0xb4, 0x01, 0xf5,
-	0x88, 0xbd, 0x9b, 0xc6, 0x7a, 0x6d, 0xb3, 0xd1, 0x83, 0x6e, 0x8a, 0x67, 0x90, 0x9d, 0x99, 0x8b,
-	0x1f, 0xd7, 0x2b, 0x0e, 0x77, 0xa3, 0x36, 0xcc, 0x1e, 0x07, 0xf4, 0x7c, 0xd7, 0x33, 0xab, 0xeb,
-	0xc6, 0xe6, 0xbc, 0x23, 0xde, 0xec, 0x07, 0xb0, 0xa8, 0x70, 0x46, 0xe4, 0x1c, 0x35, 0xa1, 0x16,
-	0x78, 0x9c, 0xaf, 0xee, 0xb0, 0x47, 0x66, 0xc1, 0x71, 0x2c, 0x02, 0xd9, 0xa3, 0x4d, 0x00, 0x1d,
-	0x60, 0x82, 0x8f, 0xa9, 0xa6, 0xe5, 0x09, 0xcc, 0x05, 0x03, 0x8a, 0xe3, 0x33, 0x97, 0x98, 0xc6,
-	0xba, 0xb1, 0xd9, 0xe8, 0x5d, 0xe3, 0x72, 0x0e, 0x22, 0x97, 0x06, 0xe1, 0x21, 0x3e, 0x8d, 0xc2,
-	0xd8, 0x25, 0xbb, 0x02, 0x23, 0x04, 0x8e, 0x63, 0x26, 0x6a, 0xdc, 0x83, 0xa6, 0x96, 0x8d, 0xa9,
-	0x9c, 0xb6, 0xee, 0x32, 0xed, 0x6d, 0xce, 0xf6, 0xcc, 0xf7, 0x63, 0x4d, 0xff, 0x76, 0x41, 0xbf,
-	0xa9, 0xea, 0x7f, 0x13, 0x0e, 0xe3, 0x4b, 0x6b, 0x3f, 0x82, 0x56, 0x21, 0x1b, 0xd3, 0x7f, 0x57,
-	0xd7, 0xdf, 0xe2, 0x89, 0x18, 0x08, 0xfb, 0x2e, 0xc5, 0xde, 0x34, 0x95, 0x7c, 0x82, 0x2b, 0xfb,
-	0x43, 0x42, 0x0e, 0x83, 0x53, 0x4c, 0x82, 0x01, 0x96, 0x65, 0x64, 0x52, 0x0c, 0x55, 0x0a, 0x6a,
-	0x41, 0x3d, 0xa1, 0x6e, 0x4c, 0x53, 0x8a, 0x9a, 0xc3, 0x5f, 0x18, 0xfa, 0x73, 0x30, 0x08, 0x92,
-	0x13, 0xb3, 0x96, 0x9a, 0xc5, 0x9b, 0xfd, 0x11, 0xfe, 0xd7, 0xc9, 0x99, 0xea, 0x7b, 0x30, 0x47,
-	0x85, 0x41, 0x08, 0x5f, 0xe2, 0xc2, 0x19, 0x2c, 0xa1, 0xee, 0x69, 0x24, 0x1b, 0x23, 0x61, 0x25,
-	0xb2, 0xdf, 0xc2, 0x12, 0x1b, 0xb9, 0xd7, 0x71, 0xe0, 0x49, 0xc9, 0x8b, 0x50, 0x0d, 0xa4, 0xdc,
-	0x6a, 0xe0, 0x21, 0x04, 0x33, 0x7d, 0x12, 0xf6, 0xd3, 0xa8, 0x05, 0x27, 0x7d, 0x56, 0xca, 0xaa,
-	0x69, 0x1d, 0xbe, 0x01, 0xff, 0x65, 0x74, 0x62, 0x80, 0x59, 0x46, 0x23, 0xcb, 0xf8, 0x88, 0x65,
-	0x24, 0xe4, 0x4f, 0x19, 0x27, 0xfd, 0x7f, 0x0f, 0x19, 0xbb, 0x0c, 0x65, 0xec, 0x52, 0x9a, 0xa1,
-	0x48, 0x2b, 0xd6, 0xf8, 0x81, 0x75, 0x2f, 0x39, 0x79, 0x79, 0x86, 0x07, 0xd9, 0x7c, 0xdd, 0x86,
-	0x59, 0x9c, 0x1a, 0x44, 0xef, 0x1a, 0xbc, 0x77, 0x29, 0x48, 0xf4, 0x4d, 0x00, 0x26, 0xca, 0xb9,
-	0xc9, 0x7b, 0x27, 0x79, 0xcb, 0xcb, 0xf5, 0xf9, 0x5f, 0xa7, 0x27, 0xff, 0x17, 0xc3, 0xfd, 0x8e,
-	0xf7, 0x55, 0x55, 0x73, 0x89, 0x1a, 0x8b, 0x5d, 0xeb, 0x43, 0x8b, 0x55, 0xb7, 0x17, 0x1e, 0x33,
-	0x49, 0x83, 0xe4, 0x6f, 0x13, 0xdd, 0x83, 0x79, 0x22, 0xb1, 0x66, 0x35, 0xcd, 0xb7, 0xc8, 0xf3,
-	0x49, 0x0a, 0x91, 0x32, 0x83, 0xd9, 0x1b, 0x80, 0x72, 0x39, 0xca, 0x9b, 0xd8, 0x65, 0x5a, 0x08,
-	0x99, 0x56, 0x8b, 0x7d, 0xc4, 0x78, 0x35, 0x3c, 0xe3, 0xd5, 0x14, 0x1a, 0x53, 0x29, 0x2c, 0xf6,
-	0xa5, 0xf7, 0xad, 0x0e, 0x8d, 0x17, 0x2e, 0x75, 0x0f, 0xf8, 0xb7, 0x02, 0x3d, 0x86, 0xf9, 0xf1,
-	0xd1, 0x46, 0xcb, 0xfc, 0xeb, 0xd0, 0xcd, 0x7f, 0x1a, 0xac, 0xab, 0x45, 0x47, 0x44, 0xce, 0xed,
-	0x0a, 0x7a, 0x0e, 0x0d, 0xe5, 0x9e, 0xa2, 0x15, 0x81, 0x2b, 0x5e, 0x74, 0x6b, 0xb9, 0xcc, 0xc5,
-	0x49, 0xde, 0xc3, 0x52, 0xee, 0xb0, 0xa1, 0x35, 0x0d, 0x9d, 0x3f, 0xaf, 0xd6, 0xea, 0x24, 0x37,
-	0x27, 0x7c, 0x05, 0x0b, 0xea, 0xc1, 0x41, 0xd6, 0x58, 0x7e, 0xe1, 0xc4, 0x59, 0x66, 0xa9, 0x8f,
-	0xf3, 0x6c, 0xc3, 0x9c, 0xbc, 0x07, 0xa8, 0xad, 0xb4, 0x40, 0xd9, 0x7e, 0xab, 0x55, 0xb0, 0x2b,
-	0xb1, 0x7c, 0xdb, 0x95, 0x58, 0xed, 0x72, 0x28, 0xb1, 0xca, 0x59, 0xb0, 0x2b, 0xe8, 0x29, 0x40,
-	0xb6, 0x9a, 0xc8, 0x54, 0x32, 0x68, 0x8b, 0x68, 0xb5, 0x4b, 0x3c, 0x0a, 0x83, 0x5c, 0x27, 0xa4,
-	0xd6, 0x38, 0x89, 0x41, 0xdb, 0x3d, 0xbb, 0x82, 0x76, 0xf9, 0x2d, 0x1c, 0x0f, 0x21, 0x5a, 0x55,
-	0x92, 0xe5, 0x47, 0xd9, 0x5a, 0x29, 0x77, 0x2a, 0x54, 0xca, 0x3c, 0x2b, 0x54, 0xc5, 0xad, 0x50,
-	0xa8, 0xf2, 0x2b, 0x60, 0x57, 0x76, 0x9a, 0x17, 0xa3, 0x8e, 0xf1, 0x7d, 0xd4, 0x31, 0x7e, 0x8e,
-	0x3a, 0xc6, 0xd7, 0x5f, 0x9d, 0x4a, 0x7f, 0x36, 0x45, 0xdf, 0xff, 0x1d, 0x00, 0x00, 0xff, 0xff,
-	0xff, 0xae, 0xac, 0xd9, 0x31, 0x09, 0x00, 0x00,
+	// 794 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0xdd, 0x6e, 0xd3, 0x4c,
+	0x10, 0x8d, 0xeb, 0xa6, 0x5f, 0x32, 0xe9, 0xd7, 0x86, 0x25, 0xa4, 0xae, 0x4b, 0x43, 0x30, 0xa2,
+	0x0a, 0x17, 0xa4, 0x10, 0xb8, 0xaa, 0x84, 0x44, 0xcb, 0x6f, 0x24, 0x04, 0xc5, 0x45, 0x08, 0x95,
+	0x0b, 0xe4, 0x34, 0x8b, 0x6b, 0xb4, 0x8d, 0x83, 0xbd, 0xa9, 0xd4, 0x37, 0xe1, 0x61, 0x78, 0x80,
+	0x5e, 0xf2, 0x04, 0x08, 0x95, 0x17, 0x41, 0xfb, 0xe3, 0x78, 0xd7, 0x76, 0x20, 0x5c, 0x70, 0x95,
+	0xec, 0xcc, 0xf1, 0x99, 0x33, 0xb3, 0x33, 0xb3, 0x70, 0x73, 0xe8, 0x51, 0xef, 0x76, 0x4c, 0xc3,
+	0xc8, 0xf3, 0xf1, 0xf6, 0x38, 0x0a, 0x69, 0xb8, 0xad, 0x9a, 0xba, 0xdc, 0x84, 0xca, 0xfc, 0xc7,
+	0xde, 0x2c, 0x40, 0xfb, 0xa1, 0x1f, 0x0a, 0x94, 0x5d, 0x4f, 0xbf, 0x17, 0x16, 0xc7, 0x85, 0xfa,
+	0xfe, 0x24, 0x3e, 0xde, 0x0f, 0x63, 0x1a, 0xbb, 0xf8, 0xf3, 0x04, 0xc7, 0x14, 0x6d, 0x41, 0x79,
+	0xcc, 0xce, 0x96, 0xd1, 0x36, 0x3b, 0xb5, 0x1e, 0x74, 0x39, 0x9e, 0x41, 0xf6, 0x16, 0xcf, 0xbf,
+	0x5f, 0x2b, 0xb9, 0xc2, 0x8d, 0x9a, 0xb0, 0x74, 0x14, 0xd0, 0xb3, 0xfe, 0xd0, 0x5a, 0x68, 0x1b,
+	0x9d, 0xaa, 0x2b, 0x4f, 0xce, 0x7d, 0x58, 0x51, 0x38, 0xc7, 0xe4, 0x0c, 0xd5, 0xc1, 0x0c, 0x86,
+	0x82, 0xaf, 0xec, 0xb2, 0xbf, 0xcc, 0x82, 0xa3, 0x48, 0x7e, 0xc8, 0xfe, 0x3a, 0x9f, 0x00, 0x1d,
+	0x60, 0x82, 0x8f, 0xa8, 0xa6, 0xe5, 0x2a, 0x54, 0x63, 0xea, 0x45, 0xf4, 0x4d, 0x70, 0x82, 0x2d,
+	0xa3, 0x6d, 0x74, 0x4c, 0x37, 0x35, 0xa0, 0x16, 0xc0, 0xc7, 0x60, 0x14, 0xc4, 0xc7, 0xdc, 0xbd,
+	0xc0, 0xdd, 0x8a, 0x45, 0x51, 0x68, 0x6a, 0x0a, 0x09, 0xd4, 0xb5, 0x58, 0x4c, 0xe3, 0xbc, 0x59,
+	0xb7, 0x60, 0xd1, 0x8b, 0xb0, 0xc7, 0xa3, 0x4d, 0x61, 0xbb, 0x11, 0xf6, 0x5c, 0x6e, 0x4f, 0x32,
+	0x33, 0xd3, 0xcc, 0x08, 0x34, 0x45, 0xb4, 0x5d, 0xdf, 0x8f, 0xb4, 0xec, 0x76, 0xa0, 0x12, 0x8c,
+	0x28, 0x8e, 0x4e, 0x3d, 0xc2, 0x93, 0xab, 0xf5, 0x2c, 0xc1, 0x77, 0x30, 0xf6, 0x68, 0x10, 0x3e,
+	0x0f, 0x27, 0x51, 0x5f, 0xfa, 0xa5, 0x88, 0x29, 0x7e, 0x66, 0xf5, 0x0f, 0xa1, 0x91, 0x8b, 0xc6,
+	0xf2, 0xbb, 0xa3, 0xe7, 0xd7, 0x90, 0xc2, 0x7d, 0x3f, 0xc2, 0xbe, 0x47, 0xf1, 0x30, 0x9f, 0x69,
+	0xfe, 0x8e, 0xde, 0xc3, 0xe5, 0xfd, 0x09, 0x21, 0xac, 0xb6, 0x24, 0x18, 0xe1, 0x24, 0x8d, 0x54,
+	0x8a, 0xa1, 0x4a, 0x41, 0x0d, 0x28, 0xf3, 0xbb, 0x92, 0x37, 0x23, 0x0e, 0x0c, 0x2d, 0xae, 0x88,
+	0xd7, 0xc8, 0x74, 0xe5, 0xc9, 0x79, 0x07, 0x97, 0x74, 0x72, 0xa6, 0xfa, 0x2e, 0x54, 0xa8, 0x34,
+	0x48, 0xe1, 0xab, 0x42, 0x38, 0x83, 0xc5, 0xd4, 0x3b, 0x19, 0x27, 0x85, 0x49, 0x60, 0x05, 0xb2,
+	0x5f, 0xc3, 0x2a, 0x6b, 0xc8, 0x67, 0x51, 0x30, 0x4c, 0x24, 0x2b, 0x1d, 0x69, 0x8a, 0x8e, 0x6c,
+	0x40, 0x79, 0x40, 0xc2, 0x41, 0x6c, 0x2d, 0xb4, 0xcd, 0xce, 0xb2, 0x2b, 0x0e, 0x33, 0x3b, 0xe8,
+	0x3a, 0xfc, 0x9f, 0x52, 0xca, 0x16, 0x67, 0x51, 0x8d, 0x34, 0xea, 0x07, 0x16, 0x95, 0x10, 0x35,
+	0xaa, 0x05, 0xff, 0xf1, 0x1a, 0xc8, 0x4a, 0x99, 0x6e, 0x72, 0x44, 0x36, 0x54, 0x44, 0x19, 0xe4,
+	0x7d, 0x9a, 0xee, 0xf4, 0x3c, 0x53, 0x43, 0x9f, 0x69, 0x48, 0x02, 0x64, 0xc6, 0xec, 0xb7, 0x49,
+	0xe5, 0x5b, 0xf4, 0x2d, 0xab, 0x7d, 0x7c, 0xfc, 0xe4, 0x14, 0x8f, 0xd2, 0xee, 0xbc, 0x05, 0x4b,
+	0x98, 0x1b, 0x64, 0xe5, 0x6b, 0xa2, 0xf2, 0x1c, 0x24, 0xab, 0x2e, 0x01, 0x33, 0x9b, 0xf1, 0x86,
+	0xa8, 0x7c, 0xc2, 0x5b, 0x5c, 0x28, 0x5f, 0x5c, 0xbc, 0x1e, 0xfc, 0x5f, 0x8c, 0xc6, 0x4b, 0x71,
+	0x23, 0xaa, 0x9a, 0xbf, 0xc8, 0x31, 0xdf, 0x57, 0x03, 0x68, 0xb0, 0xec, 0x5e, 0x84, 0x47, 0x4c,
+	0xd2, 0x28, 0xfe, 0xd3, 0x3c, 0xf4, 0xa0, 0x4a, 0x12, 0x2c, 0xbf, 0x91, 0x5a, 0x6f, 0x45, 0xc4,
+	0x4b, 0x28, 0x64, 0xc8, 0x14, 0xe6, 0x6c, 0x01, 0xca, 0xc4, 0x28, 0x2e, 0x62, 0x97, 0x69, 0x21,
+	0x64, 0x5e, 0x2d, 0xce, 0x21, 0xe3, 0xd5, 0xf0, 0x8c, 0x57, 0x53, 0x68, 0xcc, 0xa5, 0x30, 0x5f,
+	0x97, 0xde, 0xd7, 0x32, 0xd4, 0x1e, 0x7b, 0xd4, 0x3b, 0x10, 0xef, 0x10, 0x7a, 0x00, 0xd5, 0xe9,
+	0x83, 0x80, 0xd6, 0xc4, 0xcb, 0xd3, 0xcd, 0x3e, 0x3b, 0xf6, 0x95, 0xbc, 0x63, 0x4c, 0xce, 0x9c,
+	0x12, 0x7a, 0x04, 0x35, 0x65, 0x5b, 0xa3, 0x75, 0x89, 0xcb, 0xbf, 0x16, 0xf6, 0x5a, 0x91, 0x4b,
+	0x90, 0xbc, 0x82, 0xd5, 0xcc, 0x5a, 0x44, 0x9b, 0x1a, 0x3a, 0xbb, 0x9c, 0xed, 0x8d, 0x59, 0x6e,
+	0x41, 0xf8, 0x14, 0x96, 0xd5, 0x75, 0x85, 0xec, 0xa9, 0xfc, 0xdc, 0x82, 0xb4, 0xad, 0x42, 0x9f,
+	0xe0, 0xd9, 0x81, 0x4a, 0xb2, 0x49, 0x50, 0x53, 0x29, 0x81, 0xb2, 0x37, 0xec, 0x46, 0xce, 0xae,
+	0x7c, 0x2b, 0x36, 0x80, 0xf2, 0xad, 0xb6, 0x73, 0x94, 0x6f, 0x95, 0x55, 0xe1, 0x94, 0xd0, 0x43,
+	0x80, 0x74, 0x34, 0x91, 0xa5, 0x44, 0xd0, 0x06, 0xd1, 0x6e, 0x16, 0x78, 0x14, 0x86, 0x64, 0x9c,
+	0x90, 0x9a, 0xe3, 0x2c, 0x06, 0x6d, 0xf6, 0x9c, 0x12, 0xea, 0x8b, 0x2d, 0x3a, 0x6d, 0x42, 0xb4,
+	0xa1, 0x04, 0xcb, 0xb6, 0xb2, 0xbd, 0x5e, 0xec, 0x54, 0xa8, 0x94, 0x7e, 0x56, 0xa8, 0xf2, 0x53,
+	0xa1, 0x50, 0x65, 0x47, 0xc0, 0x29, 0xed, 0xd5, 0xcf, 0x2f, 0x5a, 0xc6, 0xb7, 0x8b, 0x96, 0xf1,
+	0xe3, 0xa2, 0x65, 0x7c, 0xf9, 0xd9, 0x2a, 0x0d, 0x96, 0x38, 0xfa, 0xde, 0xaf, 0x00, 0x00, 0x00,
+	0xff, 0xff, 0x88, 0x80, 0x9c, 0x3e, 0x8d, 0x09, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1730,18 +1766,18 @@ func (m *SelectPostsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.CityId)
 		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.CityId)))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x1a
 	}
-	{
-		size, err := m.Interval.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintDataStorage(dAtA, i, uint64(size))
+	if m.FinishTime != 0 {
+		i = encodeVarintDataStorage(dAtA, i, uint64(m.FinishTime))
+		i--
+		dAtA[i] = 0x10
 	}
-	i--
-	dAtA[i] = 0xa
+	if m.StartTime != 0 {
+		i = encodeVarintDataStorage(dAtA, i, uint64(m.StartTime))
+		i--
+		dAtA[i] = 0x8
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -1773,6 +1809,18 @@ func (m *SelectPostsReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.Err)
 		copy(dAtA[i:], m.Err)
 		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Err)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.Area != nil {
+		{
+			size, err := m.Area.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintDataStorage(dAtA, i, uint64(size))
+		}
 		i--
 		dAtA[i] = 0x12
 	}
@@ -2008,17 +2056,31 @@ func (m *PushGridRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.Blob) > 0 {
-		i -= len(m.Blob)
-		copy(dAtA[i:], m.Blob)
-		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Blob)))
-		i--
-		dAtA[i] = 0x12
+	if len(m.Blobs) > 0 {
+		for iNdEx := len(m.Blobs) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Blobs[iNdEx])
+			copy(dAtA[i:], m.Blobs[iNdEx])
+			i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Blobs[iNdEx])))
+			i--
+			dAtA[i] = 0x12
+		}
 	}
-	if len(m.Id) > 0 {
-		i -= len(m.Id)
-		copy(dAtA[i:], m.Id)
-		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Id)))
+	if len(m.Ids) > 0 {
+		dAtA6 := make([]byte, len(m.Ids)*10)
+		var j5 int
+		for _, num1 := range m.Ids {
+			num := uint64(num1)
+			for num >= 1<<7 {
+				dAtA6[j5] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j5++
+			}
+			dAtA6[j5] = uint8(num)
+			j5++
+		}
+		i -= j5
+		copy(dAtA[i:], dAtA6[:j5])
+		i = encodeVarintDataStorage(dAtA, i, uint64(j5))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -2088,14 +2150,17 @@ func (m *PullGridRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.CityId)
 		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.CityId)))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x1a
 	}
-	if len(m.Id) > 0 {
-		i -= len(m.Id)
-		copy(dAtA[i:], m.Id)
-		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Id)))
+	if m.FinishId != 0 {
+		i = encodeVarintDataStorage(dAtA, i, uint64(m.FinishId))
 		i--
-		dAtA[i] = 0xa
+		dAtA[i] = 0x10
+	}
+	if m.StartId != 0 {
+		i = encodeVarintDataStorage(dAtA, i, uint64(m.StartId))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -2129,12 +2194,33 @@ func (m *PullGridReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.Err)
 		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Err)))
 		i--
-		dAtA[i] = 0x12
+		dAtA[i] = 0x1a
 	}
-	if len(m.Blob) > 0 {
-		i -= len(m.Blob)
-		copy(dAtA[i:], m.Blob)
-		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Blob)))
+	if len(m.Blobs) > 0 {
+		for iNdEx := len(m.Blobs) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Blobs[iNdEx])
+			copy(dAtA[i:], m.Blobs[iNdEx])
+			i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Blobs[iNdEx])))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Ids) > 0 {
+		dAtA8 := make([]byte, len(m.Ids)*10)
+		var j7 int
+		for _, num1 := range m.Ids {
+			num := uint64(num1)
+			for num >= 1<<7 {
+				dAtA8[j7] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j7++
+			}
+			dAtA8[j7] = uint8(num)
+			j7++
+		}
+		i -= j7
+		copy(dAtA[i:], dAtA8[:j7])
+		i = encodeVarintDataStorage(dAtA, i, uint64(j7))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -2541,8 +2627,12 @@ func (m *SelectPostsRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = m.Interval.Size()
-	n += 1 + l + sovDataStorage(uint64(l))
+	if m.StartTime != 0 {
+		n += 1 + sovDataStorage(uint64(m.StartTime))
+	}
+	if m.FinishTime != 0 {
+		n += 1 + sovDataStorage(uint64(m.FinishTime))
+	}
 	l = len(m.CityId)
 	if l > 0 {
 		n += 1 + l + sovDataStorage(uint64(l))
@@ -2564,6 +2654,10 @@ func (m *SelectPostsReply) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovDataStorage(uint64(l))
 		}
+	}
+	if m.Area != nil {
+		l = m.Area.Size()
+		n += 1 + l + sovDataStorage(uint64(l))
 	}
 	l = len(m.Err)
 	if l > 0 {
@@ -2665,13 +2759,18 @@ func (m *PushGridRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Id)
-	if l > 0 {
-		n += 1 + l + sovDataStorage(uint64(l))
+	if len(m.Ids) > 0 {
+		l = 0
+		for _, e := range m.Ids {
+			l += sovDataStorage(uint64(e))
+		}
+		n += 1 + sovDataStorage(uint64(l)) + l
 	}
-	l = len(m.Blob)
-	if l > 0 {
-		n += 1 + l + sovDataStorage(uint64(l))
+	if len(m.Blobs) > 0 {
+		for _, b := range m.Blobs {
+			l = len(b)
+			n += 1 + l + sovDataStorage(uint64(l))
+		}
 	}
 	l = len(m.CityId)
 	if l > 0 {
@@ -2705,9 +2804,11 @@ func (m *PullGridRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Id)
-	if l > 0 {
-		n += 1 + l + sovDataStorage(uint64(l))
+	if m.StartId != 0 {
+		n += 1 + sovDataStorage(uint64(m.StartId))
+	}
+	if m.FinishId != 0 {
+		n += 1 + sovDataStorage(uint64(m.FinishId))
 	}
 	l = len(m.CityId)
 	if l > 0 {
@@ -2725,9 +2826,18 @@ func (m *PullGridReply) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Blob)
-	if l > 0 {
-		n += 1 + l + sovDataStorage(uint64(l))
+	if len(m.Ids) > 0 {
+		l = 0
+		for _, e := range m.Ids {
+			l += sovDataStorage(uint64(e))
+		}
+		n += 1 + sovDataStorage(uint64(l)) + l
+	}
+	if len(m.Blobs) > 0 {
+		for _, b := range m.Blobs {
+			l = len(b)
+			n += 1 + l + sovDataStorage(uint64(l))
+		}
 	}
 	l = len(m.Err)
 	if l > 0 {
@@ -3211,10 +3321,10 @@ func (m *SelectPostsRequest) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Interval", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
 			}
-			var msglen int
+			m.StartTime = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowDataStorage
@@ -3224,26 +3334,31 @@ func (m *SelectPostsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				m.StartTime |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
-				return ErrInvalidLengthDataStorage
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthDataStorage
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Interval.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FinishTime", wireType)
+			}
+			m.FinishTime = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FinishTime |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CityId", wireType)
 			}
@@ -3364,6 +3479,42 @@ func (m *SelectPostsReply) Unmarshal(dAtA []byte) error {
 			}
 			iNdEx = postIndex
 		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Area", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Area == nil {
+				m.Area = &proto1.Area{}
+			}
+			if err := m.Area.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
 			}
@@ -3933,40 +4084,84 @@ func (m *PushGridRequest) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDataStorage
+			if wireType == 0 {
+				var v int64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowDataStorage
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
-				if iNdEx >= l {
+				m.Ids = append(m.Ids, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowDataStorage
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthDataStorage
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthDataStorage
+				}
+				if postIndex > l {
 					return io.ErrUnexpectedEOF
 				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
 				}
+				elementCount = count
+				if elementCount != 0 && len(m.Ids) == 0 {
+					m.Ids = make([]int64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v int64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowDataStorage
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= int64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Ids = append(m.Ids, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ids", wireType)
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthDataStorage
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthDataStorage
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Id = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Blob", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Blobs", wireType)
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
@@ -3993,10 +4188,8 @@ func (m *PushGridRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Blob = append(m.Blob[:0], dAtA[iNdEx:postIndex]...)
-			if m.Blob == nil {
-				m.Blob = []byte{}
-			}
+			m.Blobs = append(m.Blobs, make([]byte, postIndex-iNdEx))
+			copy(m.Blobs[len(m.Blobs)-1], dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -4171,10 +4364,10 @@ func (m *PullGridRequest) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartId", wireType)
 			}
-			var stringLen uint64
+			m.StartId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowDataStorage
@@ -4184,25 +4377,31 @@ func (m *PullGridRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				m.StartId |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthDataStorage
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthDataStorage
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Id = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FinishId", wireType)
+			}
+			m.FinishId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.FinishId |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CityId", wireType)
 			}
@@ -4289,8 +4488,84 @@ func (m *PullGridReply) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType == 0 {
+				var v int64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowDataStorage
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.Ids = append(m.Ids, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowDataStorage
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthDataStorage
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthDataStorage
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.Ids) == 0 {
+					m.Ids = make([]int64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v int64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowDataStorage
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= int64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Ids = append(m.Ids, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ids", wireType)
+			}
+		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Blob", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Blobs", wireType)
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
@@ -4317,12 +4592,10 @@ func (m *PullGridReply) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Blob = append(m.Blob[:0], dAtA[iNdEx:postIndex]...)
-			if m.Blob == nil {
-				m.Blob = []byte{}
-			}
+			m.Blobs = append(m.Blobs, make([]byte, postIndex-iNdEx))
+			copy(m.Blobs[len(m.Blobs)-1], dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
 			}

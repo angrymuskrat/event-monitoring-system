@@ -2,15 +2,9 @@ package service
 
 import (
 	"context"
-	"errors"
 	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/storage"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"time"
-)
-
-var (
-	ErrEmptyGridId = errors.New("empty grid id")
-	ErrEmptyGrid   = errors.New("empty grid")
 )
 
 const (
@@ -27,7 +21,7 @@ type Service interface {
 	// input SpatioTemporalInterval
 	// return array of post, every of which satisfy the interval conditions
 	// 		and error if storage can't return posts due to other reasons
-	SelectPosts(ctx context.Context, cityId string, interval data.SpatioTemporalInterval) ([]data.Post, error)
+	SelectPosts(ctx context.Context, cityId string, startTime, finishTime int64) ([]data.Post, *data.Area, error)
 
 	SelectAggrPosts(ctx context.Context, cityId string, interval data.SpatioHourInterval) ([]data.AggregatedPost, error)
 
@@ -36,12 +30,12 @@ type Service interface {
 	// input not empty id and not empty array of bytes
 	// if blob successfully added to database, return nil
 	// else return error
-	PushGrid(ctx context.Context, cityId string, id string, blob []byte) error
+	PushGrid(ctx context.Context, cityId string, ids []int64, blobs [][]byte) error
 
 	// input not empty id
 	// if there are exist some blob with the id in database return the blob
 	// else return error
-	PullGrid(ctx context.Context, cityId string, id string) ([]byte, error)
+	PullGrid(ctx context.Context, cityId string, stratId, finishId int64) ([]int64, [][]byte, error)
 
 	PushEvents(ctx context.Context, cityId string, events []data.Event) error
 
@@ -60,8 +54,8 @@ func (s basicService) PushPosts(ctx context.Context, cityId string, posts []data
 	return s.db.PushPosts(ctx, cityId, posts)
 }
 
-func (s basicService) SelectPosts(ctx context.Context, cityId string, interval data.SpatioTemporalInterval) ([]data.Post, error) {
-	return s.db.SelectPosts(ctx, cityId, interval)
+func (s basicService) SelectPosts(ctx context.Context, cityId string, startTime, finishTime int64) ([]data.Post, *data.Area, error) {
+	return s.db.SelectPosts(ctx, cityId, startTime, finishTime)
 }
 
 func (s basicService) SelectAggrPosts(ctx context.Context, cityId string, interval data.SpatioHourInterval) ([]data.AggregatedPost, error) {
@@ -72,21 +66,12 @@ func (s basicService) PullTimeline(ctx context.Context, cityId string, start, fi
 	return s.db.PullTimeline(ctx, cityId, start, finish)
 }
 
-func (s basicService) PushGrid(ctx context.Context, cityId string, id string, blob []byte) error {
-	if id == "" {
-		return ErrEmptyGridId
-	}
-	if blob == nil || len(blob) == 0 {
-		return ErrEmptyGrid
-	}
-	return s.db.PushGrid(ctx, cityId, id, blob)
+func (s basicService) PushGrid(ctx context.Context, cityId string, ids []int64, blobs [][]byte) error {
+	return s.db.PushGrid(ctx, cityId, ids, blobs)
 }
 
-func (s basicService) PullGrid(ctx context.Context, cityId string, id string) ([]byte, error) {
-	if id == "" {
-		return nil, ErrEmptyGridId
-	}
-	return s.db.PullGrid(ctx, cityId, id)
+func (s basicService) PullGrid(ctx context.Context, cityId string, startId, finishId int64) ([]int64, [][]byte, error) {
+	return s.db.PullGrid(ctx, cityId, startId, finishId)
 }
 
 func (s basicService) PushEvents(ctx context.Context, cityId string, events []data.Event) error {

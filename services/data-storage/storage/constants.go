@@ -76,7 +76,7 @@ const LocationsTable = `
 
 const GridTable = `
 	CREATE TABLE IF NOT EXISTS grids(
-		ID VARCHAR (100) NOT NULL PRIMARY KEY,
+		ID BIGINT PRIMARY KEY,
 		Blob BYTEA NOT NULL
 	);`
 
@@ -94,9 +94,7 @@ const SelectPosts = `
 		ST_X(Location) as Lat, 
 		ST_Y(Location) as Lon
 	FROM posts
-	WHERE 
-		ST_Covers(%v, Location) 
-		AND (Timestamp BETWEEN %v AND %v)
+	WHERE Timestamp BETWEEN %v AND %v
 	`
 
 const SelectAggrPosts = `
@@ -109,11 +107,12 @@ const SelectAggrPosts = `
 `
 
 const PushGrid = `
-	INSERT INTO grids(ID, Blob)
-	VALUES ($1, $2);
+	INSERT INTO grids(id, blob)
+	VALUES ($1, $2)
+	ON CONFLICT (id) DO UPDATE SET blob = EXCLUDED.blob;
 `
 
-const PullGrid = `SELECT Blob FROM grids WHERE '%v' = Id;`
+const PullGrid = `SELECT id, blob FROM grids WHERE id BETWEEN %v AND %v;`
 
 const PushEvents = `
 	INSERT INTO events
@@ -158,11 +157,11 @@ const SelectLocations = `
 	WHERE CityId = '%v';
 `
 
-func makePoly(topLeft, botRight data.Point) string {
+func makePoly(area data.Area) string {
 	return fmt.Sprintf("ST_Polygon('LINESTRING(%v %v, %v %v, %v %v, %v %v, %v %v)'::geometry, 4326)",
-		topLeft.Lat, topLeft.Lon,
-		topLeft.Lat, botRight.Lon,
-		botRight.Lat, botRight.Lon,
-		botRight.Lat, topLeft.Lon,
-		topLeft.Lat, topLeft.Lon)
+		area.TopLeft.Lat, area.TopLeft.Lon,
+		area.TopLeft.Lat, area.BotRight.Lon,
+		area.BotRight.Lat, area.BotRight.Lon,
+		area.BotRight.Lat, area.TopLeft.Lon,
+		area.TopLeft.Lat, area.TopLeft.Lon)
 }

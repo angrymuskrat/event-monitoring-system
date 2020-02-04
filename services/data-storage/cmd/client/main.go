@@ -47,9 +47,7 @@ func test (method string, svc storagesvc.Service) {
 		fmt.Printf( "\n%v: It is all right, len(res):%v", method, len(res))
 
 	case "selectPosts":
-		res, err := svc.SelectPosts(context.Background(), "nyc", data.SpatioTemporalInterval{MinTime: 0, MaxTime: 100000000000,
-			TopLeft:  data.Point{Lat: -100, Lon: 100},
-			BotRight: data.Point{Lat: 100, Lon: -100}})
+		res, _, err := svc.SelectPosts(context.Background(), "nyc", 0, 100000000)
 		if err != nil {
 			fmt.Printf("\n%v: error: %v", method, err)
 			return
@@ -57,9 +55,8 @@ func test (method string, svc storagesvc.Service) {
 		fmt.Printf( "\n%v: It is all right, len(res):%v", method, len(res))
 
 	case "selectAggrPosts":
-		res, err := svc.SelectAggrPosts(context.Background(), "nyc", data.SpatioHourInterval{Hour: 1579622400,
-			TopLeft:  data.Point{Lat: -100, Lon: -100},
-			BotRight: data.Point{Lat: 100, Lon: 100}})
+		area := data.Area{ TopLeft:  &data.Point{Lat: -100, Lon: -100}, BotRight: &data.Point{Lat: 100, Lon: 100}}
+		res, err := svc.SelectAggrPosts(context.Background(), "nyc", data.SpatioHourInterval{Hour: 1579622400, Area: area})
 		if err != nil {
 			fmt.Printf("\n%v: error: %v", method, err)
 			return
@@ -82,13 +79,13 @@ func test (method string, svc storagesvc.Service) {
 		}
 		defer bucket.Close()
 		ctx := context.Background()
-		b, err := bucket.ReadAll(ctx, "foo100000000.blob")
+		b, err := bucket.ReadAll(ctx, "foo10000.blob")
 		if err != nil {
 			fmt.Printf("\n%v: error: %v", method, err)
 			return
 		}
-		id := RandString(20)
-		err = svc.PushGrid(context.Background(), "nyc", id, b)
+		id := RandInt64(1000)
+		err = svc.PushGrid(context.Background(), "nyc", []int64{id}, [][]byte{b})
 		if err != nil {
 			fmt.Printf("\n%v: error: %v", method, err)
 			return
@@ -96,12 +93,12 @@ func test (method string, svc storagesvc.Service) {
 		fmt.Printf( "\n%v: It is all right", method)
 
 	case "pullGrid":
-		res, err := svc.PullGrid(context.Background(), "nyc", "asasasas")
+		ids, _, err := svc.PullGrid(context.Background(), "nyc", 0, 1000)
 		if err != nil {
 			fmt.Printf("\n%v: error: %v", method, err)
 			return
 		}
-		fmt.Printf( "\n%v: It is all right, len(res):%v", method, len(res))
+		fmt.Printf( "\n%v: It is all right, ids: %v", method, ids)
 
 	case "pushEvents" :
 		events := []data.Event{
@@ -116,9 +113,8 @@ func test (method string, svc storagesvc.Service) {
 		fmt.Printf( "\n%v: It is all right", method)
 
 	case "pullEvents" :
-		res, err := svc.PullEvents(context.Background(), "nyc", data.SpatioHourInterval{Hour: 9000,
-			TopLeft:  data.Point{Lat: 1, Lon: 1},
-			BotRight: data.Point{Lat: 100, Lon: 100}})
+		area := data.Area{TopLeft:  &data.Point{Lat: 1, Lon: 1}, BotRight: &data.Point{Lat: 100, Lon: 100}}
+		res, err := svc.PullEvents(context.Background(), "nyc", data.SpatioHourInterval{Hour: 9000, Area: area})
 		if err != nil {
 			fmt.Printf("\n%v: error: %v", method, err)
 			return
