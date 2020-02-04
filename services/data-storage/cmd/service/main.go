@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	storagesvc "github.com/angrymuskrat/event-monitoring-system/services/data-storage"
@@ -23,11 +24,11 @@ func main() {
 	}
 	unilog.InitLog(logCfg)
 
-	dbConnector, err := storage.NewStorage(*connectorConfig)
+	dbConnector, err := storage.NewStorage(context.Background(), *connectorConfig)
 	if err != nil {
 		fmt.Print(err)
 		return
 	}
 
-	storagesvc.Start(*serviceConfig, dbConnector)
+	storagesvc.Start(context.Background(), *serviceConfig, dbConnector)
 }

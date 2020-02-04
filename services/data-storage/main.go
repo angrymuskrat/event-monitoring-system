@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/proto"
 	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/storage"
@@ -16,7 +17,7 @@ import (
 	"syscall"
 )
 
-func Start(confPath string, dbc *storage.Storage) {
+func Start(ctx context.Context, confPath string, dbc *storage.Storage) {
 	conf, err := readConfig(confPath)
 	if err != nil {
 		return
@@ -46,7 +47,7 @@ func Start(confPath string, dbc *storage.Storage) {
 		return baseServer.Serve(grpcListener)
 	}, func(error) {
 		grpcListener.Close()
-		dbc.Close()
+		dbc.Close(ctx)
 	})
 
 	cancelInterrupt := make(chan struct{})
@@ -55,7 +56,7 @@ func Start(confPath string, dbc *storage.Storage) {
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 		select {
 		case sig := <-c:
-			dbc.Close()
+			dbc.Close(ctx)
 			return fmt.Errorf("received signal %s", sig)
 
 		case <-cancelInterrupt:

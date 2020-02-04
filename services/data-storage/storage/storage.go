@@ -1,20 +1,21 @@
 package storage
 
 import (
-	"database/sql"
+	"context"
 	"errors"
 	"fmt"
+	"github.com/lib/pq"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
 	"strings"
 
 	types "github.com/angrymuskrat/event-monitoring-system/services/data-storage/data"
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v4"
 )
 
 type Storage struct {
-	db     *sql.DB
+	db     *pgx.Conn
 	config Configuration
 }
 
@@ -32,20 +33,24 @@ var (
 	ErrSelectLocations = errors.New("don't be able to return locations")
 )
 
-func NewStorage(confPath string) (*Storage, error) {
+func NewStorage(ctx context.Context, confPath string) (*Storage, error) {
 	conf, err := readConfig(confPath)
 	if err != nil {
 		return nil, err
 	}
-	db, err := sql.Open("postgres", conf.AuthDB)
+	connCongig, err := pgx.ParseConfig(conf.AuthDB)
+	if err != nil {
+		return nil, err
+	}
+	db, err := pgx.ConnectConfig(ctx, connCongig)
 	if err != nil {
 		return nil, err
 	}
 	dbc := &Storage{db: db, config: conf}
 
-	err = setDBEnvironment(dbc, conf.AggrPostsGRIDSize)
+	err = dbc.setDBEnvironment(ctx, conf)
 	if err != nil {
-		dbc.Close()
+		dbc.Close(ctx)
 		return nil, err
 	}
 
@@ -53,103 +58,98 @@ func NewStorage(confPath string) (*Storage, error) {
 	return dbc, nil
 }
 
-func setDBEnvironment(dbc *Storage, GRIDSize float64) (err error) {
+func (c *Storage) setDBEnvironment(ctx context.Context, conf Configuration) (err error) {
 	// create needed extension for PostGIS and TimescaleDB
-	_, err = dbc.db.Exec(ExtensionTimescaleDB)
+	_, err = c.db.Exec(ctx, ExtensionTimescaleDB)
 	if err != nil {
 		return
 	}
-	_, err = dbc.db.Exec(ExtensionPostGIS)
+	_, err = c.db.Exec(ctx, ExtensionPostGIS)
 	if err != nil {
 		return
 	}
-	_, err = dbc.db.Exec(ExtensionPostGISTopology)
+	_, err = c.db.Exec(ctx, ExtensionPostGISTopology)
 	if err != nil {
 		return
 	}
 
-	_, err = dbc.db.Exec(CreateTimeFunction)
+	_, err = c.db.Exec(ctx, CreateTimeFunction)
 	if err != nil {
 		return
 	}
 
 	// create table posts with it's environment (hypertable and integer time now function)
-	_, err = dbc.db.Exec(PostTable)
+	_, err = c.db.Exec(ctx, PostTable)
 	if err != nil {
 		return
 	}
-	_, err = dbc.db.Exec(CreateHyperTablePosts)
+	_, err = c.db.Exec(ctx, CreateHyperTablePosts)
 	if err != nil {
 		return
 	}
-	_, err = dbc.db.Exec(SetTimeFunctionForPosts)
+	_, err = c.db.Exec(ctx, SetTimeFunctionForPosts)
 	if err != nil {
 		return
 	}
 
 	// create continuous aggregation of posts
-	_, err = dbc.db.Exec(DropAggregationPosts)
+	_, err = c.db.Exec(ctx, DropAggregationPosts)
 	if err != nil {
 		return
 	}
-	createAggregationPosts := fmt.Sprintf(AggregationPosts, GRIDSize, GRIDSize) // set grid size
-	_, err = dbc.db.Exec(createAggregationPosts)
+	createAggregationPosts := fmt.Sprintf(AggregationPosts, conf.GRIDSize, conf.GRIDSize) // set grid size
+	_, err = c.db.Exec(ctx, createAggregationPosts)
 	if err != nil {
 		return
 	}
 
 	// create events table
-	_, err = dbc.db.Exec(EventsTable)
+	_, err = c.db.Exec(ctx, EventsTable)
 	if err != nil {
 		return
 	}
-	_, err = dbc.db.Exec(CreateHyperTableEvents)
+	_, err = c.db.Exec(ctx, CreateHyperTableEvents)
 	if err != nil {
 		return
 	}
-	_, err = dbc.db.Exec(SetTimeFunctionForEvents)
+	_, err = c.db.Exec(ctx, SetTimeFunctionForEvents)
 	if err != nil {
 		return
 	}
 
 	// create tables for cities and locations
-	_, err = dbc.db.Exec(CitiesTable)
+	_, err = c.db.Exec(ctx, CitiesTable)
 	if err != nil {
 		return
 	}
-	_, err = dbc.db.Exec(LocationsTable)
+	_, err = c.db.Exec(ctx, LocationsTable)
 	if err != nil {
 		return
 	}
 
 	// create table for grids
-	_, err = dbc.db.Exec(GridTable)
+	_, err = c.db.Exec(ctx, GridTable)
 	if err != nil {
 		return
 	}
 	return nil
 }
 
-func (c *Storage) PushPosts(posts []data.Post) (ids []int32, err error) {
-	err = c.db.Ping()
+func (c *Storage) PushPosts(ctx context.Context, posts []data.Post) (ids []int32, err error) {
+	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return nil, ErrDBConnecting
 	}
-	tx, err := c.db.Begin()
+	tx, err := c.db.Begin(ctx)
 	if err != nil {
 		unilog.Logger().Error("can not begin transaction", zap.Error(err))
 		return nil, ErrDBTransaction
 	}
-	defer tx.Rollback()
-	stmt, err := tx.Prepare(PushPostsTemplate)
-	if err != nil {
-		unilog.Logger().Error("can not prepare statement", zap.Error(err))
-		return nil, ErrDBTransaction
-	}
+	defer tx.Rollback(ctx)
 
 	for _, v := range posts {
-		_, err = stmt.Exec(v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp, v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lat, v.Lon)
+		_, err = tx.Exec(ctx, InsertPost, v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp, v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lat, v.Lon)
 		if err != nil {
 			unilog.Logger().Error("is not able to exec event", zap.Error(err))
 			return nil, ErrPushPosts
@@ -157,35 +157,29 @@ func (c *Storage) PushPosts(posts []data.Post) (ids []int32, err error) {
 			ids = append(ids, types.PostPushed.Int32()) // TODO now this is useless
 		}
 	}
-	if err := tx.Commit(); err != nil {
+	if err := tx.Commit(ctx); err != nil {
 		unilog.Logger().Error("is not able to commit events transaction", zap.Error(err))
 		return nil, ErrPushPosts
 	}
 	return
 }
 
-func (c Storage) SelectPosts(irv data.SpatioTemporalInterval) (posts []data.Post, err error) {
-	err = c.db.Ping()
+func (c Storage) SelectPosts(ctx context.Context, irv data.SpatioTemporalInterval) (posts []data.Post, err error) {
+	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return nil, ErrDBConnecting
 	}
 
 	poly := makePoly(irv.TopLeft, irv.BotRight)
-	statement := fmt.Sprintf(SelectPostsTemplate, poly, irv.MinTime, irv.MaxTime)
+	statement := fmt.Sprintf(SelectPosts, poly, irv.MinTime, irv.MaxTime)
 
-	rows, err := c.db.Query(statement)
+	rows, err := c.db.Query(ctx, statement)
 	if err != nil {
 		unilog.Logger().Error("error in select posts", zap.Error(err))
 		return nil, ErrSelectPosts
 	}
-
-	defer func() {
-		errClose := rows.Close()
-		if errClose != nil {
-			unilog.Logger().Error("don't be able to close rows in select posts", zap.Error(err))
-		}
-	}()
+	defer rows.Close()
 
 	for rows.Next() {
 		p := new(data.Post)
@@ -201,27 +195,22 @@ func (c Storage) SelectPosts(irv data.SpatioTemporalInterval) (posts []data.Post
 	return
 }
 
-func (c Storage) SelectAggrPosts(interval data.SpatioHourInterval) (posts []data.AggregatedPost, err error) {
-	err = c.db.Ping()
+func (c Storage) SelectAggrPosts(ctx context.Context, interval data.SpatioHourInterval) (posts []data.AggregatedPost, err error) {
+	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return nil, ErrDBConnecting
 	}
 	poly := makePoly(interval.TopLeft, interval.BotRight)
-	statement := fmt.Sprintf(SelectAggrPostsTemplate, interval.Hour, poly)
+	statement := fmt.Sprintf(SelectAggrPosts, interval.Hour, poly)
 
-	rows, err := c.db.Query(statement)
+	rows, err := c.db.Query(ctx, statement)
 	if err != nil {
 		unilog.Logger().Error("error in select aggr_posts", zap.Error(err))
 		return nil, ErrSelectPosts
 	}
 
-	defer func() {
-		errClose := rows.Close()
-		if errClose != nil {
-			unilog.Logger().Error("don't be able to close rows in select aggr_posts", zap.Error(err))
-		}
-	}()
+	defer rows.Close()
 
 	for rows.Next() {
 		p := new(data.Point)
@@ -239,19 +228,18 @@ func (c Storage) SelectAggrPosts(interval data.SpatioHourInterval) (posts []data
 	return posts, nil
 }
 
-func (c *Storage) PullTimeline(cityId string, start, finish int64) (timeline []data.Timestamp, err error) {
+func (c *Storage) PullTimeline(ctx context.Context, cityId string, start, finish int64) (timeline []data.Timestamp, err error) {
 	return nil, nil
 }
 
-func (c *Storage) PushGrid(id string, blob []byte) (err error) {
-	err = c.db.Ping()
+func (c *Storage) PushGrid(ctx context.Context, id string, blob []byte) (err error) {
+	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return ErrDBConnecting
 	}
-	statement := PushGridTemplate
 
-	_, err = c.db.Exec(statement, id, blob)
+	_, err = c.db.Exec(ctx, PushGrid, id, blob)
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key") {
 			return ErrDuplicatedKey
@@ -262,25 +250,19 @@ func (c *Storage) PushGrid(id string, blob []byte) (err error) {
 	return err
 }
 
-func (c *Storage) PullGrid(id string) (blob []byte, err error) {
-	err = c.db.Ping()
+func (c *Storage) PullGrid(ctx context.Context, id string) (blob []byte, err error) {
+	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return nil, ErrDBConnecting
 	}
-	statement := fmt.Sprintf(PullGridTemplate, id)
-	rows, err := c.db.Query(statement)
+	statement := fmt.Sprintf(PullGrid, id)
+	rows, err := c.db.Query(ctx, statement)
 	if err != nil {
 		unilog.Logger().Error("error in pull grid", zap.Error(err))
 		return nil, ErrPullGrid
 	}
-
-	defer func() {
-		errClose := rows.Close()
-		if errClose != nil {
-			unilog.Logger().Error("don't be able to close rows in pull grid", zap.Error(err))
-		}
-	}()
+	defer rows.Close()
 
 	ans := new(struct{ Blob []byte })
 	for rows.Next() {
@@ -295,59 +277,52 @@ func (c *Storage) PullGrid(id string) (blob []byte, err error) {
 	return
 }
 
-func (c *Storage) PushEvents(events []data.Event) (err error) {
-	err = c.db.Ping()
+func (c *Storage) PushEvents(ctx context.Context, events []data.Event) (err error) {
+	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return ErrDBConnecting
 	}
-	tx, err := c.db.Begin()
+	tx, err := c.db.Begin(ctx)
 	if err != nil {
 		unilog.Logger().Error("can not begin transaction", zap.Error(err))
 		return ErrDBTransaction
 	}
-	defer tx.Rollback()
-	stmt, err := tx.Prepare(PushEventsTemplate)
+	defer tx.Rollback(ctx)
 	if err != nil {
 		unilog.Logger().Error("can not prepare statement", zap.Error(err))
 		return ErrDBTransaction
 	}
 	for _, event := range events {
-		_, err = stmt.Exec(event.Title, event.Start, event.Finish, event.Center.Lat, event.Center.Lon, pq.Array(event.PostCodes), pq.Array(event.Tags))
+		_, err = tx.Exec(ctx, PushEvents, event.Title, event.Start, event.Finish, event.Center.Lat, event.Center.Lon, pq.Array(event.PostCodes), pq.Array(event.Tags))
 		if err != nil {
 			unilog.Logger().Error("is not able to exec event", zap.Error(err))
 			return ErrPushEvents
 		}
 	}
-	if err := tx.Commit(); err != nil {
+	if err := tx.Commit(ctx); err != nil {
 		unilog.Logger().Error("is not able to commit events transaction", zap.Error(err))
 		return ErrPushEvents
 	}
 	return
 }
 
-func (c *Storage) PullEvents(interval data.SpatioHourInterval) (events []data.Event, err error) {
-	err = c.db.Ping()
+func (c *Storage) PullEvents(ctx context.Context, interval data.SpatioHourInterval) (events []data.Event, err error) {
+	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return nil, ErrDBConnecting
 	}
 
 	poly := makePoly(interval.TopLeft, interval.BotRight)
-	statement := fmt.Sprintf(SelectEventsTemplate, poly, interval.Hour, interval.Hour+Hour)
-	rows, err := c.db.Query(statement)
+	statement := fmt.Sprintf(SelectEvents, poly, interval.Hour, interval.Hour+Hour)
+	rows, err := c.db.Query(ctx, statement)
 
 	if err != nil {
 		unilog.Logger().Error("error in select events", zap.Error(err))
 		return nil, ErrSelectEvents
 	}
-
-	defer func() {
-		errClose := rows.Close()
-		if errClose != nil {
-			unilog.Logger().Error("don't be able to close rows in select events", zap.Error(err))
-		}
-	}()
+	defer rows.Close()
 
 	for rows.Next() {
 		e := new(data.Event)
@@ -363,64 +338,53 @@ func (c *Storage) PullEvents(interval data.SpatioHourInterval) (events []data.Ev
 	return
 }
 
-func (c *Storage) PushLocations(cityId string, locations []data.Location) (err error) {
-	err = c.db.Ping()
+func (c *Storage) PushLocations(ctx context.Context, cityId string, locations []data.Location) (err error) {
+	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return ErrDBConnecting
 	}
-	_, err = c.db.Exec(PushCityIfNotExists, cityId, cityId)
+	_, err = c.db.Exec(ctx, PushCityIfNotExists, cityId, cityId)
 	if err != nil {
 		unilog.Logger().Error("is not able to insert city", zap.Error(err))
 		return ErrPushCity
 	}
 
-	tx, err := c.db.Begin()
+	tx, err := c.db.Begin(ctx)
 	if err != nil {
 		unilog.Logger().Error("can not begin transaction", zap.Error(err))
 		return ErrDBTransaction
 	}
-	defer tx.Rollback()
-	stmt, err := tx.Prepare(PushLocationTemplate)
-	if err != nil {
-		unilog.Logger().Error("can not prepare statement", zap.Error(err))
-		return ErrDBTransaction
-	}
+	defer tx.Rollback(ctx)
 	for _, l := range locations {
-		_, err = stmt.Exec(l.ID, cityId, l.Position.Lat, l.Position.Lon, l.Title, l.Slug)
+		_, err = tx.Exec(ctx, PushLocation, l.ID, cityId, l.Position.Lat, l.Position.Lon, l.Title, l.Slug)
 		if err != nil {
 			unilog.Logger().Error("is not able to exec location", zap.Error(err))
 			return ErrPushLocations
 		}
 	}
-	if err := tx.Commit(); err != nil {
+	if err := tx.Commit(ctx); err != nil {
 		unilog.Logger().Error("is not able to commit events transaction", zap.Error(err))
 		return ErrPushLocations
 	}
 	return
 }
 
-func (c *Storage) PullLocations(cityId string) (locations []data.Location, err error) {
-	err = c.db.Ping()
+func (c *Storage) PullLocations(ctx context.Context, cityId string) (locations []data.Location, err error) {
+	err = c.db.Ping(ctx)
 	if err != nil {
 		unilog.Logger().Error("db error", zap.Error(err))
 		return nil, ErrDBConnecting
 	}
 
-	statement := fmt.Sprintf(SelectLocationsTemplate, cityId)
-	rows, err := c.db.Query(statement)
+	statement := fmt.Sprintf(SelectLocations, cityId)
+	rows, err := c.db.Query(ctx, statement)
 
 	if err != nil {
 		unilog.Logger().Error("error in select locations", zap.Error(err))
 		return nil, ErrSelectLocations
 	}
-
-	defer func() {
-		errClose := rows.Close()
-		if errClose != nil {
-			unilog.Logger().Error("don't be able to close rows in select locations", zap.Error(err))
-		}
-	}()
+	defer rows.Close()
 
 	for rows.Next() {
 		l := new(data.Location)
@@ -436,8 +400,8 @@ func (c *Storage) PullLocations(cityId string) (locations []data.Location, err e
 	return
 }
 
-func (c *Storage) Close() {
-	err := c.db.Close()
+func (c *Storage) Close(ctx context.Context) {
+	err := c.db.Close(ctx)
 	if err != nil {
 		unilog.Logger().Error("don't be able to close db", zap.Error(err))
 	}

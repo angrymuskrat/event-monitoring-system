@@ -80,7 +80,7 @@ const GridTable = `
 		Blob BYTEA NOT NULL
 	);`
 
-const PushPostsTemplate = `
+const InsertPost = `
 	INSERT INTO posts
 		(ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, Location)
 	VALUES 
@@ -88,7 +88,7 @@ const PushPostsTemplate = `
 	ON CONFLICT (Shortcode, Timestamp) DO NOTHING;
 `
 
-const SelectPostsTemplate = `
+const SelectPosts = `
 	SELECT 
 		ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, 
 		ST_X(Location) as Lat, 
@@ -99,7 +99,7 @@ const SelectPostsTemplate = `
 		AND (Timestamp BETWEEN %v AND %v)
 	`
 
-const SelectAggrPostsTemplate = `
+const SelectAggrPosts = `
 	SELECT
 		count,
 		ST_X(center) as lat,
@@ -108,21 +108,21 @@ const SelectAggrPostsTemplate = `
 	WHERE hour = %v AND ST_Contains(%v, center); 
 `
 
-const PushGridTemplate = `
+const PushGrid = `
 	INSERT INTO grids(ID, Blob)
 	VALUES ($1, $2);
 `
 
-const PullGridTemplate = `SELECT Blob FROM grids WHERE '%v' = Id;`
+const PullGrid = `SELECT Blob FROM grids WHERE '%v' = Id;`
 
-const PushEventsTemplate = `
+const PushEvents = `
 	INSERT INTO events
 		(Title, Start, Finish, Center, PostCodes, Tags)
 	VALUES
 		($1, $2, $3, ST_SetSRID( ST_Point($4, $5), 4326), $6, $7)
 `
 const Hour = 60 * 60
-const SelectEventsTemplate = `
+const SelectEvents = `
 	SELECT 
 		Title, Start, Finish, PostCodes, Tags,  
 		ST_X(Center) as Lat, 
@@ -141,7 +141,7 @@ const PushCityIfNotExists = `
 	ON CONFLICT (Id) DO NOTHING;
 `
 
-const PushLocationTemplate = `
+const PushLocation = `
 	INSERT INTO locations 
 		(ID, CityId, Position, Title, Slug)
 	VALUES
@@ -149,7 +149,7 @@ const PushLocationTemplate = `
 	ON CONFLICT (ID) DO NOTHING;
 `
 
-const SelectLocationsTemplate = `
+const SelectLocations = `
 	SELECT 
 		ID, Title, Slug,
 		ST_X(Position) as Lat,

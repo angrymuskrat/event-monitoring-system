@@ -1,2 +1,2 @@
-AuthDB = "database=testgisdb user=myuser password=mypass sslmode=disable"
-AggrPostsGRIDSize = 50.0
+AuthDB = "database=testgisdb user=myuser password=mypass sslmode=disable host=localhost port=5432"
+GRIDSize = 50.0

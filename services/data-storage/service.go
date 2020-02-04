@@ -56,51 +56,51 @@ type basicService struct {
 	db *storage.Storage
 }
 
-func (s basicService) PushPosts(_ context.Context, cityId string, posts []data.Post) ([]int32, error) {
-	return s.db.PushPosts(posts)
+func (s basicService) PushPosts(ctx context.Context, cityId string, posts []data.Post) ([]int32, error) {
+	return s.db.PushPosts(ctx, posts)
 }
 
-func (s basicService) SelectPosts(_ context.Context, cityId string, interval data.SpatioTemporalInterval) ([]data.Post, error) {
-	return s.db.SelectPosts(interval)
+func (s basicService) SelectPosts(ctx context.Context, cityId string, interval data.SpatioTemporalInterval) ([]data.Post, error) {
+	return s.db.SelectPosts(ctx, interval)
 }
 
-func (s basicService) SelectAggrPosts(_ context.Context, cityId string, interval data.SpatioHourInterval) ([]data.AggregatedPost, error) {
-	return s.db.SelectAggrPosts(interval)
+func (s basicService) SelectAggrPosts(ctx context.Context, cityId string, interval data.SpatioHourInterval) ([]data.AggregatedPost, error) {
+	return s.db.SelectAggrPosts(ctx, interval)
 }
 
-func (s basicService) PullTimeline(_ context.Context, cityId string, start, finish int64) ([]data.Timestamp, error) {
-	return s.db.PullTimeline(cityId, start, finish)
+func (s basicService) PullTimeline(ctx context.Context, cityId string, start, finish int64) ([]data.Timestamp, error) {
+	return s.db.PullTimeline(ctx, cityId, start, finish)
 }
 
-func (s basicService) PushGrid(_ context.Context, cityId string, id string, blob []byte) error {
+func (s basicService) PushGrid(ctx context.Context, cityId string, id string, blob []byte) error {
 	if id == "" {
 		return ErrEmptyGridId
 	}
 	if blob == nil || len(blob) == 0 {
 		return ErrEmptyGrid
 	}
-	return s.db.PushGrid(id, blob)
+	return s.db.PushGrid(ctx, id, blob)
 }
 
-func (s basicService) PullGrid(_ context.Context, cityId string, id string) ([]byte, error) {
+func (s basicService) PullGrid(ctx context.Context, cityId string, id string) ([]byte, error) {
 	if id == "" {
 		return nil, ErrEmptyGridId
 	}
-	return s.db.PullGrid(id)
+	return s.db.PullGrid(ctx, id)
 }
 
-func (s basicService) PushEvents(_ context.Context, cityId string, events []data.Event) error {
-	return s.db.PushEvents(events)
+func (s basicService) PushEvents(ctx context.Context, cityId string, events []data.Event) error {
+	return s.db.PushEvents(ctx, events)
 }
 
-func (s basicService) PullEvents(_ context.Context, cityId string, interval data.SpatioHourInterval) ([]data.Event, error) {
-	return s.db.PullEvents(interval)
+func (s basicService) PullEvents(ctx context.Context, cityId string, interval data.SpatioHourInterval) ([]data.Event, error) {
+	return s.db.PullEvents(ctx, interval)
 }
 
-func (s basicService) PushLocations(_ context.Context, cityId string, locations []data.Location) error {
-	return s.db.PushLocations(cityId, locations)
+func (s basicService) PushLocations(ctx context.Context, cityId string, locations []data.Location) error {
+	return s.db.PushLocations(ctx, cityId, locations)
 }
 
-func (s basicService) PullLocations(_ context.Context, cityId string) ([]data.Location, error) {
-	return s.db.PullLocations(cityId)
+func (s basicService) PullLocations(ctx context.Context, cityId string) ([]data.Location, error) {
+	return s.db.PullLocations(ctx, cityId)
 }

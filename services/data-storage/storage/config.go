@@ -8,7 +8,7 @@ import (
 
 type Configuration struct {
 	AuthDB            string
-	AggrPostsGRIDSize float64
+	GRIDSize float64
 }
 
 func readConfig(path string) (cfg Configuration, err error) {
