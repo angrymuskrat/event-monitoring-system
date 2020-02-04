@@ -79,7 +79,8 @@ func (s *grpcServer) PushPosts(ctx context.Context, req *proto.PushPostsRequest)
 	if err != nil {
 		return nil, err
 	}
-	return rep.(*proto.PushPostsReply), nil
+	tmp := rep.(proto.PushPostsReply)
+	return &tmp, nil
 }
 
 func (s *grpcServer) SelectPosts(ctx context.Context, req *proto.SelectPostsRequest) (*proto.SelectPostsReply, error) {
@@ -95,6 +96,7 @@ func (s *grpcServer) SelectAggrPosts(ctx context.Context, req *proto.SelectAggrP
 	if err != nil {
 		return nil, err
 	}
+
 	return rep.(*proto.SelectAggrPostsReply), nil
 }
 

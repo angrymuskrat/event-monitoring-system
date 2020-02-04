@@ -242,7 +242,7 @@ func NewGRPCClient(conn *grpc.ClientConn) GrpcService {
 		decodeGRPCPushLocationsResponse,
 		proto.PushLocationsReply{},
 	).Endpoint()
-	svc.pullLocations = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+	svc.pushLocations = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
 		Name:    "PushLocations",
 		Timeout: TimeWaitingClient,
 	}))(pushLocationsEndpoint)

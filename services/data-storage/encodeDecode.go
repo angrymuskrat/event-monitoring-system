@@ -177,7 +177,7 @@ func decodeGRPCPushLocationsRequest(_ context.Context, grpcReq interface{}) (int
 }
 
 func encodeGRPCPushLocationsResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(proto.PushEventsReply)
+	resp := response.(proto.PushLocationsReply)
 	return &resp, nil
 }
 
