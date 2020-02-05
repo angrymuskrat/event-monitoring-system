@@ -70,6 +70,6 @@ message Location {
 
 message City {
     string Title = 1;
-    string ID = 2;
+    string Code = 2;
     Area Area = 3[(gogoproto.nullable) = false];
 }
