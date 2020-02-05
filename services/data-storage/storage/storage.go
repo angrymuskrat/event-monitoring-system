@@ -180,7 +180,6 @@ func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err er
 		return
 	}
 
-
 	createAggrPostsView := fmt.Sprintf(CreateAggrPostsView, s.config.GRIDSize, s.config.GRIDSize) // set grid size
 	_, err = conn.Exec(ctx, createAggrPostsView)
 	if err != nil && isNotAlreadyExistsError(err) {
@@ -196,8 +195,19 @@ func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err er
 	if err != nil {
 		return
 	}
+
 	_, err = conn.Exec(ctx, SetTimeFunctionForEvents)
 	if err != nil {
+		return
+	}
+
+	_, err = conn.Exec(ctx, CreatePostsTimelineView)
+	if err != nil && isNotAlreadyExistsError(err) {
+		return
+	}
+
+	_, err = conn.Exec(ctx, CreateEventsTimelineView)
+	if err != nil && isNotAlreadyExistsError(err) {
 		return
 	}
 
@@ -335,7 +345,28 @@ func (s Storage) SelectAggrPosts(ctx context.Context, cityId string, interval da
 }
 
 func (s *Storage) PullTimeline(ctx context.Context, cityId string, start, finish int64) (timeline []data.Timestamp, err error) {
-	return nil, nil
+	conn, err := s.getCityConn(cityId)
+	if err != nil {
+		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
+		return nil, err
+	}
+
+	statement := fmt.Sprintf(SelectTimeline, start, finish, start, finish)
+	rows, err := conn.Query(ctx, statement)
+	if err != nil {
+		unilog.Logger().Error("error in pull timeline", zap.Error(err))
+		return nil, ErrPullGrid
+	}
+	for rows.Next() {
+		var timestamp data.Timestamp
+		err = rows.Scan(&timestamp.PostsNumber, &timestamp.EventsNumber, &timestamp.Time)
+		if err != nil {
+			unilog.Logger().Error("error in pull timeline", zap.Error(err))
+			return  nil, err
+		}
+		timeline = append(timeline, timestamp)
+	}
+	return
 }
 
 func (s *Storage) PushGrid(ctx context.Context, cityId string, ids []int64, blobs [][]byte) (err error) {
@@ -374,12 +405,12 @@ func (s *Storage) PullGrid(ctx context.Context, cityId string, startId, finishId
 	}
 	defer rows.Close()
 
-	var id int64
-	var blob []byte
 	for rows.Next() {
+		var id int64
+		var blob []byte
 		err = rows.Scan(&id, &blob)
 		if err != nil {
-			unilog.Logger().Error("error in select", zap.Error(err))
+			unilog.Logger().Error("error in pull grid", zap.Error(err))
 			return nil, nil, ErrPullGrid
 		}
 		ids = append(ids, id)

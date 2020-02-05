@@ -154,6 +154,43 @@ const SelectEvents = `
 `
 
 
+const CreatePostsTimelineView = `
+	CREATE VIEW posts_timeline
+	WITH (timescaledb.continuous)
+	AS
+	SELECT
+	time_bucket('3600', timestamp) as time,
+	COUNT(*) as count
+	FROM posts 
+	GROUP BY time;
+`
+const CreateEventsTimelineView = `
+	CREATE VIEW events_timeline
+	WITH (timescaledb.continuous)
+	AS
+	SELECT
+	time_bucket('3600', start) as time,
+	COUNT(*) as count
+	FROM events 
+	GROUP BY time;
+`
+const SelectTimeline = `
+	SELECT
+		SUM(posts) as posts,
+		SUM(events) as events,
+		time
+	FROM (
+ 		SELECT count as posts, 0 as events, time
+ 		FROM posts_timeline
+ 		WHERE time BETWEEN %v AND %v
+ 		UNION
+ 		SELECT 0 as posts, count as events, time
+ 		FROM events_timeline
+		WHERE time BETWEEN %v AND %v
+	) as tmp
+	GROUP BY time;
+`
+
 
 const CreateLocationsTable = `
 	CREATE TABLE IF NOT EXISTS locations (
