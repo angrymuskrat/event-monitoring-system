@@ -5,9 +5,24 @@ import (
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 )
 
+const PostgresDBName = "postgres"
+const GeneralDBName = "general"
+
 const ExtensionTimescaleDB = "CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;"
 const ExtensionPostGIS = "CREATE EXTENSION IF NOT EXISTS postgis;"
 const ExtensionPostGISTopology = "CREATE EXTENSION IF NOT EXISTS postgis_topology;"
+
+const CreateDB = "CREATE DATABASE %v;"
+const SelectDB = "SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = lower('%v');"
+
+const CitiesTable = `
+	CREATE TABLE IF NOT EXISTS cities(
+		Title VARCHAR(100),
+		Code VARCHAR(50) NOT NULL PRIMARY KEY,
+		TopLeft geometry,
+		BotRight geometry
+	);
+`
 
 const PostTable = `
 	CREATE TABLE IF NOT EXISTS posts(
@@ -57,21 +72,12 @@ const EventsTable = `
 const CreateHyperTableEvents = "SELECT create_hypertable('events', 'start', chunk_time_interval => 86400, if_not_exists => TRUE);"
 const SetTimeFunctionForEvents = "SELECT set_integer_now_func('events', 'unix_now', replace_if_exists => true);"
 
-const CitiesTable = `
-	CREATE TABLE IF NOT EXISTS cities (
-		Title VARCHAR(50),
-		ID VARCHAR(20) NOT NULL PRIMARY KEY,
-		Location geometry
-	);
-`
 const LocationsTable = `
 	CREATE TABLE IF NOT EXISTS locations (
 		ID VARCHAR(20) NOT NULL PRIMARY KEY,
-		CityId VARCHAR(20),
 		Position geometry,
 		Title VARCHAR(100),
-		Slug VARCHAR(100),
-		FOREIGN KEY (CityId) REFERENCES cities (ID)
+		Slug VARCHAR(100)
 	);`
 
 const GridTable = `
@@ -79,6 +85,17 @@ const GridTable = `
 		ID BIGINT PRIMARY KEY,
 		Blob BYTEA NOT NULL
 	);`
+
+const SelectCities = `
+	SELECT 
+		Title,
+		Code,
+		ST_X(TopLeft) as tlLat,
+		ST_Y(TopLeft) as tlLon,
+		ST_X(BotRight) as brLat,
+		ST_Y(BotRight) as brLon
+	FROM cities;
+`
 
 const InsertPost = `
 	INSERT INTO posts
@@ -132,19 +149,18 @@ const SelectEvents = `
 		AND (Start BETWEEN %v AND %v)
 	`
 
-const PushCityIfNotExists = `
+const InsertCity = `
 	INSERT INTO cities
-		(Title, Id)
+		(Title, Code, TopLeft, BotRight)
 	VALUES
-		($1, $2)
-	ON CONFLICT (Id) DO NOTHING;
+		($1, $2, ST_SetSRID( ST_Point($3, $4), 4326), ST_SetSRID( ST_Point($5, $6), 4326));
 `
 
-const PushLocation = `
+const InsertLocation = `
 	INSERT INTO locations 
-		(ID, CityId, Position, Title, Slug)
+		(ID, Position, Title, Slug)
 	VALUES
-		($1, $2, ST_SetSRID( ST_Point($3, $4), 4326), $5, $6)
+		($1, ST_SetSRID( ST_Point($2, $3), 4326), $4, $5)
 	ON CONFLICT (ID) DO NOTHING;
 `
 
@@ -153,8 +169,7 @@ const SelectLocations = `
 		ID, Title, Slug,
 		ST_X(Position) as Lat,
 		ST_Y(Position) as Lon
-	FROM locations
-	WHERE CityId = '%v';
+	FROM locations;
 `
 
 func makePoly(area data.Area) string {
@@ -164,4 +179,12 @@ func makePoly(area data.Area) string {
 		area.BotRight.Lat, area.BotRight.Lon,
 		area.BotRight.Lat, area.TopLeft.Lon,
 		area.TopLeft.Lat, area.TopLeft.Lon)
+}
+
+func makeCreateDB(name string) string {
+	return fmt.Sprintf(CreateDB, name)
+}
+
+func makeSelectDB(name string) string {
+	return fmt.Sprintf(SelectDB, name)
 }
