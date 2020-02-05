@@ -88,7 +88,7 @@ func (s *Storage) initGeneral(ctx context.Context) (err error) {
 	if err != nil {
 		return err
 	}
-	_, err = conn.Exec(ctx, CitiesTable)
+	_, err = conn.Exec(ctx, CreateCitiesTable)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err er
 	}
 
 	// create table posts with it's environment (hypertable and integer time now function)
-	_, err = conn.Exec(ctx, PostTable)
+	_, err = conn.Exec(ctx, CreatePostsTable)
 	if err != nil {
 		return
 	}
@@ -180,19 +180,15 @@ func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err er
 		return
 	}
 
-	// create continuous aggregation of posts
-	_, err = conn.Exec(ctx, DropAggregationPosts)
-	if err != nil {
-		return
-	}
-	createAggregationPosts := fmt.Sprintf(AggregationPosts, s.config.GRIDSize, s.config.GRIDSize) // set grid size
-	_, err = conn.Exec(ctx, createAggregationPosts)
-	if err != nil {
+
+	createAggrPostsView := fmt.Sprintf(CreateAggrPostsView, s.config.GRIDSize, s.config.GRIDSize) // set grid size
+	_, err = conn.Exec(ctx, createAggrPostsView)
+	if err != nil && isNotAlreadyExistsError(err) {
 		return
 	}
 
 	// create events table
-	_, err = conn.Exec(ctx, EventsTable)
+	_, err = conn.Exec(ctx, CreateEventsTable)
 	if err != nil {
 		return
 	}
@@ -206,13 +202,13 @@ func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err er
 	}
 
 	// create table for locations
-	_, err = conn.Exec(ctx, LocationsTable)
+	_, err = conn.Exec(ctx, CreateLocationsTable)
 	if err != nil {
 		return
 	}
 
 	// create table for grids
-	_, err = conn.Exec(ctx, GridTable)
+	_, err = conn.Exec(ctx, CreateGridsTable)
 	if err != nil {
 		return
 	}
@@ -253,7 +249,12 @@ func (s *Storage) PushPosts(ctx context.Context, cityId string, posts []data.Pos
 		unilog.Logger().Error("can not begin transaction", zap.Error(err))
 		return nil, ErrDBTransaction
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		err := tx.Rollback(ctx)
+		if err != nil {
+			unilog.Logger().Error("do not be able to close transaction", zap.Error(err))
+		}
+	}()
 
 	for _, v := range posts {
 		_, err = tx.Exec(ctx, InsertPost, v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp, v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lat, v.Lon)
@@ -343,9 +344,10 @@ func (s *Storage) PushGrid(ctx context.Context, cityId string, ids []int64, blob
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return err
 	}
+	// TODO add transaction
 	for i, blob := range blobs {
 		id := ids[i]
-		_, err = conn.Exec(ctx, PushGrid, id, blob)
+		_, err = conn.Exec(ctx, InsertGrid, id, blob)
 		if err != nil {
 			if strings.Contains(err.Error(), "duplicate key") {
 				return ErrDuplicatedKey
@@ -364,7 +366,7 @@ func (s *Storage) PullGrid(ctx context.Context, cityId string, startId, finishId
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return nil, nil, err
 	}
-	statement := fmt.Sprintf(PullGrid, startId, finishId)
+	statement := fmt.Sprintf(SelectGrid, startId, finishId)
 	rows, err := conn.Query(ctx, statement)
 	if err != nil {
 		unilog.Logger().Error("error in pull grid", zap.Error(err))
@@ -398,9 +400,14 @@ func (s *Storage) PushEvents(ctx context.Context, cityId string, events []data.E
 		unilog.Logger().Error("can not begin transaction", zap.Error(err))
 		return ErrDBTransaction
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		err := tx.Rollback(ctx)
+		if err != nil {
+			unilog.Logger().Error("do not be able to close transaction", zap.Error(err))
+		}
+	}()
 	for _, event := range events {
-		_, err = tx.Exec(ctx, PushEvents, event.Title, event.Start, event.Finish, event.Center.Lat, event.Center.Lon, pq.Array(event.PostCodes), pq.Array(event.Tags))
+		_, err = tx.Exec(ctx, InsertEvent, event.Title, event.Start, event.Finish, event.Center.Lat, event.Center.Lon, pq.Array(event.PostCodes), pq.Array(event.Tags))
 		if err != nil {
 			unilog.Logger().Error("is not able to exec event", zap.Error(err))
 			return ErrPushEvents
@@ -456,7 +463,12 @@ func (s *Storage) PushLocations(ctx context.Context, cityId string, locations []
 		unilog.Logger().Error("can not begin transaction", zap.Error(err))
 		return ErrDBTransaction
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		err := tx.Rollback(ctx)
+		if err != nil {
+			unilog.Logger().Error("do not be able to close transaction", zap.Error(err))
+		}
+	}()
 	for _, l := range locations {
 		_, err = tx.Exec(ctx, InsertLocation, l.ID, l.Position.Lat, l.Position.Lon, l.Title, l.Slug)
 		if err != nil {
