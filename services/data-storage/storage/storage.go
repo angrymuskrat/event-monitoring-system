@@ -259,12 +259,7 @@ func (s *Storage) PushPosts(ctx context.Context, cityId string, posts []data.Pos
 		unilog.Logger().Error("can not begin transaction", zap.Error(err))
 		return nil, ErrDBTransaction
 	}
-	defer func() {
-		err := tx.Rollback(ctx)
-		if err != nil {
-			unilog.Logger().Error("do not be able to close transaction", zap.Error(err))
-		}
-	}()
+	defer tx.Rollback(ctx)
 
 	for _, v := range posts {
 		_, err = tx.Exec(ctx, InsertPost, v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp, v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lat, v.Lon)
@@ -375,10 +370,16 @@ func (s *Storage) PushGrid(ctx context.Context, cityId string, ids []int64, blob
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return err
 	}
-	// TODO add transaction
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		unilog.Logger().Error("can not begin transaction", zap.Error(err))
+		return ErrDBTransaction
+	}
+	defer tx.Rollback(ctx)
+
 	for i, blob := range blobs {
 		id := ids[i]
-		_, err = conn.Exec(ctx, InsertGrid, id, blob)
+		_, err = tx.Exec(ctx, InsertGrid, id, blob)
 		if err != nil {
 			if strings.Contains(err.Error(), "duplicate key") {
 				return ErrDuplicatedKey
@@ -431,12 +432,8 @@ func (s *Storage) PushEvents(ctx context.Context, cityId string, events []data.E
 		unilog.Logger().Error("can not begin transaction", zap.Error(err))
 		return ErrDBTransaction
 	}
-	defer func() {
-		err := tx.Rollback(ctx)
-		if err != nil {
-			unilog.Logger().Error("do not be able to close transaction", zap.Error(err))
-		}
-	}()
+	defer tx.Rollback(ctx)
+
 	for _, event := range events {
 		_, err = tx.Exec(ctx, InsertEvent, event.Title, event.Start, event.Finish, event.Center.Lat, event.Center.Lon, pq.Array(event.PostCodes), pq.Array(event.Tags))
 		if err != nil {
@@ -494,12 +491,8 @@ func (s *Storage) PushLocations(ctx context.Context, cityId string, locations []
 		unilog.Logger().Error("can not begin transaction", zap.Error(err))
 		return ErrDBTransaction
 	}
-	defer func() {
-		err := tx.Rollback(ctx)
-		if err != nil {
-			unilog.Logger().Error("do not be able to close transaction", zap.Error(err))
-		}
-	}()
+	defer tx.Rollback(ctx)
+
 	for _, l := range locations {
 		_, err = tx.Exec(ctx, InsertLocation, l.ID, l.Position.Lat, l.Position.Lon, l.Title, l.Slug)
 		if err != nil {
