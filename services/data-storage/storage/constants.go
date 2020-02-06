@@ -42,11 +42,11 @@ const InsertCity = `
 		($1, $2, ST_SetSRID( ST_Point($3, $4), 4326), ST_SetSRID( ST_Point($5, $6), 4326));
 `
 const UpsertCity = `
-	INSERT INTO cities
+	INSERT INTO cities 
 		(Title, Code, TopLeft, BotRight)
-	VALUES
+	VALUES 
 		($1, $2, ST_SetSRID( ST_Point($3, $4), 4326), ST_SetSRID( ST_Point($5, $6), 4326))
-	ON CONFLICT DO UPDATE;
+ 	ON CONFLICT (Code) DO UPDATE SET Title = EXCLUDED.Title, TopLeft = EXCLUDED.TopLeft, BotRight = EXCLUDED.BotRight;
 `
 const SelectCities = `
 	SELECT 
