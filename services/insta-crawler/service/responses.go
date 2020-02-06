@@ -5,17 +5,17 @@ import (
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
 )
 
-type newEpResponse struct {
+type NewEpResponse struct {
 	ID    string `json:"id"`
 	Error string `json:"error,omitempty"`
 }
 
-type statusEpResponse struct {
+type StatusEpResponse struct {
 	Status crawler.OutStatus `json:"status"`
 	Error  string            `json:"error,omitempty"`
 }
 
-type stopEpResponse struct {
+type StopEpResponse struct {
 	Ok    bool   `json:"stopped"`
 	Error string `json:"error,omitempty"`
 }

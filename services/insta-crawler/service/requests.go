@@ -1,6 +1,6 @@
 package service
 
-type idEpRequest struct {
+type IDEpRequest struct {
 	ID string `json:"id"`
 }
 

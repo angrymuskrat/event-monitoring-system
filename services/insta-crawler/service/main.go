@@ -81,7 +81,7 @@ func decodeStatusRequest(_ context.Context, r *http.Request) (interface{}, error
 	if !ok {
 		return nil, errors.New("unable to get session ID")
 	}
-	return idEpRequest{
+	return IDEpRequest{
 		ID: id,
 	}, nil
 }
@@ -115,7 +115,7 @@ func decodePostsRequest(_ context.Context, r *http.Request) (interface{}, error)
 }
 
 func decodeStopRequest(_ context.Context, r *http.Request) (interface{}, error) {
-	var req idEpRequest
+	var req IDEpRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
