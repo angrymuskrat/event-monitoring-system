@@ -6,6 +6,41 @@ import (
 	"github.com/go-kit/kit/endpoint"
 )
 
+func makeInsertCityEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(proto.InsertCityRequest)
+		err = s.InsertCity(ctx, req.City, req.UpdateIfExists)
+		var msg string
+		if err != nil {
+			msg = err.Error()
+		}
+		return proto.InsertCityReply{Err: msg}, nil
+	}
+}
+
+func makeGetAllCitiesEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, _ interface{}) (response interface{}, err error) {
+		cities, err := s.GetAllCities(ctx)
+		var msg string
+		if err != nil {
+			msg = err.Error()
+		}
+		return proto.GetAllCitiesReply{Cities: cities, Err: msg}, nil
+	}
+}
+
+func makeGetCityEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(proto.GetCityRequest)
+		city, err := s.GetCity(ctx, req.CityId)
+		var msg string
+		if err != nil {
+			msg = err.Error()
+		}
+		return proto.GetCityReply{City: city, Err: msg}, nil
+	}
+}
+
 func makePushPostsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PushPostsRequest)

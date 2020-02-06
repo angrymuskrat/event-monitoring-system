@@ -14,6 +14,9 @@ import (
 )
 
 type GrpcService struct {
+	insertCity      endpoint.Endpoint
+	getAllCities    endpoint.Endpoint
+	getCity         endpoint.Endpoint
 	pushPosts       endpoint.Endpoint
 	selectPosts     endpoint.Endpoint
 	selectAggrPosts endpoint.Endpoint
@@ -24,6 +27,42 @@ type GrpcService struct {
 	pullEvents      endpoint.Endpoint
 	pushLocations   endpoint.Endpoint
 	pullLocations   endpoint.Endpoint
+}
+
+func (svc GrpcService) InsertCity(ctx context.Context, city data.City, updateIfExists bool) error {
+	resp, err := svc.insertCity(ctx, proto.InsertCityRequest{City: city, UpdateIfExists: updateIfExists})
+	if err != nil {
+		return err
+	}
+	response := resp.(proto.InsertCityReply)
+	if response.Err != "" {
+		return errors.New(response.Err)
+	}
+	return nil
+}
+
+func (svc GrpcService) GetAllCities(ctx context.Context) ([]data.City, error) {
+	resp, err := svc.getAllCities(ctx, proto.GetAllCitiesRequest{})
+	if err != nil {
+		return nil, err
+	}
+	response := resp.(proto.GetAllCitiesReply)
+	if response.Err != "" {
+		return nil, errors.New(response.Err)
+	}
+	return response.Cities, nil
+}
+
+func (svc GrpcService) GetCity(ctx context.Context, cityId string) (*data.City, error) {
+	resp, err := svc.getCity(ctx, proto.GetCityRequest{CityId: cityId})
+	if err != nil {
+		return nil, err
+	}
+	response := resp.(proto.GetCityReply)
+	if response.Err != "" {
+		return nil, errors.New(response.Err)
+	}
+	return response.City, nil
 }
 
 func (svc GrpcService) PushPosts(ctx context.Context, cityId string, posts []data.Post) ([]int32, error) {
@@ -148,6 +187,39 @@ func (svc GrpcService) PullLocations(ctx context.Context, cityId string) ([]data
 
 func NewGRPCClient(conn *grpc.ClientConn) GrpcService {
 	svc := GrpcService{}
+	insertCityEndpoint := grpctransport.NewClient(
+		conn, "proto.DataStorage", "InsertCity",
+		encodeGRPCInsertCityRequest,
+		decodeGRPCInsertCityResponse,
+		proto.InsertCityReply{},
+	).Endpoint()
+	svc.insertCity = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+		Name:    "InsertCity",
+		Timeout: TimeWaitingClient,
+	}))(insertCityEndpoint)
+
+	getAllCitiesEndpoint := grpctransport.NewClient(
+		conn, "proto.DataStorage", "GetAllCities",
+		encodeGRPCGetAllCitiesRequest,
+		decodeGRPCGetAllCitiesResponse,
+		proto.GetAllCitiesReply{},
+	).Endpoint()
+	svc.getAllCities = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+		Name:    "GetAllCities",
+		Timeout: TimeWaitingClient,
+	}))(getAllCitiesEndpoint)
+
+	getCityEndpoint := grpctransport.NewClient(
+		conn, "proto.DataStorage", "GetCity",
+		encodeGRPCGetCityRequest,
+		decodeGRPCGetCityResponse,
+		proto.GetCityReply{},
+	).Endpoint()
+	svc.getCity = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+		Name:    "GetCity",
+		Timeout: TimeWaitingClient,
+	}))(getCityEndpoint)
+
 	pushPostsEndpoint := grpctransport.NewClient(
 		conn, "proto.DataStorage", "PushPosts",
 		encodeGRPCPushPostsRequest,

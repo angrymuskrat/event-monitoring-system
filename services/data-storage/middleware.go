@@ -12,6 +12,39 @@ type loggingMiddleware struct {
 	next   Service
 }
 
+func (mw loggingMiddleware) InsertCity(ctx context.Context, city data.City, updateIfExists bool) (err error) {
+	func(begin time.Time) {
+		mw.logger.Info("insert city request",
+			zap.Any("city", city),
+			zap.Bool("update option", updateIfExists),
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	err = mw.next.InsertCity(ctx, city, updateIfExists)
+	return
+}
+
+func (mw loggingMiddleware) GetAllCities(ctx context.Context) (cities []data.City, err error) {
+	func(begin time.Time) {
+		mw.logger.Info("get all cities request",
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	cities, err = mw.next.GetAllCities(ctx)
+	return
+}
+
+func (mw loggingMiddleware) GetCity(ctx context.Context, cityId string) (city *data.City, err error) {
+	func(begin time.Time) {
+		mw.logger.Info("get city by id",
+			zap.String("cityId", cityId),
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	city, err = mw.next.GetCity(ctx, cityId)
+	return
+}
+
 func (mw loggingMiddleware) PushPosts(ctx context.Context, cityId string, posts []data.Post) (ids []int32, err error) {
 	func(begin time.Time) {
 		mw.logger.Info("push posts request",

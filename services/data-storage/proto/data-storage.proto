@@ -6,6 +6,10 @@ import "data-storage/proto/gogo.proto";
 import "proto/data.proto";
 
 service DataStorage {
+    rpc InsertCity (InsertCityRequest) returns (InsertCityReply) {}
+    rpc GetAllCities (GetAllCitiesRequest) returns (GetAllCitiesReply) {}
+    rpc GetCity (GetCityRequest) returns (GetCityReply) {}
+
     rpc PushPosts (PushPostsRequest) returns (PushPostsReply) {}
     rpc SelectPosts (SelectPostsRequest) returns (SelectPostsReply) {}
 
@@ -23,6 +27,31 @@ service DataStorage {
     rpc PullLocations (PullLocationsRequest) returns (PullLocationsReply) {}
 }
 
+message InsertCityRequest {
+    data.City city = 1[(gogoproto.nullable) = false];
+    bool updateIfExists = 2;
+}
+
+message InsertCityReply {
+    string err = 1;
+}
+
+message GetAllCitiesRequest {
+}
+
+message GetAllCitiesReply {
+    repeated data.City cities = 1[(gogoproto.nullable) = false];
+    string err = 2;
+}
+
+message GetCityRequest {
+    string cityId = 1;
+}
+
+message GetCityReply {
+    data.City city = 1;
+    string err = 2;
+}
 
 // PushPostsRequest represents a request for loading posts from crawler to data storage.
 message PushPostsRequest {

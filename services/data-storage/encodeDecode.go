@@ -6,6 +6,66 @@ import (
 	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/proto"
 )
 
+func encodeGRPCInsertCityRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(proto.InsertCityRequest)
+	return &req, nil
+}
+
+func decodeGRPCInsertCityRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.InsertCityRequest)
+	return *req, nil
+}
+
+func encodeGRPCInsertCityResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.InsertCityReply)
+	return resp, nil
+}
+
+func decodeGRPCInsertCityResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.InsertCityReply)
+	return *reply, nil
+}
+
+func encodeGRPCGetAllCitiesRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(proto.GetAllCitiesRequest)
+	return &req, nil
+}
+
+func decodeGRPCGetAllCitiesRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.GetAllCitiesRequest)
+	return *req, nil
+}
+
+func encodeGRPCGetAllCitiesResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.GetAllCitiesReply)
+	return resp, nil
+}
+
+func decodeGRPCGetAllCitiesResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.GetAllCitiesReply)
+	return *reply, nil
+}
+
+func encodeGRPCGetCityRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(proto.GetCityRequest)
+	return &req, nil
+}
+
+func decodeGRPCGetCityRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.GetCityRequest)
+	return *req, nil
+}
+
+func encodeGRPCGetCityResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.GetCityReply)
+	return resp, nil
+}
+
+func decodeGRPCGetCityResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.GetCityReply)
+	return *reply, nil
+}
+
 func encodeGRPCPushPostsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PushPostsRequest)
 	return &req, nil

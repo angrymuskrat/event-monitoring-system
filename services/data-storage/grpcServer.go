@@ -7,6 +7,9 @@ import (
 )
 
 type grpcServer struct {
+	insertCity      grpctransport.Handler
+	getAllCities    grpctransport.Handler
+	getCity         grpctransport.Handler
 	pushPosts       grpctransport.Handler
 	selectPosts     grpctransport.Handler
 	selectAggrPosts grpctransport.Handler
@@ -21,6 +24,21 @@ type grpcServer struct {
 
 func NewGRPCServer(svc Service) proto.DataStorageServer {
 	return &grpcServer{
+		insertCity: grpctransport.NewServer(
+			makeInsertCityEndpoint(svc),
+			decodeGRPCInsertCityRequest,
+			encodeGRPCInsertCityResponse,
+		),
+		getAllCities: grpctransport.NewServer(
+			makeGetAllCitiesEndpoint(svc),
+			decodeGRPCGetAllCitiesRequest,
+			encodeGRPCGetAllCitiesResponse,
+		),
+		getCity: grpctransport.NewServer(
+			makeGetCityEndpoint(svc),
+			decodeGRPCGetCityRequest,
+			encodeGRPCGetCityResponse,
+		),
 		pushPosts: grpctransport.NewServer(
 			makePushPostsEndpoint(svc),
 			decodeGRPCPushPostsRequest,
@@ -72,6 +90,33 @@ func NewGRPCServer(svc Service) proto.DataStorageServer {
 			encodeGRPCPullLocationsResponse,
 		),
 	}
+}
+
+func (s *grpcServer) InsertCity(ctx context.Context, req *proto.InsertCityRequest) (*proto.InsertCityReply, error) {
+	_, rep, err := s.insertCity.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	tmp := rep.(proto.InsertCityReply)
+	return &tmp, nil
+}
+
+func (s *grpcServer) GetAllCities(ctx context.Context, req *proto.GetAllCitiesRequest) (*proto.GetAllCitiesReply, error) {
+	_, rep, err := s.getAllCities.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	tmp := rep.(proto.GetAllCitiesReply)
+	return &tmp, nil
+}
+
+func (s *grpcServer) GetCity(ctx context.Context, req *proto.GetCityRequest) (*proto.GetCityReply, error) {
+	_, rep, err := s.getCity.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	tmp := rep.(proto.GetCityReply)
+	return &tmp, nil
 }
 
 func (s *grpcServer) PushPosts(ctx context.Context, req *proto.PushPostsRequest) (*proto.PushPostsReply, error) {

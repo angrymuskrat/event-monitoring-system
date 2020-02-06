@@ -28,6 +28,304 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+type InsertCityRequest struct {
+	City                 proto1.City `protobuf:"bytes,1,opt,name=city,proto3" json:"city"`
+	UpdateIfExists       bool        `protobuf:"varint,2,opt,name=updateIfExists,proto3" json:"updateIfExists,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
+}
+
+func (m *InsertCityRequest) Reset()         { *m = InsertCityRequest{} }
+func (m *InsertCityRequest) String() string { return proto.CompactTextString(m) }
+func (*InsertCityRequest) ProtoMessage()    {}
+func (*InsertCityRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{0}
+}
+func (m *InsertCityRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *InsertCityRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_InsertCityRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *InsertCityRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InsertCityRequest.Merge(m, src)
+}
+func (m *InsertCityRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *InsertCityRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_InsertCityRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_InsertCityRequest proto.InternalMessageInfo
+
+func (m *InsertCityRequest) GetCity() proto1.City {
+	if m != nil {
+		return m.City
+	}
+	return proto1.City{}
+}
+
+func (m *InsertCityRequest) GetUpdateIfExists() bool {
+	if m != nil {
+		return m.UpdateIfExists
+	}
+	return false
+}
+
+type InsertCityReply struct {
+	Err                  string   `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *InsertCityReply) Reset()         { *m = InsertCityReply{} }
+func (m *InsertCityReply) String() string { return proto.CompactTextString(m) }
+func (*InsertCityReply) ProtoMessage()    {}
+func (*InsertCityReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{1}
+}
+func (m *InsertCityReply) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *InsertCityReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_InsertCityReply.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *InsertCityReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_InsertCityReply.Merge(m, src)
+}
+func (m *InsertCityReply) XXX_Size() int {
+	return m.Size()
+}
+func (m *InsertCityReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_InsertCityReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_InsertCityReply proto.InternalMessageInfo
+
+func (m *InsertCityReply) GetErr() string {
+	if m != nil {
+		return m.Err
+	}
+	return ""
+}
+
+type GetAllCitiesRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetAllCitiesRequest) Reset()         { *m = GetAllCitiesRequest{} }
+func (m *GetAllCitiesRequest) String() string { return proto.CompactTextString(m) }
+func (*GetAllCitiesRequest) ProtoMessage()    {}
+func (*GetAllCitiesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{2}
+}
+func (m *GetAllCitiesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetAllCitiesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetAllCitiesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetAllCitiesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetAllCitiesRequest.Merge(m, src)
+}
+func (m *GetAllCitiesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetAllCitiesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetAllCitiesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetAllCitiesRequest proto.InternalMessageInfo
+
+type GetAllCitiesReply struct {
+	Cities               []proto1.City `protobuf:"bytes,1,rep,name=cities,proto3" json:"cities"`
+	Err                  string        `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
+}
+
+func (m *GetAllCitiesReply) Reset()         { *m = GetAllCitiesReply{} }
+func (m *GetAllCitiesReply) String() string { return proto.CompactTextString(m) }
+func (*GetAllCitiesReply) ProtoMessage()    {}
+func (*GetAllCitiesReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{3}
+}
+func (m *GetAllCitiesReply) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetAllCitiesReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetAllCitiesReply.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetAllCitiesReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetAllCitiesReply.Merge(m, src)
+}
+func (m *GetAllCitiesReply) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetAllCitiesReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetAllCitiesReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetAllCitiesReply proto.InternalMessageInfo
+
+func (m *GetAllCitiesReply) GetCities() []proto1.City {
+	if m != nil {
+		return m.Cities
+	}
+	return nil
+}
+
+func (m *GetAllCitiesReply) GetErr() string {
+	if m != nil {
+		return m.Err
+	}
+	return ""
+}
+
+type GetCityRequest struct {
+	CityId               string   `protobuf:"bytes,1,opt,name=cityId,proto3" json:"cityId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetCityRequest) Reset()         { *m = GetCityRequest{} }
+func (m *GetCityRequest) String() string { return proto.CompactTextString(m) }
+func (*GetCityRequest) ProtoMessage()    {}
+func (*GetCityRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{4}
+}
+func (m *GetCityRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetCityRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetCityRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetCityRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetCityRequest.Merge(m, src)
+}
+func (m *GetCityRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetCityRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetCityRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetCityRequest proto.InternalMessageInfo
+
+func (m *GetCityRequest) GetCityId() string {
+	if m != nil {
+		return m.CityId
+	}
+	return ""
+}
+
+type GetCityReply struct {
+	City                 *proto1.City `protobuf:"bytes,1,opt,name=city,proto3" json:"city,omitempty"`
+	Err                  string       `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *GetCityReply) Reset()         { *m = GetCityReply{} }
+func (m *GetCityReply) String() string { return proto.CompactTextString(m) }
+func (*GetCityReply) ProtoMessage()    {}
+func (*GetCityReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{5}
+}
+func (m *GetCityReply) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetCityReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetCityReply.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetCityReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetCityReply.Merge(m, src)
+}
+func (m *GetCityReply) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetCityReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetCityReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetCityReply proto.InternalMessageInfo
+
+func (m *GetCityReply) GetCity() *proto1.City {
+	if m != nil {
+		return m.City
+	}
+	return nil
+}
+
+func (m *GetCityReply) GetErr() string {
+	if m != nil {
+		return m.Err
+	}
+	return ""
+}
+
 // PushPostsRequest represents a request for loading posts from crawler to data storage.
 type PushPostsRequest struct {
 	Posts                []proto1.Post `protobuf:"bytes,1,rep,name=posts,proto3" json:"posts"`
@@ -41,7 +339,7 @@ func (m *PushPostsRequest) Reset()         { *m = PushPostsRequest{} }
 func (m *PushPostsRequest) String() string { return proto.CompactTextString(m) }
 func (*PushPostsRequest) ProtoMessage()    {}
 func (*PushPostsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{0}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{6}
 }
 func (m *PushPostsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -96,7 +394,7 @@ func (m *PushPostsReply) Reset()         { *m = PushPostsReply{} }
 func (m *PushPostsReply) String() string { return proto.CompactTextString(m) }
 func (*PushPostsReply) ProtoMessage()    {}
 func (*PushPostsReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{1}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{7}
 }
 func (m *PushPostsReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -153,7 +451,7 @@ func (m *SelectPostsRequest) Reset()         { *m = SelectPostsRequest{} }
 func (m *SelectPostsRequest) String() string { return proto.CompactTextString(m) }
 func (*SelectPostsRequest) ProtoMessage()    {}
 func (*SelectPostsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{2}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{8}
 }
 func (m *SelectPostsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -216,7 +514,7 @@ func (m *SelectPostsReply) Reset()         { *m = SelectPostsReply{} }
 func (m *SelectPostsReply) String() string { return proto.CompactTextString(m) }
 func (*SelectPostsReply) ProtoMessage()    {}
 func (*SelectPostsReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{3}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{9}
 }
 func (m *SelectPostsReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -279,7 +577,7 @@ func (m *SelectAggrPostsRequest) Reset()         { *m = SelectAggrPostsRequest{}
 func (m *SelectAggrPostsRequest) String() string { return proto.CompactTextString(m) }
 func (*SelectAggrPostsRequest) ProtoMessage()    {}
 func (*SelectAggrPostsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{4}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{10}
 }
 func (m *SelectAggrPostsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -334,7 +632,7 @@ func (m *SelectAggrPostsReply) Reset()         { *m = SelectAggrPostsReply{} }
 func (m *SelectAggrPostsReply) String() string { return proto.CompactTextString(m) }
 func (*SelectAggrPostsReply) ProtoMessage()    {}
 func (*SelectAggrPostsReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{5}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{11}
 }
 func (m *SelectAggrPostsReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -391,7 +689,7 @@ func (m *PullTimelineRequest) Reset()         { *m = PullTimelineRequest{} }
 func (m *PullTimelineRequest) String() string { return proto.CompactTextString(m) }
 func (*PullTimelineRequest) ProtoMessage()    {}
 func (*PullTimelineRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{6}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{12}
 }
 func (m *PullTimelineRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -453,7 +751,7 @@ func (m *PullTimelineReply) Reset()         { *m = PullTimelineReply{} }
 func (m *PullTimelineReply) String() string { return proto.CompactTextString(m) }
 func (*PullTimelineReply) ProtoMessage()    {}
 func (*PullTimelineReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{7}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{13}
 }
 func (m *PullTimelineReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -510,7 +808,7 @@ func (m *PushGridRequest) Reset()         { *m = PushGridRequest{} }
 func (m *PushGridRequest) String() string { return proto.CompactTextString(m) }
 func (*PushGridRequest) ProtoMessage()    {}
 func (*PushGridRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{8}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{14}
 }
 func (m *PushGridRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -571,7 +869,7 @@ func (m *PushGridReply) Reset()         { *m = PushGridReply{} }
 func (m *PushGridReply) String() string { return proto.CompactTextString(m) }
 func (*PushGridReply) ProtoMessage()    {}
 func (*PushGridReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{9}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{15}
 }
 func (m *PushGridReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -620,7 +918,7 @@ func (m *PullGridRequest) Reset()         { *m = PullGridRequest{} }
 func (m *PullGridRequest) String() string { return proto.CompactTextString(m) }
 func (*PullGridRequest) ProtoMessage()    {}
 func (*PullGridRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{10}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{16}
 }
 func (m *PullGridRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -683,7 +981,7 @@ func (m *PullGridReply) Reset()         { *m = PullGridReply{} }
 func (m *PullGridReply) String() string { return proto.CompactTextString(m) }
 func (*PullGridReply) ProtoMessage()    {}
 func (*PullGridReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{11}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{17}
 }
 func (m *PullGridReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -746,7 +1044,7 @@ func (m *PushEventsRequest) Reset()         { *m = PushEventsRequest{} }
 func (m *PushEventsRequest) String() string { return proto.CompactTextString(m) }
 func (*PushEventsRequest) ProtoMessage()    {}
 func (*PushEventsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{12}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{18}
 }
 func (m *PushEventsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -800,7 +1098,7 @@ func (m *PushEventsReply) Reset()         { *m = PushEventsReply{} }
 func (m *PushEventsReply) String() string { return proto.CompactTextString(m) }
 func (*PushEventsReply) ProtoMessage()    {}
 func (*PushEventsReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{13}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{19}
 }
 func (m *PushEventsReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -848,7 +1146,7 @@ func (m *PullEventsRequest) Reset()         { *m = PullEventsRequest{} }
 func (m *PullEventsRequest) String() string { return proto.CompactTextString(m) }
 func (*PullEventsRequest) ProtoMessage()    {}
 func (*PullEventsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{14}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{20}
 }
 func (m *PullEventsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -903,7 +1201,7 @@ func (m *PullEventsReply) Reset()         { *m = PullEventsReply{} }
 func (m *PullEventsReply) String() string { return proto.CompactTextString(m) }
 func (*PullEventsReply) ProtoMessage()    {}
 func (*PullEventsReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{15}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{21}
 }
 func (m *PullEventsReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -959,7 +1257,7 @@ func (m *PushLocationsRequest) Reset()         { *m = PushLocationsRequest{} }
 func (m *PushLocationsRequest) String() string { return proto.CompactTextString(m) }
 func (*PushLocationsRequest) ProtoMessage()    {}
 func (*PushLocationsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{16}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{22}
 }
 func (m *PushLocationsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1013,7 +1311,7 @@ func (m *PushLocationsReply) Reset()         { *m = PushLocationsReply{} }
 func (m *PushLocationsReply) String() string { return proto.CompactTextString(m) }
 func (*PushLocationsReply) ProtoMessage()    {}
 func (*PushLocationsReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{17}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{23}
 }
 func (m *PushLocationsReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1060,7 +1358,7 @@ func (m *PullLocationsRequest) Reset()         { *m = PullLocationsRequest{} }
 func (m *PullLocationsRequest) String() string { return proto.CompactTextString(m) }
 func (*PullLocationsRequest) ProtoMessage()    {}
 func (*PullLocationsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{18}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{24}
 }
 func (m *PullLocationsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1108,7 +1406,7 @@ func (m *PullLocationsReply) Reset()         { *m = PullLocationsReply{} }
 func (m *PullLocationsReply) String() string { return proto.CompactTextString(m) }
 func (*PullLocationsReply) ProtoMessage()    {}
 func (*PullLocationsReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_8ec0c2fba98f9a4b, []int{19}
+	return fileDescriptor_8ec0c2fba98f9a4b, []int{25}
 }
 func (m *PullLocationsReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1152,6 +1450,12 @@ func (m *PullLocationsReply) GetErr() string {
 }
 
 func init() {
+	proto.RegisterType((*InsertCityRequest)(nil), "proto.InsertCityRequest")
+	proto.RegisterType((*InsertCityReply)(nil), "proto.InsertCityReply")
+	proto.RegisterType((*GetAllCitiesRequest)(nil), "proto.GetAllCitiesRequest")
+	proto.RegisterType((*GetAllCitiesReply)(nil), "proto.GetAllCitiesReply")
+	proto.RegisterType((*GetCityRequest)(nil), "proto.GetCityRequest")
+	proto.RegisterType((*GetCityReply)(nil), "proto.GetCityReply")
 	proto.RegisterType((*PushPostsRequest)(nil), "proto.PushPostsRequest")
 	proto.RegisterType((*PushPostsReply)(nil), "proto.PushPostsReply")
 	proto.RegisterType((*SelectPostsRequest)(nil), "proto.SelectPostsRequest")
@@ -1179,57 +1483,66 @@ func init() {
 }
 
 var fileDescriptor_8ec0c2fba98f9a4b = []byte{
-	// 794 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0xdd, 0x6e, 0xd3, 0x4c,
-	0x10, 0x8d, 0xeb, 0xa6, 0x5f, 0x32, 0xe9, 0xd7, 0x86, 0x25, 0xa4, 0xae, 0x4b, 0x43, 0x30, 0xa2,
-	0x0a, 0x17, 0xa4, 0x10, 0xb8, 0xaa, 0x84, 0x44, 0xcb, 0x6f, 0x24, 0x04, 0xc5, 0x45, 0x08, 0x95,
-	0x0b, 0xe4, 0x34, 0x8b, 0x6b, 0xb4, 0x8d, 0x83, 0xbd, 0xa9, 0xd4, 0x37, 0xe1, 0x61, 0x78, 0x80,
-	0x5e, 0xf2, 0x04, 0x08, 0x95, 0x17, 0x41, 0xfb, 0xe3, 0x78, 0xd7, 0x76, 0x20, 0x5c, 0x70, 0x95,
-	0xec, 0xcc, 0xf1, 0x99, 0x33, 0xb3, 0x33, 0xb3, 0x70, 0x73, 0xe8, 0x51, 0xef, 0x76, 0x4c, 0xc3,
-	0xc8, 0xf3, 0xf1, 0xf6, 0x38, 0x0a, 0x69, 0xb8, 0xad, 0x9a, 0xba, 0xdc, 0x84, 0xca, 0xfc, 0xc7,
-	0xde, 0x2c, 0x40, 0xfb, 0xa1, 0x1f, 0x0a, 0x94, 0x5d, 0x4f, 0xbf, 0x17, 0x16, 0xc7, 0x85, 0xfa,
-	0xfe, 0x24, 0x3e, 0xde, 0x0f, 0x63, 0x1a, 0xbb, 0xf8, 0xf3, 0x04, 0xc7, 0x14, 0x6d, 0x41, 0x79,
-	0xcc, 0xce, 0x96, 0xd1, 0x36, 0x3b, 0xb5, 0x1e, 0x74, 0x39, 0x9e, 0x41, 0xf6, 0x16, 0xcf, 0xbf,
-	0x5f, 0x2b, 0xb9, 0xc2, 0x8d, 0x9a, 0xb0, 0x74, 0x14, 0xd0, 0xb3, 0xfe, 0xd0, 0x5a, 0x68, 0x1b,
-	0x9d, 0xaa, 0x2b, 0x4f, 0xce, 0x7d, 0x58, 0x51, 0x38, 0xc7, 0xe4, 0x0c, 0xd5, 0xc1, 0x0c, 0x86,
-	0x82, 0xaf, 0xec, 0xb2, 0xbf, 0xcc, 0x82, 0xa3, 0x48, 0x7e, 0xc8, 0xfe, 0x3a, 0x9f, 0x00, 0x1d,
-	0x60, 0x82, 0x8f, 0xa8, 0xa6, 0xe5, 0x2a, 0x54, 0x63, 0xea, 0x45, 0xf4, 0x4d, 0x70, 0x82, 0x2d,
-	0xa3, 0x6d, 0x74, 0x4c, 0x37, 0x35, 0xa0, 0x16, 0xc0, 0xc7, 0x60, 0x14, 0xc4, 0xc7, 0xdc, 0xbd,
-	0xc0, 0xdd, 0x8a, 0x45, 0x51, 0x68, 0x6a, 0x0a, 0x09, 0xd4, 0xb5, 0x58, 0x4c, 0xe3, 0xbc, 0x59,
-	0xb7, 0x60, 0xd1, 0x8b, 0xb0, 0xc7, 0xa3, 0x4d, 0x61, 0xbb, 0x11, 0xf6, 0x5c, 0x6e, 0x4f, 0x32,
-	0x33, 0xd3, 0xcc, 0x08, 0x34, 0x45, 0xb4, 0x5d, 0xdf, 0x8f, 0xb4, 0xec, 0x76, 0xa0, 0x12, 0x8c,
-	0x28, 0x8e, 0x4e, 0x3d, 0xc2, 0x93, 0xab, 0xf5, 0x2c, 0xc1, 0x77, 0x30, 0xf6, 0x68, 0x10, 0x3e,
-	0x0f, 0x27, 0x51, 0x5f, 0xfa, 0xa5, 0x88, 0x29, 0x7e, 0x66, 0xf5, 0x0f, 0xa1, 0x91, 0x8b, 0xc6,
-	0xf2, 0xbb, 0xa3, 0xe7, 0xd7, 0x90, 0xc2, 0x7d, 0x3f, 0xc2, 0xbe, 0x47, 0xf1, 0x30, 0x9f, 0x69,
-	0xfe, 0x8e, 0xde, 0xc3, 0xe5, 0xfd, 0x09, 0x21, 0xac, 0xb6, 0x24, 0x18, 0xe1, 0x24, 0x8d, 0x54,
-	0x8a, 0xa1, 0x4a, 0x41, 0x0d, 0x28, 0xf3, 0xbb, 0x92, 0x37, 0x23, 0x0e, 0x0c, 0x2d, 0xae, 0x88,
-	0xd7, 0xc8, 0x74, 0xe5, 0xc9, 0x79, 0x07, 0x97, 0x74, 0x72, 0xa6, 0xfa, 0x2e, 0x54, 0xa8, 0x34,
-	0x48, 0xe1, 0xab, 0x42, 0x38, 0x83, 0xc5, 0xd4, 0x3b, 0x19, 0x27, 0x85, 0x49, 0x60, 0x05, 0xb2,
-	0x5f, 0xc3, 0x2a, 0x6b, 0xc8, 0x67, 0x51, 0x30, 0x4c, 0x24, 0x2b, 0x1d, 0x69, 0x8a, 0x8e, 0x6c,
-	0x40, 0x79, 0x40, 0xc2, 0x41, 0x6c, 0x2d, 0xb4, 0xcd, 0xce, 0xb2, 0x2b, 0x0e, 0x33, 0x3b, 0xe8,
-	0x3a, 0xfc, 0x9f, 0x52, 0xca, 0x16, 0x67, 0x51, 0x8d, 0x34, 0xea, 0x07, 0x16, 0x95, 0x10, 0x35,
-	0xaa, 0x05, 0xff, 0xf1, 0x1a, 0xc8, 0x4a, 0x99, 0x6e, 0x72, 0x44, 0x36, 0x54, 0x44, 0x19, 0xe4,
-	0x7d, 0x9a, 0xee, 0xf4, 0x3c, 0x53, 0x43, 0x9f, 0x69, 0x48, 0x02, 0x64, 0xc6, 0xec, 0xb7, 0x49,
-	0xe5, 0x5b, 0xf4, 0x2d, 0xab, 0x7d, 0x7c, 0xfc, 0xe4, 0x14, 0x8f, 0xd2, 0xee, 0xbc, 0x05, 0x4b,
-	0x98, 0x1b, 0x64, 0xe5, 0x6b, 0xa2, 0xf2, 0x1c, 0x24, 0xab, 0x2e, 0x01, 0x33, 0x9b, 0xf1, 0x86,
-	0xa8, 0x7c, 0xc2, 0x5b, 0x5c, 0x28, 0x5f, 0x5c, 0xbc, 0x1e, 0xfc, 0x5f, 0x8c, 0xc6, 0x4b, 0x71,
-	0x23, 0xaa, 0x9a, 0xbf, 0xc8, 0x31, 0xdf, 0x57, 0x03, 0x68, 0xb0, 0xec, 0x5e, 0x84, 0x47, 0x4c,
-	0xd2, 0x28, 0xfe, 0xd3, 0x3c, 0xf4, 0xa0, 0x4a, 0x12, 0x2c, 0xbf, 0x91, 0x5a, 0x6f, 0x45, 0xc4,
-	0x4b, 0x28, 0x64, 0xc8, 0x14, 0xe6, 0x6c, 0x01, 0xca, 0xc4, 0x28, 0x2e, 0x62, 0x97, 0x69, 0x21,
-	0x64, 0x5e, 0x2d, 0xce, 0x21, 0xe3, 0xd5, 0xf0, 0x8c, 0x57, 0x53, 0x68, 0xcc, 0xa5, 0x30, 0x5f,
-	0x97, 0xde, 0xd7, 0x32, 0xd4, 0x1e, 0x7b, 0xd4, 0x3b, 0x10, 0xef, 0x10, 0x7a, 0x00, 0xd5, 0xe9,
-	0x83, 0x80, 0xd6, 0xc4, 0xcb, 0xd3, 0xcd, 0x3e, 0x3b, 0xf6, 0x95, 0xbc, 0x63, 0x4c, 0xce, 0x9c,
-	0x12, 0x7a, 0x04, 0x35, 0x65, 0x5b, 0xa3, 0x75, 0x89, 0xcb, 0xbf, 0x16, 0xf6, 0x5a, 0x91, 0x4b,
-	0x90, 0xbc, 0x82, 0xd5, 0xcc, 0x5a, 0x44, 0x9b, 0x1a, 0x3a, 0xbb, 0x9c, 0xed, 0x8d, 0x59, 0x6e,
-	0x41, 0xf8, 0x14, 0x96, 0xd5, 0x75, 0x85, 0xec, 0xa9, 0xfc, 0xdc, 0x82, 0xb4, 0xad, 0x42, 0x9f,
-	0xe0, 0xd9, 0x81, 0x4a, 0xb2, 0x49, 0x50, 0x53, 0x29, 0x81, 0xb2, 0x37, 0xec, 0x46, 0xce, 0xae,
-	0x7c, 0x2b, 0x36, 0x80, 0xf2, 0xad, 0xb6, 0x73, 0x94, 0x6f, 0x95, 0x55, 0xe1, 0x94, 0xd0, 0x43,
-	0x80, 0x74, 0x34, 0x91, 0xa5, 0x44, 0xd0, 0x06, 0xd1, 0x6e, 0x16, 0x78, 0x14, 0x86, 0x64, 0x9c,
-	0x90, 0x9a, 0xe3, 0x2c, 0x06, 0x6d, 0xf6, 0x9c, 0x12, 0xea, 0x8b, 0x2d, 0x3a, 0x6d, 0x42, 0xb4,
-	0xa1, 0x04, 0xcb, 0xb6, 0xb2, 0xbd, 0x5e, 0xec, 0x54, 0xa8, 0x94, 0x7e, 0x56, 0xa8, 0xf2, 0x53,
-	0xa1, 0x50, 0x65, 0x47, 0xc0, 0x29, 0xed, 0xd5, 0xcf, 0x2f, 0x5a, 0xc6, 0xb7, 0x8b, 0x96, 0xf1,
-	0xe3, 0xa2, 0x65, 0x7c, 0xf9, 0xd9, 0x2a, 0x0d, 0x96, 0x38, 0xfa, 0xde, 0xaf, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0x88, 0x80, 0x9c, 0x3e, 0x8d, 0x09, 0x00, 0x00,
+	// 939 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0x5f, 0x6f, 0xe3, 0x44,
+	0x10, 0x8f, 0xe3, 0x26, 0x97, 0x4c, 0x8e, 0x24, 0xdd, 0xa6, 0x39, 0x9f, 0x8f, 0x0b, 0xc5, 0x07,
+	0x55, 0x78, 0x20, 0x07, 0x01, 0x09, 0x09, 0x09, 0xa9, 0x7f, 0x28, 0x25, 0x12, 0xa2, 0xc5, 0x45,
+	0x08, 0x95, 0x07, 0xe4, 0x24, 0x5b, 0xd7, 0x68, 0x1b, 0x07, 0x7b, 0x53, 0x91, 0x6f, 0xc2, 0x47,
+	0xea, 0x23, 0x9f, 0x00, 0xa1, 0xf2, 0x41, 0x40, 0xfb, 0xc7, 0xf6, 0xae, 0xed, 0xd0, 0xf2, 0x70,
+	0x4f, 0xc9, 0xce, 0xfc, 0x3c, 0xf3, 0x9b, 0xdf, 0xce, 0xce, 0xc0, 0xfb, 0x73, 0x8f, 0x7a, 0x1f,
+	0xc6, 0x34, 0x8c, 0x3c, 0x1f, 0xbf, 0x5e, 0x46, 0x21, 0x0d, 0x5f, 0xab, 0xa6, 0x11, 0x37, 0xa1,
+	0x1a, 0xff, 0xb1, 0x5f, 0x96, 0xa0, 0xfd, 0xd0, 0x0f, 0x05, 0xca, 0xee, 0x66, 0xdf, 0x0b, 0x8b,
+	0xe3, 0xc1, 0xf6, 0x64, 0x11, 0xe3, 0x88, 0x1e, 0x07, 0x74, 0xed, 0xe2, 0x5f, 0x57, 0x38, 0xa6,
+	0xe8, 0x3d, 0xd8, 0x9a, 0x05, 0x74, 0x6d, 0x19, 0x7b, 0xc6, 0xb0, 0x35, 0x86, 0x11, 0xc7, 0x33,
+	0xc0, 0xd1, 0xd6, 0xdd, 0x9f, 0xef, 0x54, 0x5c, 0xee, 0x45, 0xfb, 0xd0, 0x5e, 0x2d, 0xe7, 0x1e,
+	0xc5, 0x93, 0xab, 0x93, 0xdf, 0x82, 0x98, 0xc6, 0x56, 0x75, 0xcf, 0x18, 0x36, 0xdc, 0x9c, 0xd5,
+	0x79, 0x05, 0x1d, 0x35, 0xc5, 0x92, 0xac, 0x51, 0x17, 0x4c, 0x1c, 0x45, 0x3c, 0x7e, 0xd3, 0x65,
+	0x7f, 0x9d, 0x5d, 0xd8, 0x39, 0xc5, 0xf4, 0x90, 0x90, 0xe3, 0x80, 0x06, 0x38, 0x96, 0x4c, 0x9c,
+	0x33, 0xd8, 0xd6, 0xcd, 0xec, 0xeb, 0x21, 0xd4, 0x67, 0xfc, 0x68, 0x19, 0x7b, 0x66, 0x29, 0x41,
+	0xe9, 0x4f, 0xf2, 0x54, 0xb3, 0x3c, 0x43, 0x68, 0x9f, 0x62, 0xad, 0xd8, 0x3e, 0x8f, 0xb6, 0x9e,
+	0xcc, 0x25, 0x1d, 0x79, 0x72, 0x0e, 0xe0, 0x69, 0x8a, 0x64, 0x59, 0x07, 0x9b, 0x44, 0x91, 0x72,
+	0x14, 0x73, 0xb9, 0xd0, 0x3d, 0x5f, 0xc5, 0xd7, 0xe7, 0x61, 0x4c, 0x93, 0x82, 0xd0, 0x3e, 0xd4,
+	0x96, 0xec, 0xac, 0x53, 0x67, 0x10, 0x49, 0x5d, 0xb8, 0x15, 0x56, 0x55, 0x8d, 0xd5, 0xa7, 0xd0,
+	0x56, 0x62, 0x4a, 0x2d, 0x83, 0xb9, 0x88, 0x57, 0x73, 0xd9, 0xdf, 0x12, 0x26, 0xbf, 0x00, 0xba,
+	0xc0, 0x04, 0xcf, 0xa8, 0xc6, 0xe5, 0x6d, 0x68, 0xc6, 0xd4, 0x8b, 0xe8, 0xf7, 0xc1, 0x0d, 0xe6,
+	0x65, 0x99, 0x6e, 0x66, 0x40, 0x03, 0x80, 0xab, 0x60, 0x11, 0xc4, 0xd7, 0xdc, 0x5d, 0xe5, 0x6e,
+	0xc5, 0xa2, 0x30, 0x34, 0x35, 0x86, 0x04, 0xba, 0x5a, 0x2e, 0xc6, 0xf1, 0xb1, 0x55, 0x0f, 0x60,
+	0xcb, 0x8b, 0xb0, 0xc7, 0xb3, 0xa5, 0xb0, 0xc3, 0x08, 0x7b, 0x2e, 0xb7, 0x27, 0x95, 0x99, 0x59,
+	0x65, 0x04, 0xfa, 0x22, 0xdb, 0xa1, 0xef, 0x47, 0x5a, 0x75, 0x9f, 0x43, 0x23, 0x58, 0x50, 0x1c,
+	0xdd, 0x7a, 0x44, 0xde, 0x99, 0x25, 0xe2, 0x5d, 0x2c, 0x3d, 0x1a, 0x84, 0x5f, 0x87, 0xab, 0x68,
+	0x22, 0xfd, 0x92, 0x44, 0x8a, 0xdf, 0xa8, 0xfe, 0x25, 0xf4, 0x0a, 0xd9, 0x58, 0x7d, 0x1f, 0xe9,
+	0xf5, 0xf5, 0x24, 0x71, 0xdf, 0x8f, 0xb0, 0xef, 0x51, 0x3c, 0x2f, 0x56, 0x5a, 0xbc, 0xa3, 0x9f,
+	0x60, 0xe7, 0x7c, 0x45, 0x08, 0xd3, 0x96, 0x04, 0x0b, 0xfc, 0x40, 0x7b, 0xa2, 0x1e, 0xd4, 0xf8,
+	0x5d, 0xc9, 0x9b, 0x11, 0x07, 0x86, 0x16, 0x57, 0xc4, 0x35, 0x32, 0x5d, 0x79, 0x72, 0x7e, 0x84,
+	0x6d, 0x3d, 0x38, 0x63, 0xfd, 0x31, 0x34, 0xa8, 0x34, 0x48, 0xe2, 0x1d, 0x41, 0x9c, 0xc1, 0x62,
+	0xea, 0xdd, 0x2c, 0x13, 0x61, 0x12, 0x58, 0x09, 0xed, 0xef, 0xa0, 0xc3, 0x1a, 0xf2, 0x34, 0x0a,
+	0xe6, 0x09, 0x65, 0xa5, 0x23, 0x4d, 0xd1, 0x91, 0x3d, 0xa8, 0x4d, 0x49, 0x38, 0x65, 0x13, 0xc2,
+	0x1c, 0x3e, 0x75, 0xc5, 0x61, 0x63, 0x07, 0xbd, 0x0b, 0x6f, 0x65, 0x21, 0xcb, 0xc7, 0xc5, 0xcf,
+	0x2c, 0x2b, 0x21, 0x6a, 0x56, 0x0b, 0x9e, 0x70, 0x0d, 0xa4, 0x52, 0xa6, 0x9b, 0x1c, 0x91, 0x0d,
+	0x0d, 0x21, 0x83, 0xbc, 0x4f, 0xd3, 0x4d, 0xcf, 0x1b, 0x39, 0x4c, 0x18, 0x87, 0x24, 0x41, 0xee,
+	0x99, 0xfd, 0x67, 0x51, 0xc5, 0x16, 0xfd, 0x81, 0x69, 0x1f, 0x5f, 0x9f, 0xdc, 0xe2, 0x45, 0xd6,
+	0x9d, 0x1f, 0x40, 0x1d, 0x73, 0x83, 0x54, 0xbe, 0x25, 0x94, 0xe7, 0xa0, 0x64, 0x88, 0x09, 0xc0,
+	0xc6, 0x66, 0x7c, 0x25, 0x94, 0x4f, 0xe2, 0x96, 0x0b, 0xe5, 0x8b, 0x8b, 0xd7, 0x93, 0xbf, 0x89,
+	0xa7, 0xf1, 0xad, 0xb8, 0x11, 0x95, 0xcd, 0xff, 0xa8, 0xb1, 0xd8, 0x57, 0x53, 0xe8, 0xb1, 0xea,
+	0xbe, 0x09, 0x67, 0x8c, 0xd2, 0x22, 0x7e, 0xe8, 0x3d, 0x8c, 0xa1, 0x49, 0x12, 0x2c, 0xbf, 0x91,
+	0xd6, 0xb8, 0x2d, 0xf2, 0x25, 0x21, 0x64, 0xca, 0x0c, 0xe6, 0xec, 0x03, 0xca, 0xe5, 0x28, 0x17,
+	0x71, 0xc4, 0xb8, 0x10, 0xf2, 0x58, 0x2e, 0xce, 0x25, 0x8b, 0xab, 0xe1, 0x59, 0x5c, 0x8d, 0xa1,
+	0xf1, 0x28, 0x86, 0x45, 0x5d, 0xc6, 0xff, 0xd4, 0xa1, 0xf5, 0xa5, 0x47, 0xbd, 0x0b, 0xb1, 0xe3,
+	0xd1, 0x01, 0x40, 0xb6, 0x5d, 0x91, 0x25, 0xd6, 0xfa, 0xa8, 0xb0, 0xd3, 0xed, 0x7e, 0x89, 0x67,
+	0x49, 0xd6, 0x4e, 0x05, 0x7d, 0xc5, 0x17, 0x5d, 0xba, 0x63, 0x91, 0x2d, 0x91, 0x25, 0xfb, 0xd8,
+	0xb6, 0x4a, 0x7d, 0x22, 0xce, 0x67, 0xf0, 0x44, 0x2e, 0x4c, 0xb4, 0x9b, 0xc1, 0x54, 0x0e, 0x3b,
+	0x79, 0xb3, 0xf8, 0xf0, 0x0b, 0x68, 0xa6, 0x3b, 0x0d, 0x3d, 0x93, 0x98, 0xfc, 0xe6, 0xb4, 0x77,
+	0x8b, 0x0e, 0xf1, 0xf9, 0x31, 0xb4, 0x94, 0x85, 0x83, 0x9e, 0x4b, 0x5c, 0x71, 0xe1, 0xd9, 0xcf,
+	0xca, 0x5c, 0x22, 0xc8, 0x19, 0x74, 0x72, 0x93, 0x1d, 0xbd, 0xd4, 0xd0, 0xf9, 0xfd, 0x62, 0xbf,
+	0xd8, 0xe4, 0x4e, 0x55, 0x55, 0x27, 0x6e, 0xaa, 0x6a, 0xc9, 0x8c, 0x4f, 0x55, 0x2d, 0x8c, 0x68,
+	0xa7, 0xc2, 0xde, 0x6a, 0x32, 0x0c, 0x51, 0x5f, 0x91, 0x40, 0x19, 0x7d, 0x76, 0xaf, 0x60, 0x57,
+	0xbe, 0x15, 0x43, 0x4c, 0xf9, 0x56, 0x1b, 0x9b, 0xca, 0xb7, 0xca, 0xb4, 0x73, 0x2a, 0xac, 0xaf,
+	0xb2, 0xe9, 0x82, 0x2c, 0x25, 0x83, 0x36, 0x4b, 0xec, 0x7e, 0x89, 0x47, 0x89, 0x90, 0x4c, 0x04,
+	0xa4, 0xd6, 0xb8, 0x29, 0x82, 0x36, 0x3e, 0x9c, 0x0a, 0x9a, 0x88, 0x45, 0x90, 0xbe, 0x23, 0xf4,
+	0x42, 0x49, 0x96, 0x7f, 0x8d, 0xf6, 0xf3, 0x72, 0xa7, 0x12, 0x4a, 0x79, 0x92, 0x4a, 0xa8, 0xe2,
+	0xc3, 0x56, 0x42, 0xe5, 0x5f, 0xb1, 0x53, 0x39, 0xea, 0xde, 0xdd, 0x0f, 0x8c, 0x3f, 0xee, 0x07,
+	0xc6, 0x5f, 0xf7, 0x03, 0xe3, 0xf7, 0xbf, 0x07, 0x95, 0x69, 0x9d, 0xa3, 0x3f, 0xf9, 0x37, 0x00,
+	0x00, 0xff, 0xff, 0xa3, 0x23, 0x8c, 0x8a, 0xac, 0x0b, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1244,6 +1557,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type DataStorageClient interface {
+	InsertCity(ctx context.Context, in *InsertCityRequest, opts ...grpc.CallOption) (*InsertCityReply, error)
+	GetAllCities(ctx context.Context, in *GetAllCitiesRequest, opts ...grpc.CallOption) (*GetAllCitiesReply, error)
+	GetCity(ctx context.Context, in *GetCityRequest, opts ...grpc.CallOption) (*GetCityReply, error)
 	PushPosts(ctx context.Context, in *PushPostsRequest, opts ...grpc.CallOption) (*PushPostsReply, error)
 	SelectPosts(ctx context.Context, in *SelectPostsRequest, opts ...grpc.CallOption) (*SelectPostsReply, error)
 	SelectAggrPosts(ctx context.Context, in *SelectAggrPostsRequest, opts ...grpc.CallOption) (*SelectAggrPostsReply, error)
@@ -1262,6 +1578,33 @@ type dataStorageClient struct {
 
 func NewDataStorageClient(cc *grpc.ClientConn) DataStorageClient {
 	return &dataStorageClient{cc}
+}
+
+func (c *dataStorageClient) InsertCity(ctx context.Context, in *InsertCityRequest, opts ...grpc.CallOption) (*InsertCityReply, error) {
+	out := new(InsertCityReply)
+	err := c.cc.Invoke(ctx, "/proto.DataStorage/InsertCity", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataStorageClient) GetAllCities(ctx context.Context, in *GetAllCitiesRequest, opts ...grpc.CallOption) (*GetAllCitiesReply, error) {
+	out := new(GetAllCitiesReply)
+	err := c.cc.Invoke(ctx, "/proto.DataStorage/GetAllCities", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataStorageClient) GetCity(ctx context.Context, in *GetCityRequest, opts ...grpc.CallOption) (*GetCityReply, error) {
+	out := new(GetCityReply)
+	err := c.cc.Invoke(ctx, "/proto.DataStorage/GetCity", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *dataStorageClient) PushPosts(ctx context.Context, in *PushPostsRequest, opts ...grpc.CallOption) (*PushPostsReply, error) {
@@ -1356,6 +1699,9 @@ func (c *dataStorageClient) PullLocations(ctx context.Context, in *PullLocations
 
 // DataStorageServer is the server API for DataStorage service.
 type DataStorageServer interface {
+	InsertCity(context.Context, *InsertCityRequest) (*InsertCityReply, error)
+	GetAllCities(context.Context, *GetAllCitiesRequest) (*GetAllCitiesReply, error)
+	GetCity(context.Context, *GetCityRequest) (*GetCityReply, error)
 	PushPosts(context.Context, *PushPostsRequest) (*PushPostsReply, error)
 	SelectPosts(context.Context, *SelectPostsRequest) (*SelectPostsReply, error)
 	SelectAggrPosts(context.Context, *SelectAggrPostsRequest) (*SelectAggrPostsReply, error)
@@ -1372,6 +1718,15 @@ type DataStorageServer interface {
 type UnimplementedDataStorageServer struct {
 }
 
+func (*UnimplementedDataStorageServer) InsertCity(ctx context.Context, req *InsertCityRequest) (*InsertCityReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InsertCity not implemented")
+}
+func (*UnimplementedDataStorageServer) GetAllCities(ctx context.Context, req *GetAllCitiesRequest) (*GetAllCitiesReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllCities not implemented")
+}
+func (*UnimplementedDataStorageServer) GetCity(ctx context.Context, req *GetCityRequest) (*GetCityReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCity not implemented")
+}
 func (*UnimplementedDataStorageServer) PushPosts(ctx context.Context, req *PushPostsRequest) (*PushPostsReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PushPosts not implemented")
 }
@@ -1405,6 +1760,60 @@ func (*UnimplementedDataStorageServer) PullLocations(ctx context.Context, req *P
 
 func RegisterDataStorageServer(s *grpc.Server, srv DataStorageServer) {
 	s.RegisterService(&_DataStorage_serviceDesc, srv)
+}
+
+func _DataStorage_InsertCity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InsertCityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataStorageServer).InsertCity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.DataStorage/InsertCity",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataStorageServer).InsertCity(ctx, req.(*InsertCityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DataStorage_GetAllCities_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAllCitiesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataStorageServer).GetAllCities(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.DataStorage/GetAllCities",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataStorageServer).GetAllCities(ctx, req.(*GetAllCitiesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DataStorage_GetCity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataStorageServer).GetCity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.DataStorage/GetCity",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataStorageServer).GetCity(ctx, req.(*GetCityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _DataStorage_PushPosts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1592,6 +2001,18 @@ var _DataStorage_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*DataStorageServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "InsertCity",
+			Handler:    _DataStorage_InsertCity_Handler,
+		},
+		{
+			MethodName: "GetAllCities",
+			Handler:    _DataStorage_GetAllCities_Handler,
+		},
+		{
+			MethodName: "GetCity",
+			Handler:    _DataStorage_GetCity_Handler,
+		},
+		{
 			MethodName: "PushPosts",
 			Handler:    _DataStorage_PushPosts_Handler,
 		},
@@ -1634,6 +2055,242 @@ var _DataStorage_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "data-storage/proto/data-storage.proto",
+}
+
+func (m *InsertCityRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *InsertCityRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *InsertCityRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.UpdateIfExists {
+		i--
+		if m.UpdateIfExists {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x10
+	}
+	{
+		size, err := m.City.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintDataStorage(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *InsertCityReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *InsertCityReply) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *InsertCityReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Err) > 0 {
+		i -= len(m.Err)
+		copy(dAtA[i:], m.Err)
+		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Err)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetAllCitiesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetAllCitiesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetAllCitiesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetAllCitiesReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetAllCitiesReply) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetAllCitiesReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Err) > 0 {
+		i -= len(m.Err)
+		copy(dAtA[i:], m.Err)
+		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Err)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Cities) > 0 {
+		for iNdEx := len(m.Cities) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Cities[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintDataStorage(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetCityRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetCityRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetCityRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.CityId) > 0 {
+		i -= len(m.CityId)
+		copy(dAtA[i:], m.CityId)
+		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.CityId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetCityReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetCityReply) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetCityReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Err) > 0 {
+		i -= len(m.Err)
+		copy(dAtA[i:], m.Err)
+		i = encodeVarintDataStorage(dAtA, i, uint64(len(m.Err)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.City != nil {
+		{
+			size, err := m.City.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintDataStorage(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *PushPostsRequest) Marshal() (dAtA []byte, err error) {
@@ -1716,21 +2373,21 @@ func (m *PushPostsReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 	}
 	if len(m.Ids) > 0 {
-		dAtA2 := make([]byte, len(m.Ids)*10)
-		var j1 int
+		dAtA4 := make([]byte, len(m.Ids)*10)
+		var j3 int
 		for _, num1 := range m.Ids {
 			num := uint64(num1)
 			for num >= 1<<7 {
-				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA4[j3] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j1++
+				j3++
 			}
-			dAtA2[j1] = uint8(num)
-			j1++
+			dAtA4[j3] = uint8(num)
+			j3++
 		}
-		i -= j1
-		copy(dAtA[i:], dAtA2[:j1])
-		i = encodeVarintDataStorage(dAtA, i, uint64(j1))
+		i -= j3
+		copy(dAtA[i:], dAtA4[:j3])
+		i = encodeVarintDataStorage(dAtA, i, uint64(j3))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -2066,21 +2723,21 @@ func (m *PushGridRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 	}
 	if len(m.Ids) > 0 {
-		dAtA6 := make([]byte, len(m.Ids)*10)
-		var j5 int
+		dAtA8 := make([]byte, len(m.Ids)*10)
+		var j7 int
 		for _, num1 := range m.Ids {
 			num := uint64(num1)
 			for num >= 1<<7 {
-				dAtA6[j5] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA8[j7] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j5++
+				j7++
 			}
-			dAtA6[j5] = uint8(num)
-			j5++
+			dAtA8[j7] = uint8(num)
+			j7++
 		}
-		i -= j5
-		copy(dAtA[i:], dAtA6[:j5])
-		i = encodeVarintDataStorage(dAtA, i, uint64(j5))
+		i -= j7
+		copy(dAtA[i:], dAtA8[:j7])
+		i = encodeVarintDataStorage(dAtA, i, uint64(j7))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -2206,21 +2863,21 @@ func (m *PullGridReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 	}
 	if len(m.Ids) > 0 {
-		dAtA8 := make([]byte, len(m.Ids)*10)
-		var j7 int
+		dAtA10 := make([]byte, len(m.Ids)*10)
+		var j9 int
 		for _, num1 := range m.Ids {
 			num := uint64(num1)
 			for num >= 1<<7 {
-				dAtA8[j7] = uint8(uint64(num)&0x7f | 0x80)
+				dAtA10[j9] = uint8(uint64(num)&0x7f | 0x80)
 				num >>= 7
-				j7++
+				j9++
 			}
-			dAtA8[j7] = uint8(num)
-			j7++
+			dAtA10[j9] = uint8(num)
+			j9++
 		}
-		i -= j7
-		copy(dAtA[i:], dAtA8[:j7])
-		i = encodeVarintDataStorage(dAtA, i, uint64(j7))
+		i -= j9
+		copy(dAtA[i:], dAtA10[:j9])
+		i = encodeVarintDataStorage(dAtA, i, uint64(j9))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -2576,6 +3233,109 @@ func encodeVarintDataStorage(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *InsertCityRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.City.Size()
+	n += 1 + l + sovDataStorage(uint64(l))
+	if m.UpdateIfExists {
+		n += 2
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *InsertCityReply) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Err)
+	if l > 0 {
+		n += 1 + l + sovDataStorage(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *GetAllCitiesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *GetAllCitiesReply) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Cities) > 0 {
+		for _, e := range m.Cities {
+			l = e.Size()
+			n += 1 + l + sovDataStorage(uint64(l))
+		}
+	}
+	l = len(m.Err)
+	if l > 0 {
+		n += 1 + l + sovDataStorage(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *GetCityRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.CityId)
+	if l > 0 {
+		n += 1 + l + sovDataStorage(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *GetCityReply) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.City != nil {
+		l = m.City.Size()
+		n += 1 + l + sovDataStorage(uint64(l))
+	}
+	l = len(m.Err)
+	if l > 0 {
+		n += 1 + l + sovDataStorage(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
 func (m *PushPostsRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -3008,6 +3768,581 @@ func sovDataStorage(x uint64) (n int) {
 }
 func sozDataStorage(x uint64) (n int) {
 	return sovDataStorage(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *InsertCityRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: InsertCityRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: InsertCityRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field City", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.City.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdateIfExists", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.UpdateIfExists = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *InsertCityReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: InsertCityReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: InsertCityReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Err = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetAllCitiesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetAllCitiesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetAllCitiesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetAllCitiesReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetAllCitiesReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetAllCitiesReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Cities", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Cities = append(m.Cities, proto1.City{})
+			if err := m.Cities[len(m.Cities)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Err = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetCityRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetCityRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetCityRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CityId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CityId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetCityReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDataStorage
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetCityReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetCityReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field City", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.City == nil {
+				m.City = &proto1.City{}
+			}
+			if err := m.City.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Err", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDataStorage
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Err = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDataStorage(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthDataStorage
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *PushPostsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

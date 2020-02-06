@@ -13,6 +13,12 @@ const (
 )
 
 type Service interface {
+	InsertCity(ctx context.Context, city data.City, updateIfExists bool) error
+
+	GetAllCities(ctx context.Context) ([]data.City, error)
+
+	GetCity(ctx context.Context, cityId string) (*data.City, error)
+
 	// input array of Posts and write every Post to database
 	// return array of statuses of adding posts
 	// 		and error if one or more Post wasn't pushed
@@ -48,6 +54,18 @@ type Service interface {
 
 type basicService struct {
 	db *storage.Storage
+}
+
+func (s basicService) InsertCity(ctx context.Context, city data.City, updateIfExists bool) error {
+	return s.db.InsertCity(ctx, city, updateIfExists)
+}
+
+func (s basicService) GetAllCities(ctx context.Context) ([]data.City, error) {
+	return s.db.GetCities(ctx)
+}
+
+func (s basicService) GetCity(ctx context.Context, cityId string) (*data.City, error) {
+	return s.db.SelectCity(ctx, cityId)
 }
 
 func (s basicService) PushPosts(ctx context.Context, cityId string, posts []data.Post) ([]int32, error) {
