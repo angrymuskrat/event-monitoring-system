@@ -36,12 +36,12 @@ type Service interface {
 	// input not empty id and not empty array of bytes
 	// if blob successfully added to database, return nil
 	// else return error
-	PushGrid(ctx context.Context, cityId string, ids []int64, blobs [][]byte) error
+	PushGrid(ctx context.Context, cityId string, grids map[int64][]byte) error
 
 	// input not empty id
 	// if there are exist some blob with the id in database return the blob
 	// else return error
-	PullGrid(ctx context.Context, cityId string, stratId, finishId int64) ([]int64, [][]byte, error)
+	PullGrid(ctx context.Context, cityId string, startId, finishId int64) (map[int64][]byte, error)
 
 	PushEvents(ctx context.Context, cityId string, events []data.Event) error
 
@@ -84,11 +84,11 @@ func (s basicService) PullTimeline(ctx context.Context, cityId string, start, fi
 	return s.db.PullTimeline(ctx, cityId, start, finish)
 }
 
-func (s basicService) PushGrid(ctx context.Context, cityId string, ids []int64, blobs [][]byte) error {
-	return s.db.PushGrid(ctx, cityId, ids, blobs)
+func (s basicService) PushGrid(ctx context.Context, cityId string, grids map[int64][]byte) error {
+	return s.db.PushGrid(ctx, cityId, grids)
 }
 
-func (s basicService) PullGrid(ctx context.Context, cityId string, startId, finishId int64) ([]int64, [][]byte, error) {
+func (s basicService) PullGrid(ctx context.Context, cityId string, startId, finishId int64) (map[int64][]byte, error) {
 	return s.db.PullGrid(ctx, cityId, startId, finishId)
 }
 

@@ -96,20 +96,19 @@ func (mw loggingMiddleware) PullTimeline(ctx context.Context, cityId string, sta
 	return
 }
 
-func (mw loggingMiddleware) PushGrid(ctx context.Context, cityId string, ids []int64, blobs [][]byte) (err error) {
+func (mw loggingMiddleware) PushGrid(ctx context.Context, cityId string, grids map[int64][]byte) (err error) {
 	defer func(begin time.Time) {
 		mw.logger.Info("push grid",
-			zap.Int("len ids", len(ids)),
-			zap.Int("len blobs", len(blobs)),
+			zap.Int("len grids", len(grids)),
 			zap.String("city id", cityId),
 			zap.Error(err),
 			zap.String("took", time.Since(begin).String()))
 	}(time.Now())
-	err = mw.next.PushGrid(ctx, cityId, ids, blobs)
+	err = mw.next.PushGrid(ctx, cityId, grids)
 	return
 }
 
-func (mw loggingMiddleware) PullGrid(ctx context.Context, cityId string, startId, finishId int64) (ids []int64, blobs [][]byte, err error) {
+func (mw loggingMiddleware) PullGrid(ctx context.Context, cityId string, startId, finishId int64) (grids map[int64][]byte, err error) {
 	defer func(begin time.Time) {
 		mw.logger.Info("pull grid",
 			zap.Int64("start id", startId),
@@ -118,7 +117,7 @@ func (mw loggingMiddleware) PullGrid(ctx context.Context, cityId string, startId
 			zap.Error(err),
 			zap.String("took", time.Since(begin).String()))
 	}(time.Now())
-	ids, blobs, err = mw.next.PullGrid(ctx, cityId, startId, finishId)
+	grids, err = mw.next.PullGrid(ctx, cityId, startId, finishId)
 	return
 }
 

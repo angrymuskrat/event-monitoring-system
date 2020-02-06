@@ -111,7 +111,9 @@ func test(method string, svc storagesvc.Service) {
 			return
 		}
 		id := RandInt64(1000)
-		err = svc.PushGrid(context.Background(), "nyc", []int64{id}, [][]byte{b})
+		grids := map[int64][]byte{}
+		grids[id] = b
+		err = svc.PushGrid(context.Background(), "nyc", grids)
 		if err != nil {
 			fmt.Printf("\n%v: error: %v", method, err)
 			return
@@ -119,12 +121,12 @@ func test(method string, svc storagesvc.Service) {
 		fmt.Printf("\n%v: It is all right", method)
 
 	case "pullGrid":
-		ids, _, err := svc.PullGrid(context.Background(), "nyc", 0, 1000)
+		res, err := svc.PullGrid(context.Background(), "nyc", 0, 1000)
 		if err != nil {
 			fmt.Printf("\n%v: error: %v", method, err)
 			return
 		}
-		fmt.Printf("\n%v: It is all right, ids: %v", method, ids)
+		fmt.Printf("\n%v: It is all right, ids: %v", method, len(res))
 
 	case "pushEvents":
 		events := []data.Event{

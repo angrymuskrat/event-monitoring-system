@@ -92,7 +92,7 @@ func makePullTimelineEndpoint(s Service) endpoint.Endpoint {
 func makePushGridEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PushGridRequest)
-		err = s.PushGrid(ctx, req.CityId, req.Ids, req.Blobs)
+		err = s.PushGrid(ctx, req.CityId, req.Grids)
 		var msg string
 		if err != nil {
 			msg = err.Error()
@@ -104,12 +104,12 @@ func makePushGridEndpoint(s Service) endpoint.Endpoint {
 func makePullGridEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PullGridRequest)
-		ids, blobs, err := s.PullGrid(ctx, req.CityId, req.StartId, req.FinishId)
+		grids, err := s.PullGrid(ctx, req.CityId, req.StartId, req.FinishId)
 		var msg string
 		if err != nil {
 			msg = err.Error()
 		}
-		return proto.PullGridReply{Ids: ids, Blobs: blobs, Err: msg}, nil
+		return proto.PullGridReply{Grids: grids, Err: msg}, nil
 	}
 }
 

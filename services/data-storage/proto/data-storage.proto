@@ -102,9 +102,8 @@ message PullTimelineReply {
 
 // messages for pull and push grids
 message PushGridRequest {
-    repeated int64 ids = 1;
-    repeated bytes blobs = 2;
-    string cityId = 3;
+    map<int64, bytes> grids = 1;
+    string cityId = 2;
 }
 
 message PushGridReply {
@@ -118,9 +117,8 @@ message PullGridRequest {
 }
 
 message PullGridReply {
-    repeated int64 ids = 1;
-    repeated bytes blobs = 2;
-    string err = 3;
+    map<int64, bytes> grids = 1;
+    string err = 2;
 }
 
 // messages gor pull and push events

@@ -113,8 +113,8 @@ func (svc GrpcService) PullTimeline(ctx context.Context, cityId string, start, f
 	return response.Timeline, nil
 }
 
-func (svc GrpcService) PushGrid(ctx context.Context, cityId string, ids []int64, blobs [][]byte) error {
-	resp, err := svc.pushGrid(ctx, proto.PushGridRequest{CityId: cityId, Ids: ids, Blobs: blobs})
+func (svc GrpcService) PushGrid(ctx context.Context, cityId string, grids map[int64][]byte) error {
+	resp, err := svc.pushGrid(ctx, proto.PushGridRequest{CityId: cityId, Grids: grids})
 	if err != nil {
 		return err
 	}
@@ -125,16 +125,16 @@ func (svc GrpcService) PushGrid(ctx context.Context, cityId string, ids []int64,
 	return nil
 }
 
-func (svc GrpcService) PullGrid(ctx context.Context, cityId string, startId, finishId int64) ([]int64, [][]byte, error) {
+func (svc GrpcService) PullGrid(ctx context.Context, cityId string, startId, finishId int64) (map[int64][]byte, error) {
 	resp, err := svc.pullGrid(ctx, proto.PullGridRequest{CityId: cityId, StartId: startId, FinishId: finishId})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	response := resp.(proto.PullGridReply)
 	if response.Err != "" {
-		return nil, nil, errors.New(response.Err)
+		return nil, errors.New(response.Err)
 	}
-	return response.Ids, response.Blobs, nil
+	return response.Grids, nil
 }
 
 func (svc GrpcService) PushEvents(ctx context.Context, cityId string, events []data.Event) error {

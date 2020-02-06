@@ -412,7 +412,7 @@ func (s *Storage) PullTimeline(ctx context.Context, cityId string, start, finish
 	return
 }
 
-func (s *Storage) PushGrid(ctx context.Context, cityId string, ids []int64, blobs [][]byte) (err error) {
+func (s *Storage) PushGrid(ctx context.Context, cityId string, grids map[int64][]byte) (err error) {
 	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
@@ -425,8 +425,7 @@ func (s *Storage) PushGrid(ctx context.Context, cityId string, ids []int64, blob
 	}
 	defer tx.Rollback(ctx)
 
-	for i, blob := range blobs {
-		id := ids[i]
+	for id, blob := range grids {
 		_, err = tx.Exec(ctx, InsertGrid, id, blob)
 		if err != nil {
 			if strings.Contains(err.Error(), "duplicate key") {
@@ -440,17 +439,18 @@ func (s *Storage) PushGrid(ctx context.Context, cityId string, ids []int64, blob
 	return err
 }
 
-func (s *Storage) PullGrid(ctx context.Context, cityId string, startId, finishId int64) (ids []int64, blobs [][]byte, err error) {
+func (s *Storage) PullGrid(ctx context.Context, cityId string, startId, finishId int64) (grids map[int64][]byte, err error) {
 	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
-		return nil, nil, err
+		return nil, err
 	}
+	grids = make(map[int64][]byte)
 	statement := fmt.Sprintf(SelectGrid, startId, finishId)
 	rows, err := conn.Query(ctx, statement)
 	if err != nil {
 		unilog.Logger().Error("error in pull grid", zap.Error(err))
-		return nil, nil, ErrPullGrid
+		return nil, ErrPullGrid
 	}
 	defer rows.Close()
 
@@ -460,11 +460,9 @@ func (s *Storage) PullGrid(ctx context.Context, cityId string, startId, finishId
 		err = rows.Scan(&id, &blob)
 		if err != nil {
 			unilog.Logger().Error("error in pull grid", zap.Error(err))
-			return nil, nil, ErrPullGrid
+			return nil, ErrPullGrid
 		}
-		ids = append(ids, id)
-		blobs = append(blobs, blob)
-
+		grids[id] = blob
 	}
 	return
 }
