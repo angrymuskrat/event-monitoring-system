@@ -21,7 +21,6 @@ type Storage struct {
 }
 
 var (
-	ErrUnexpectedCity  = errors.New("this city doesn't exist")
 	ErrDBTransaction   = errors.New("error with transaction")
 	ErrPushPosts       = errors.New("one or more posts wasn't pushed")
 	ErrSelectPosts     = errors.New("don't be able to return posts")
@@ -103,43 +102,55 @@ func (s *Storage) initCities(ctx context.Context) (err error) {
 		return err
 	}
 	s.cities = make(map[string]*pgx.Conn)
-
 	for _, city := range cities {
 		cityId := city.Code
-		row := s.general.QueryRow(ctx, makeSelectDB(cityId))
-		err = row.Scan(&cityId)
-		if err == pgx.ErrNoRows {
-			_, err = s.general.Exec(ctx, makeCreateDB(cityId))
-		}
+		err = s.initCity(ctx, cityId)
 		if err != nil {
-			return err
-		}
-
-		connConfig, err := pgx.ParseConfig(s.config.makeAuthToken(cityId))
-		if err != nil {
-			return nil
-		}
-		conn, err := pgx.ConnectConfig(ctx, connConfig)
-		if err != nil {
-			return nil
-		}
-		s.cities[cityId] = conn
-
-		err = s.setCityEnvironment(ctx, cityId)
-		if err != nil {
-			return err
+			return
 		}
 	}
-
-	return nil
+	return
 }
 
-func (s *Storage) getCityConn(cityId string) (*pgx.Conn, error) {
-	if conn, isExist := s.cities[cityId]; isExist {
-		return conn, nil
-	} else {
-		return nil, ErrUnexpectedCity
+func (s *Storage) initCity(ctx context.Context, cityID string) error {
+	row := s.general.QueryRow(ctx, makeSelectDB(cityID))
+	err := row.Scan(&cityID)
+	if err == pgx.ErrNoRows {
+		_, err = s.general.Exec(ctx, makeCreateDB(cityID))
 	}
+	if err != nil {
+		unilog.Logger().Error("unable to create database for the city")
+		return err
+	}
+	connConfig, err := pgx.ParseConfig(s.config.makeAuthToken(cityID))
+	if err != nil {
+		unilog.Logger().Error("unable to parse config for database connection")
+		return err
+	}
+	conn, err := pgx.ConnectConfig(ctx, connConfig)
+	if err != nil {
+		unilog.Logger().Error("unable to connect to the city database")
+		return nil
+	}
+	s.cities[cityID] = conn
+	err = s.setCityEnvironment(ctx, cityID)
+	if err != nil {
+		unilog.Logger().Error("unable to set city database environment")
+	}
+	return err
+}
+
+func (s *Storage) getCityConn(cityID string) (*pgx.Conn, error) {
+	if conn, isExist := s.cities[cityID]; isExist {
+		return conn, nil
+	}
+	if err := s.initCity(context.Background(), cityID); err != nil { //TODO: possible concurrent map write, not a deal for current use case.
+		return nil, err
+	}
+	if conn, isExist := s.cities[cityID]; isExist {
+		return conn, nil
+	}
+	return nil, errors.New("specified city does not exist in the database")
 }
 
 func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err error) {
@@ -357,7 +368,7 @@ func (s *Storage) PullTimeline(ctx context.Context, cityId string, start, finish
 		err = rows.Scan(&timestamp.PostsNumber, &timestamp.EventsNumber, &timestamp.Time)
 		if err != nil {
 			unilog.Logger().Error("error in pull timeline", zap.Error(err))
-			return  nil, err
+			return nil, err
 		}
 		timeline = append(timeline, timestamp)
 	}
@@ -483,7 +494,7 @@ func (s *Storage) PushLocations(ctx context.Context, cityId string, locations []
 	conn, err := s.getCityConn(cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
-		return  err
+		return err
 	}
 
 	tx, err := conn.Begin(ctx)
