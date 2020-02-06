@@ -1,13 +1,22 @@
 package detection
 
 import (
+	"strconv"
+	"time"
+
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"github.com/gonum/stat"
 	convtree "github.com/visheratin/conv-tree"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
-	"strconv"
-	"time"
+)
+
+const (
+	minXLength = 0.001
+	minYLength = 0.001
+	maxDepth   = 50
+	convNumber = 3
+	gridSize   = 10
 )
 
 func HistoricGrid(data []data.Post, topLeft, bottomRight data.Point, maxPoints int, tz string, gridSize float64) (convtree.ConvTree, error) {
@@ -55,7 +64,7 @@ func buildGrid(postData map[convtree.Point]float64, topLeft, bottomRight data.Po
 		Y:      bottomRight.Lat,
 		Weight: 1,
 	}
-	tree, err := convtree.NewConvTree(tl, br, 0.001, 0.001, maxPoints, 50, 3, 10, nil, points)
+	tree, err := convtree.NewConvTree(tl, br, minXLength, minYLength, maxPoints, maxDepth, convNumber, gridSize, nil, points)
 	if err != nil {
 		unilog.Logger().Error("unalble to create ConvTree", zap.Error(err))
 	}
