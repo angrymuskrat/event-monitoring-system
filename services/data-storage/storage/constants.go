@@ -41,6 +41,13 @@ const InsertCity = `
 	VALUES
 		($1, $2, ST_SetSRID( ST_Point($3, $4), 4326), ST_SetSRID( ST_Point($5, $6), 4326));
 `
+const UpsertCity = `
+	INSERT INTO cities
+		(Title, Code, TopLeft, BotRight)
+	VALUES
+		($1, $2, ST_SetSRID( ST_Point($3, $4), 4326), ST_SetSRID( ST_Point($5, $6), 4326))
+	ON CONFLICT DO UPDATE;
+`
 const SelectCities = `
 	SELECT 
 		Title,

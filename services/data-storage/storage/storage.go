@@ -236,6 +236,38 @@ func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err er
 	return nil
 }
 
+func (s *Storage) InsertCity(ctx context.Context, city data.City, updateIfExist bool) (err error) {
+	tl := city.Area.TopLeft
+	br := city.Area.BotRight
+	var statement string
+	if updateIfExist {
+		statement = UpsertCity
+	} else {
+		statement = InsertCity
+	}
+	_, err = s.general.Exec(ctx, statement, city.Title, city.Code, tl.Lat, tl.Lon, br.Lat, br.Lon)
+	if err != nil {
+		unilog.Logger().Error("error in InsertCity", zap.Error(err))
+		return
+	}
+	return nil
+}
+
+func (s *Storage) SelectCity(ctx context.Context, cityId string) (city *data.City, err error) {
+	statement := fmt.Sprintf(SelectCity, cityId)
+	row := s.general.QueryRow(ctx, statement)
+	var tl, br data.Point
+	city = &data.City{}
+
+	err = row.Scan(&city.Title, &city.Code, &tl.Lat, &tl.Lon, &br.Lat, &br.Lon)
+	if err != nil {
+		unilog.Logger().Error("error in selectCity - Scan", zap.Error(err))
+		return nil, err
+	}
+	city.Area = data.Area{TopLeft: &tl, BotRight: &br}
+	return city, nil
+}
+
 func (s *Storage) GetCities(ctx context.Context) (cities []data.City, err error) {
 	rows, err := s.general.Query(ctx, SelectCities)
 	if err != nil {
