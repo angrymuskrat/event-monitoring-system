@@ -140,11 +140,11 @@ func (s *Storage) initCity(ctx context.Context, cityID string) error {
 	return err
 }
 
-func (s *Storage) getCityConn(cityID string) (*pgx.Conn, error) {
+func (s *Storage) getCityConn(ctx context.Context, cityID string) (*pgx.Conn, error) {
 	if conn, isExist := s.cities[cityID]; isExist {
 		return conn, nil
 	}
-	if err := s.initCity(context.Background(), cityID); err != nil { //TODO: possible concurrent map write, not a deal for current use case.
+	if err := s.initCity(ctx, cityID); err != nil { //TODO: possible concurrent map write, not a deal for current use case.
 		return nil, err
 	}
 	if conn, isExist := s.cities[cityID]; isExist {
@@ -154,7 +154,7 @@ func (s *Storage) getCityConn(cityID string) (*pgx.Conn, error) {
 }
 
 func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err error) {
-	conn, err := s.getCityConn(cityId)
+	conn, err := s.getCityConn(ctx, cityId)
 
 	if err != nil {
 		return
@@ -291,7 +291,7 @@ func (s *Storage) GetCities(ctx context.Context) (cities []data.City, err error)
 }
 
 func (s *Storage) PushPosts(ctx context.Context, cityId string, posts []data.Post) (ids []int32, err error) {
-	conn, err := s.getCityConn(cityId)
+	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return nil, err
@@ -321,7 +321,7 @@ func (s *Storage) PushPosts(ctx context.Context, cityId string, posts []data.Pos
 }
 
 func (s Storage) SelectPosts(ctx context.Context, cityId string, startTime, finishTime int64) (posts []data.Post, cityArea *data.Area, err error) {
-	conn, err := s.getCityConn(cityId)
+	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return nil, nil, err
@@ -349,7 +349,7 @@ func (s Storage) SelectPosts(ctx context.Context, cityId string, startTime, fini
 }
 
 func (s Storage) SelectAggrPosts(ctx context.Context, cityId string, interval data.SpatioHourInterval) (posts []data.AggregatedPost, err error) {
-	conn, err := s.getCityConn(cityId)
+	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return nil, err
@@ -383,7 +383,7 @@ func (s Storage) SelectAggrPosts(ctx context.Context, cityId string, interval da
 }
 
 func (s *Storage) PullTimeline(ctx context.Context, cityId string, start, finish int64) (timeline []data.Timestamp, err error) {
-	conn, err := s.getCityConn(cityId)
+	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return nil, err
@@ -408,7 +408,7 @@ func (s *Storage) PullTimeline(ctx context.Context, cityId string, start, finish
 }
 
 func (s *Storage) PushGrid(ctx context.Context, cityId string, ids []int64, blobs [][]byte) (err error) {
-	conn, err := s.getCityConn(cityId)
+	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return err
@@ -436,7 +436,7 @@ func (s *Storage) PushGrid(ctx context.Context, cityId string, ids []int64, blob
 }
 
 func (s *Storage) PullGrid(ctx context.Context, cityId string, startId, finishId int64) (ids []int64, blobs [][]byte, err error) {
-	conn, err := s.getCityConn(cityId)
+	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return nil, nil, err
@@ -465,7 +465,7 @@ func (s *Storage) PullGrid(ctx context.Context, cityId string, startId, finishId
 }
 
 func (s *Storage) PushEvents(ctx context.Context, cityId string, events []data.Event) (err error) {
-	conn, err := s.getCityConn(cityId)
+	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return err
@@ -492,7 +492,7 @@ func (s *Storage) PushEvents(ctx context.Context, cityId string, events []data.E
 }
 
 func (s *Storage) PullEvents(ctx context.Context, cityId string, interval data.SpatioHourInterval) (events []data.Event, err error) {
-	conn, err := s.getCityConn(cityId)
+	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return nil, err
@@ -523,7 +523,7 @@ func (s *Storage) PullEvents(ctx context.Context, cityId string, interval data.S
 }
 
 func (s *Storage) PushLocations(ctx context.Context, cityId string, locations []data.Location) (err error) {
-	conn, err := s.getCityConn(cityId)
+	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return err
@@ -551,7 +551,7 @@ func (s *Storage) PushLocations(ctx context.Context, cityId string, locations []
 }
 
 func (s *Storage) PullLocations(ctx context.Context, cityId string) (locations []data.Location, err error) {
-	conn, err := s.getCityConn(cityId)
+	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return nil, err
