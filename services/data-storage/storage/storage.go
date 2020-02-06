@@ -261,7 +261,7 @@ func (s *Storage) SelectCity(ctx context.Context, cityId string) (city *data.Cit
 
 	err = row.Scan(&city.Title, &city.Code, &tl.Lat, &tl.Lon, &br.Lat, &br.Lon)
 	if err != nil {
-		unilog.Logger().Error("error in selectCity - Scan", zap.Error(err))
+		unilog.Logger().Error("error in selectCity", zap.Error(err))
 		return nil, err
 	}
 	city.Area = data.Area{TopLeft: &tl, BotRight: &br}
@@ -345,7 +345,12 @@ func (s Storage) SelectPosts(ctx context.Context, cityId string, startTime, fini
 		}
 		posts = append(posts, *p)
 	}
-	return
+	city, err := s.SelectCity(ctx, cityId)
+	if err != nil {
+		// unilog inn't needed due to unilog in SelectCity
+		return nil, nil, err
+	}
+	return posts, &city.Area, nil
 }
 
 func (s Storage) SelectAggrPosts(ctx context.Context, cityId string, interval data.SpatioHourInterval) (posts []data.AggregatedPost, err error) {
