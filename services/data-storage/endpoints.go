@@ -137,6 +137,18 @@ func makePullEventsEndpoint(s Service) endpoint.Endpoint {
 	}
 }
 
+func makePullEventsTagsEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(proto.PullEventsTagsRequest)
+		events, err := s.PullEventsTags(ctx, req.CityId, req.Tags, req.StartTime, req.FinishTime)
+		var msg string
+		if err != nil {
+			msg = err.Error()
+		}
+		return proto.PullEventsTagsReply{Events: events, Err: msg}, nil
+	}
+}
+
 func makePushLocationsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PushLocationsRequest)

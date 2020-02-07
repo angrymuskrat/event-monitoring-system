@@ -18,6 +18,7 @@ type grpcServer struct {
 	pullGrid        grpctransport.Handler
 	pushEvents      grpctransport.Handler
 	pullEvents      grpctransport.Handler
+	pullEventsTags  grpctransport.Handler
 	pushLocations   grpctransport.Handler
 	pullLocations   grpctransport.Handler
 }
@@ -78,6 +79,11 @@ func NewGRPCServer(svc Service) proto.DataStorageServer {
 			makePullEventsEndpoint(svc),
 			decodeGRPCPullEventsRequest,
 			encodeGRPCPullEventsResponse,
+		),
+		pullEventsTags: grpctransport.NewServer(
+			makePullEventsTagsEndpoint(svc),
+			decodeGRPCPullEventsTagsRequest,
+			encodeGRPCPullEventsTagsResponse,
 		),
 		pushLocations: grpctransport.NewServer(
 			makePushLocationsEndpoint(svc),
@@ -183,6 +189,14 @@ func (s *grpcServer) PullEvents(ctx context.Context, req *proto.PullEventsReques
 		return nil, err
 	}
 	return rep.(*proto.PullEventsReply), nil
+}
+
+func (s *grpcServer) PullEventsTags(ctx context.Context, req *proto.PullEventsTagsRequest) (*proto.PullEventsTagsReply, error) {
+	_, rep, err := s.pullEventsTags.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*proto.PullEventsTagsReply), nil
 }
 
 func (s *grpcServer) PushLocations(ctx context.Context, req *proto.PushLocationsRequest) (*proto.PushLocationsReply, error) {

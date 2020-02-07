@@ -226,6 +226,26 @@ func decodeGRPCPullEventsResponse(_ context.Context, grpcReply interface{}) (int
 	return *reply, nil
 }
 
+func encodeGRPCPullEventsTagsRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(proto.PullEventsTagsRequest)
+	return &req, nil
+}
+
+func decodeGRPCPullEventsTagsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PullEventsTagsRequest)
+	return *req, nil
+}
+
+func encodeGRPCPullEventsTagsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.PullEventsTagsReply)
+	return &resp, nil
+}
+
+func decodeGRPCPullEventsTagsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PullEventsTagsReply)
+	return *reply, nil
+}
+
 func encodeGRPCPushLocationsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PushLocationsRequest)
 	return &req, nil
