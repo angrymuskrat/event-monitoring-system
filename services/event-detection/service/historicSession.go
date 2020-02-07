@@ -28,8 +28,8 @@ type historicSession struct {
 	mut         sync.Mutex
 }
 
-func newHistoricSession(config Config, histReq proto.HistoricRequest, id string) historicSession {
-	return historicSession{
+func newHistoricSession(config Config, histReq proto.HistoricRequest, id string) *historicSession {
+	return &historicSession{
 		id:          id,
 		status:      RunningStatus,
 		cfg:         config,
@@ -41,7 +41,7 @@ func newHistoricSession(config Config, histReq proto.HistoricRequest, id string)
 	}
 }
 
-func (hs historicSession) generateGrids() {
+func (hs *historicSession) generateGrids() {
 	conn, err := grpc.Dial(hs.cfg.DataStorageAddress)
 	if err != nil {
 		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))
@@ -86,7 +86,7 @@ func (hs historicSession) generateGrids() {
 	hs.status = FinishedStatus
 }
 
-func (hs historicSession) readWorker(wg *sync.WaitGroup, area data.Area) {
+func (hs *historicSession) readWorker(wg *sync.WaitGroup, area data.Area) {
 	defer wg.Done()
 	for post := range hs.postsChan {
 		if post.Lat <= area.TopLeft.Lat && post.Lat >= area.BotRight.Lat && post.Lon >= area.TopLeft.Lon && post.Lon <= area.BotRight.Lon {
@@ -119,7 +119,7 @@ func getGridNum(month time.Month, day time.Weekday, hour int) int64 {
 	return gridNum
 }
 
-func (hs historicSession) gridWorker(wg *sync.WaitGroup, area data.Area) {
+func (hs *historicSession) gridWorker(wg *sync.WaitGroup, area data.Area) {
 	defer wg.Done()
 
 	for id := range hs.gridChan {

@@ -32,15 +32,16 @@ func ServerStart(cfg Config) {
 
 type grpcServer struct {
 	cfg           Config
-	histSesssions []historicSession
+	histSesssions []*historicSession
+	eventSessions []*eventSession
 	mut           sync.Mutex
 }
 
-func newGRPCServer(cfg Config) grpcServer {
-	return grpcServer{cfg: cfg}
+func newGRPCServer(cfg Config) *grpcServer {
+	return &grpcServer{cfg: cfg}
 }
 
-func (gs grpcServer) HistoricGrids(ctx context.Context, histReq *proto.HistoricRequest) (*proto.HistoricResponse, error) {
+func (gs *grpcServer) HistoricGrids(ctx context.Context, histReq *proto.HistoricRequest) (*proto.HistoricResponse, error) {
 	id := uuid.New().String()
 	session := newHistoricSession(gs.cfg, *histReq, id)
 	gs.mut.Lock()
@@ -50,14 +51,20 @@ func (gs grpcServer) HistoricGrids(ctx context.Context, histReq *proto.HistoricR
 	return &proto.HistoricResponse{Id: id, Err: ""}, nil
 }
 
-func (gs grpcServer) HistoricStatus(context.Context, *proto.StatusRequest) (*proto.StatusResponse, error) {
+func (gs *grpcServer) HistoricStatus(context.Context, *proto.StatusRequest) (*proto.StatusResponse, error) {
 	return nil, nil
 }
 
-func (gs grpcServer) FindEvents(context.Context, *proto.EventRequest) (*proto.EventResponse, error) {
-	return nil, nil
+func (gs *grpcServer) FindEvents(ctx context.Context, eventReq *proto.EventRequest) (*proto.EventResponse, error) {
+	id := uuid.New().String()
+	session := newEventSession(gs.cfg, *eventReq, id)
+	gs.mut.Lock()
+	gs.eventSessions = append(gs.eventSessions, session)
+	gs.mut.Unlock()
+	go session.detectEvents()
+	return &proto.EventResponse{Id: id, Err: ""}, nil
 }
 
-func (gs grpcServer) EventsStatus(context.Context, *proto.StatusRequest) (*proto.StatusResponse, error) {
+func (gs *grpcServer) EventsStatus(context.Context, *proto.StatusRequest) (*proto.StatusResponse, error) {
 	return nil, nil
 }
