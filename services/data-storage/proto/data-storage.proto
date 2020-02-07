@@ -22,6 +22,7 @@ service DataStorage {
 
     rpc PushEvents (PushEventsRequest) returns (PushEventsReply) {}
     rpc PullEvents (PullEventsRequest) returns (PullEventsReply) {}
+    rpc PullEventsTags (PullEventsTagsRequest) returns (PullEventsTagsReply) {}
 
     rpc PushLocations (PushLocationsRequest) returns (PushLocationsReply) {}
     rpc PullLocations (PullLocationsRequest) returns (PullLocationsReply) {}
@@ -137,6 +138,18 @@ message PullEventsRequest {
 }
 
 message PullEventsReply {
+    repeated data.Event events = 1 [(gogoproto.nullable) = false];
+    string err = 2;
+}
+
+message PullEventsTagsRequest {
+    string cityId = 1;
+    repeated string tags = 2;
+    int64 startTime = 3;
+    int64 finishTime = 4;
+}
+
+message PullEventsTagsReply {
     repeated data.Event events = 1 [(gogoproto.nullable) = false];
     string err = 2;
 }

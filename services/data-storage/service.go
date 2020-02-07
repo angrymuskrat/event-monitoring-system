@@ -47,6 +47,8 @@ type Service interface {
 
 	PullEvents(ctx context.Context, cityId string, interval data.SpatioHourInterval) ([]data.Event, error)
 
+	PullEventsTags(ctx context.Context, cityId string, tags []string, startTime, finishTime int64) ([]data.Event, error)
+
 	PushLocations(ctx context.Context, cityId string, locations []data.Location) error
 
 	PullLocations(ctx context.Context, cityId string) ([]data.Location, error)
@@ -98,6 +100,10 @@ func (s basicService) PushEvents(ctx context.Context, cityId string, events []da
 
 func (s basicService) PullEvents(ctx context.Context, cityId string, interval data.SpatioHourInterval) ([]data.Event, error) {
 	return s.db.PullEvents(ctx, cityId, interval)
+}
+
+func (s basicService) PullEventsTags(ctx context.Context, cityId string, tags []string, startTime, finishTime int64) ([]data.Event, error) {
+	return s.db.PullEventsTags(ctx, cityId, tags, startTime, finishTime)
 }
 
 func (s basicService) PushLocations(ctx context.Context, cityId string, locations []data.Location) error {

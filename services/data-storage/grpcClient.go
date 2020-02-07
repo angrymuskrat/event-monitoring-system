@@ -25,6 +25,7 @@ type GrpcService struct {
 	pullGrid        endpoint.Endpoint
 	pushEvents      endpoint.Endpoint
 	pullEvents      endpoint.Endpoint
+	pullEventsTags  endpoint.Endpoint
 	pushLocations   endpoint.Endpoint
 	pullLocations   endpoint.Endpoint
 }
@@ -155,6 +156,18 @@ func (svc GrpcService) PullEvents(ctx context.Context, cityId string, interval d
 		return nil, err
 	}
 	response := resp.(proto.PullEventsReply)
+	if response.Err != "" {
+		return nil, errors.New(response.Err)
+	}
+	return response.Events, nil
+}
+
+func (svc GrpcService) PullEventsTags(ctx context.Context, cityId string, tags []string, startTime, finishTime int64) ([]data.Event, error) {
+	resp, err := svc.pullEventsTags(ctx, proto.PullEventsTagsRequest{CityId: cityId, Tags: tags, StartTime: startTime, FinishTime: finishTime})
+	if err != nil {
+		return nil, err
+	}
+	response := resp.(proto.PullEventsTagsReply)
 	if response.Err != "" {
 		return nil, errors.New(response.Err)
 	}
@@ -307,6 +320,17 @@ func NewGRPCClient(conn *grpc.ClientConn) GrpcService {
 		Name:    "PullEvents",
 		Timeout: TimeWaitingClient,
 	}))(pullEventsEndpoint)
+
+	pullEventsTagsEndpoint := grpctransport.NewClient(
+		conn, "proto.DataStorage", "PullEventsTags",
+		encodeGRPCPullEventsTagsRequest,
+		decodeGRPCPullEventsTagsResponse,
+		proto.PullEventsTagsReply{},
+	).Endpoint()
+	svc.pullEventsTags = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+		Name:    "PullEventsTags",
+		Timeout: TimeWaitingClient,
+	}))(pullEventsTagsEndpoint)
 
 	pushLocationsEndpoint := grpctransport.NewClient(
 		conn, "proto.DataStorage", "PushLocations",

@@ -26,7 +26,7 @@ func main() {
 	//test("pullLocations", svc)
 }
 
-var AllMethods = []string{"insertCity", "getAllCities", "getCity", "pushPosts", "selectPosts", "selectAggrPosts", "pullTimeline", "pushEvents", "pullEvents", "pushGrid", "pullGrid", "pushLocations", "pullLocations"}
+var AllMethods = []string{"insertCity", "getAllCities", "getCity", "pushPosts", "selectPosts", "selectAggrPosts", "pullTimeline", "pushEvents", "pullEvents", "pullEventsTags", "pushGrid", "pullGrid", "pushLocations", "pullLocations"}
 
 func testAll(svc storagesvc.Service) {
 	for _, method := range AllMethods {
@@ -143,6 +143,14 @@ func test(method string, svc storagesvc.Service) {
 	case "pullEvents":
 		area := data.Area{TopLeft: &data.Point{Lat: 1, Lon: 1}, BotRight: &data.Point{Lat: 100, Lon: 100}}
 		res, err := svc.PullEvents(context.Background(), "nyc", data.SpatioHourInterval{Hour: 9000, Area: area})
+		if err != nil {
+			fmt.Printf("\n%v: error: %v", method, err)
+			return
+		}
+		fmt.Printf("\n%v: It is all right, len(res):%v", method, len(res))
+	case "pullEventsTags":
+		tags := []string{"tag1", "tag2"}
+		res, err := svc.PullEventsTags(context.Background(), "nyc", tags, 0, 100000)
 		if err != nil {
 			fmt.Printf("\n%v: error: %v", method, err)
 			return

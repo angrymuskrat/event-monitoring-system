@@ -525,6 +525,10 @@ func (s *Storage) PullEvents(ctx context.Context, cityId string, interval data.S
 	return
 }
 
+func (s *Storage) PullEventsTags(ctx context.Context, cityId string, tags []string, startTime, finishTime int64) (events []data.Event, err error) {
+	return nil, nil
+}
+
 func (s *Storage) PushLocations(ctx context.Context, cityId string, locations []data.Location) (err error) {
 	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
