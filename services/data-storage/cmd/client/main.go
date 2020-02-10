@@ -5,9 +5,11 @@ import (
 	"fmt"
 	storagesvc "github.com/angrymuskrat/event-monitoring-system/services/data-storage"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
+	"github.com/angrymuskrat/event-monitoring-system/utils/rand"
 	"gocloud.dev/blob/fileblob"
 	"google.golang.org/grpc"
 	"os"
+	"time"
 )
 
 func main() {
@@ -35,6 +37,11 @@ func testAll(svc storagesvc.Service) {
 }
 
 func test(method string, svc storagesvc.Service) {
+	gen := rand.New()
+	NY := data.Point{Lat: 40.7, Lon: -74}
+	now := int64(time.Now().Second())
+	genConf := rand.GenConfig{ Center: NY, DeltaPoint: data.Point{ Lat: 0.1, Lon: 0.02 }, StartTime: now - 24 * 3600, FinishTime: now}
+
 	switch method {
 	case "insertCity":
 		tl := data.Point{Lat: 60.154306, Lon: 29.606505}
@@ -64,8 +71,8 @@ func test(method string, svc storagesvc.Service) {
 		fmt.Printf("\n%v: It is all right, code: %v, title: %v", method, res.Code, res.Title)
 
 	case "pushPosts":
-		testPosts := GeneratePosts(1000)
-		res, err := svc.PushPosts(context.Background(), "spb", testPosts)
+		testPosts := gen.Posts(1000, genConf)
+		res, err := svc.PushPosts(context.Background(), "nyc", testPosts)
 		if err != nil {
 			fmt.Printf("\n%v: error: %v", method, err)
 			return
@@ -73,7 +80,7 @@ func test(method string, svc storagesvc.Service) {
 		fmt.Printf("\n%v: It is all right, len(res):%v", method, len(res))
 
 	case "selectPosts":
-		res, _, err := svc.SelectPosts(context.Background(), "spb", 0, 100000000)
+		res, _, err := svc.SelectPosts(context.Background(), "nyc", 0, 100000000)
 		if err != nil {
 			fmt.Printf("\n%v: error: %v", method, err)
 			return
@@ -110,7 +117,7 @@ func test(method string, svc storagesvc.Service) {
 			fmt.Printf("\n%v: error: %v", method, err)
 			return
 		}
-		id := RandInt64(1000)
+		id := gen.Uint64(0, 12124)
 		grids := map[int64][]byte{}
 		grids[id] = b
 		err = svc.PushGrid(context.Background(), "nyc", grids)

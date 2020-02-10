@@ -85,7 +85,7 @@ type Service interface {
 	// input: context, id of the city, array of tags, start hour and finish hour UTC-time in seconds, both are beginning of needed hours
 	// output: events and error
 	// result: if request was successfully finished, will return events,
-	//		which have tags from request and time between startTime and finishTime and nil error, otherwise, empty array and some error
+	//		which include all input tags and have time between startTime and finishTime, and nil error, otherwise, empty array and some error
 	PullEventsTags(ctx context.Context, cityId string, tags []string, startTime, finishTime int64) ([]data.Event, error)
 
 	// input: context, id of the city, array of locations - Instagram's locations for this city
