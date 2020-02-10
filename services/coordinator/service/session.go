@@ -2,10 +2,13 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/angrymuskrat/event-monitoring-system/services/coordinator/service/status"
+	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/proto"
+	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/service"
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler"
 	crawlerdata "github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
 	crservice "github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/service"
@@ -13,6 +16,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"net/http"
 	"time"
 )
@@ -21,34 +25,50 @@ type Session struct {
 	ID        string
 	Params    SessionParameters
 	Status    status.Status
-	Endpoints SessionEndpoints
+	Endpoints ServiceEndpoints
+	edClient  service.Client
 }
 
 type SessionParameters struct {
-	CityID          string
-	CityName        string
-	TopLeft         data.Point
-	BottomRight     data.Point
-	Locations       []string
-	FinishTimestamp int64
+	CityID         string
+	CityName       string
+	Timezone       string
+	TopLeft        data.Point
+	BottomRight    data.Point
+	Locations      []string
+	CrawlerFinish  int64
+	HistoricStart  int64
+	HistoricFinish int64
+	GridSize       float64
 }
 
-type SessionEndpoints struct {
-	Crawler string
-}
-
-func NewSession(p SessionParameters, e SessionEndpoints) Session {
+func NewSession(p SessionParameters, e ServiceEndpoints) (Session, error) {
 	id := uuid.New().String()
+	conn, err := grpc.Dial(e.EventDetection)
+	if err != nil {
+		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))
+		return Session{}, err
+	}
+	client := service.NewClient(conn)
 	return Session{
 		ID:        id,
 		Params:    p,
 		Endpoints: e,
 		Status:    status.HistoricBuilding{},
-	}
+		edClient:  client,
+	}, nil
 }
 
 func (s *Session) Run() {
-
+	err := s.historicCollect()
+	if err != nil {
+		return
+	}
+	err = s.historicBuild()
+	if err != nil {
+		return
+	}
+	s.monitoring()
 }
 
 func (s *Session) historicCollect() error {
@@ -83,7 +103,7 @@ func (s *Session) startCollect() error {
 		CityID:          s.Params.CityID,
 		Type:            crawlerdata.LocationsType,
 		Entities:        s.Params.Locations,
-		FinishTimestamp: s.Params.FinishTimestamp,
+		FinishTimestamp: s.Params.CrawlerFinish,
 	}
 	d, err := json.Marshal(p)
 	if err != nil {
@@ -198,9 +218,139 @@ func (s *Session) deleteCollect() error {
 }
 
 func (s *Session) historicBuild() error {
+	err := s.historicStart()
+	if err != nil {
+		s.Status = status.Failed{Error: err}
+		return err
+	}
+	finished := false
+	for !finished {
+		finished, err = s.historicStatus()
+		if err != nil {
+			s.Status = status.Failed{Error: err}
+			return err
+		}
+		time.Sleep(1 * time.Minute)
+	}
+	return nil
+}
 
+func (s *Session) historicStart() error {
+	req := proto.HistoricRequest{
+		Timezone:   s.Params.Timezone,
+		CityId:     s.Params.CityID,
+		StartTime:  s.Params.HistoricStart,
+		FinishDate: s.Params.HistoricFinish,
+		GridSize:   s.Params.GridSize,
+	}
+	respRaw, err := s.edClient.HistoricGrids(context.Background(), req)
+	if err != nil {
+		unilog.Logger().Error("error during historic building initiation", zap.Error(err))
+		return err
+	}
+	resp := respRaw.(proto.HistoricResponse)
+	if resp.Err != "" {
+		err := errors.New(resp.Err)
+		unilog.Logger().Error("server error", zap.Error(err))
+		return err
+	}
+	s.Status = status.HistoricBuilding{
+		SessionID: resp.Id,
+	}
+	return nil
+}
+
+func (s *Session) historicStatus() (bool, error) {
+	st := s.Status.Get().(status.HistoricBuilding)
+	req := proto.StatusRequest{
+		Id: st.SessionID,
+	}
+	respRaw, err := s.edClient.HistoricStatus(context.Background(), req)
+	if err != nil {
+		unilog.Logger().Error("error during historic status checking", zap.Error(err))
+		return false, err
+	}
+	resp := respRaw.(proto.StatusResponse)
+	if resp.Err != "" {
+		err := errors.New(resp.Err)
+		unilog.Logger().Error("server error", zap.Error(err))
+		return false, err
+	}
+	s.Status = status.HistoricBuilding{
+		SessionID: st.SessionID,
+		Status:    resp.Status,
+	}
+	return resp.Finished, nil
 }
 
 func (s *Session) monitoring() error {
+	start, finish := s.Params.HistoricFinish, time.Now().Unix()
+	var err error
+	for {
+		err = s.eventsStart(start, finish)
+		if err != nil {
+			s.Status = status.Failed{Error: err}
+			return err
+		}
+		finished := false
+		for !finished {
+			finished, err = s.eventsStatus()
+			if err != nil {
+				s.Status = status.Failed{Error: err}
+				return err
+			}
+			time.Sleep(20 * time.Second)
+		}
+		time.Sleep(5 * time.Minute)
+		st := s.Status.Get().(status.Monitoring)
+		start, finish = st.CurrentTimestamp, time.Now().Unix()
+	}
+}
 
+func (s *Session) eventsStart(start, finish int64) error {
+	req := proto.EventRequest{
+		Timezone:   s.Params.Timezone,
+		CityId:     s.Params.CityID,
+		StartTime:  start,
+		FinishDate: finish,
+	}
+	respRaw, err := s.edClient.FindEvents(context.Background(), req)
+	if err != nil {
+		unilog.Logger().Error("error during events search initiation", zap.Error(err))
+		return err
+	}
+	resp := respRaw.(proto.EventResponse)
+	if resp.Err != "" {
+		err := errors.New(resp.Err)
+		unilog.Logger().Error("server error", zap.Error(err))
+		return err
+	}
+	s.Status = status.Monitoring{
+		SessionID:        resp.Id,
+		CurrentTimestamp: finish,
+	}
+	return nil
+}
+
+func (s *Session) eventsStatus() (bool, error) {
+	st := s.Status.Get().(status.Monitoring)
+	req := proto.StatusRequest{
+		Id: st.SessionID,
+	}
+	respRaw, err := s.edClient.EventsStatus(context.Background(), req)
+	if err != nil {
+		unilog.Logger().Error("error during events status checking", zap.Error(err))
+		return false, err
+	}
+	resp := respRaw.(proto.StatusResponse)
+	if resp.Err != "" {
+		err := errors.New(resp.Err)
+		unilog.Logger().Error("server error", zap.Error(err))
+		return false, err
+	}
+	s.Status = status.Monitoring{
+		SessionID: st.SessionID,
+		Status:    resp.Status,
+	}
+	return resp.Finished, nil
 }

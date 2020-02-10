@@ -1,7 +1,9 @@
 package status
 
 type Monitoring struct {
-	CurrentTimestamp string
+	SessionID        string
+	CurrentTimestamp int64
+	Status           string
 }
 
 func (s Monitoring) Get() Status {

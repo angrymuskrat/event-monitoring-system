@@ -1,7 +1,8 @@
 package status
 
 type HistoricBuilding struct {
-	GridsBuilt int
+	SessionID string
+	Status    string
 }
 
 func (s HistoricBuilding) Get() Status {
