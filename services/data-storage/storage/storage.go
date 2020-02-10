@@ -65,10 +65,10 @@ func (s *Storage) initGeneral(ctx context.Context) (err error) {
 	}
 
 	var name string
-	row := conn.QueryRow(ctx, makeSelectDB(GeneralDBName))
+	row := conn.QueryRow(ctx, MakeSelectDB(GeneralDBName))
 	err = row.Scan(&name)
 	if err == pgx.ErrNoRows {
-		_, err = conn.Exec(ctx, makeCreateDB(GeneralDBName))
+		_, err = conn.Exec(ctx, MakeCreateDB(GeneralDBName))
 	}
 	if err != nil {
 		return err
@@ -113,10 +113,10 @@ func (s *Storage) initCities(ctx context.Context) (err error) {
 }
 
 func (s *Storage) initCity(ctx context.Context, cityID string) error {
-	row := s.general.QueryRow(ctx, makeSelectDB(cityID))
+	row := s.general.QueryRow(ctx, MakeSelectDB(cityID))
 	err := row.Scan(&cityID)
 	if err == pgx.ErrNoRows {
-		_, err = s.general.Exec(ctx, makeCreateDB(cityID))
+		_, err = s.general.Exec(ctx, MakeCreateDB(cityID))
 	}
 	if err != nil {
 		unilog.Logger().Error("unable to create database for the city")
@@ -193,7 +193,7 @@ func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err er
 
 	createAggrPostsView := fmt.Sprintf(CreateAggrPostsView, s.config.GRIDSize, s.config.GRIDSize) // set grid size
 	_, err = conn.Exec(ctx, createAggrPostsView)
-	if err != nil && isNotAlreadyExistsError(err) {
+	if err != nil && IsNotAlreadyExistsError(err) {
 		return
 	}
 
@@ -213,12 +213,12 @@ func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err er
 	}
 
 	_, err = conn.Exec(ctx, CreatePostsTimelineView)
-	if err != nil && isNotAlreadyExistsError(err) {
+	if err != nil && IsNotAlreadyExistsError(err) {
 		return
 	}
 
 	_, err = conn.Exec(ctx, CreateEventsTimelineView)
-	if err != nil && isNotAlreadyExistsError(err) {
+	if err != nil && IsNotAlreadyExistsError(err) {
 		return
 	}
 
@@ -360,7 +360,7 @@ func (s Storage) SelectAggrPosts(ctx context.Context, cityId string, interval da
 		return nil, err
 	}
 
-	poly := makePoly(interval.Area)
+	poly := MakePoly(interval.Area)
 	statement := fmt.Sprintf(SelectAggrPosts, interval.Hour, poly)
 
 	rows, err := conn.Query(ctx, statement)
@@ -501,7 +501,7 @@ func (s *Storage) PullEvents(ctx context.Context, cityId string, interval data.S
 		return nil, err
 	}
 
-	poly := makePoly(interval.Area)
+	poly := MakePoly(interval.Area)
 	statement := fmt.Sprintf(SelectEvents, poly, interval.Hour, interval.Hour+Hour)
 	rows, err := conn.Query(ctx, statement)
 

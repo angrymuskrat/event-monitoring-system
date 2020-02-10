@@ -244,7 +244,7 @@ const SelectGrid = `
 
 
 
-func makePoly(area data.Area) string {
+func MakePoly(area data.Area) string {
 	return fmt.Sprintf("ST_Polygon('LINESTRING(%v %v, %v %v, %v %v, %v %v, %v %v)'::geometry, 4326)",
 		area.TopLeft.Lat, area.TopLeft.Lon,
 		area.TopLeft.Lat, area.BotRight.Lon,
@@ -253,14 +253,14 @@ func makePoly(area data.Area) string {
 		area.TopLeft.Lat, area.TopLeft.Lon)
 }
 
-func makeCreateDB(name string) string {
+func MakeCreateDB(name string) string {
 	return fmt.Sprintf(CreateDB, name)
 }
 
-func makeSelectDB(name string) string {
+func MakeSelectDB(name string) string {
 	return fmt.Sprintf(SelectDB, name)
 }
 
-func isNotAlreadyExistsError(err error) bool {
+func IsNotAlreadyExistsError(err error) bool {
 	return !strings.Contains(err.Error(), "already exists")
 }
