@@ -24,7 +24,7 @@ func main() {
 	}
 	unilog.InitLog(logCfg)
 
-	dbConnector, err := storage.NewStorage(context.Background(), *connectorConfig)
+	dbConnector, err := storage.New(context.Background(), *connectorConfig)
 	if err != nil {
 		fmt.Print(err)
 		return

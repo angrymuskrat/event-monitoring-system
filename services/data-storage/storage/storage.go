@@ -32,7 +32,7 @@ var (
 	ErrSelectLocations = errors.New("don't be able to return locations")
 )
 
-func NewStorage(ctx context.Context, confPath string) (*Storage, error) {
+func New(ctx context.Context, confPath string) (*Storage, error) {
 	conf, err := readConfig(confPath)
 	if err != nil {
 		return nil, err
