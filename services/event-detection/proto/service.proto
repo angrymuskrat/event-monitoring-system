@@ -3,10 +3,14 @@ syntax = "proto3";
 package proto;
 
 service EventDetection {
-    rpc HistoricGrids (HistoricRequest) returns (HistoricResponse) { }
-    rpc HistoricStatus (StatusRequest) returns (StatusResponse) { }
-    rpc FindEvents (EventRequest) returns (EventResponse) { }
-    rpc EventsStatus (StatusRequest) returns (StatusResponse) { }
+    rpc HistoricGrids (HistoricRequest) returns (HistoricResponse) {
+    }
+    rpc HistoricStatus (StatusRequest) returns (StatusResponse) {
+    }
+    rpc FindEvents (EventRequest) returns (EventResponse) {
+    }
+    rpc EventsStatus (StatusRequest) returns (StatusResponse) {
+    }
 }
 
 // HistoricRequest represents a request for generating historic grids for event detection.
@@ -42,5 +46,6 @@ message StatusRequest {
 
 message StatusResponse {
     string status = 1;
-    string err = 2;
+    bool finished = 2;
+    string err = 3;
 }

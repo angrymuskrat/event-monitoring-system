@@ -2,69 +2,80 @@ package service
 
 import (
 	"context"
-	"net"
-	"sync"
-
 	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/proto"
-	"github.com/google/uuid"
-	"github.com/visheratin/unilog"
-	"go.uber.org/zap"
-	"google.golang.org/grpc"
+	grpctransport "github.com/go-kit/kit/transport/grpc"
+	"time"
 )
 
-const MaxMsgSize = 1000000000 //maximum grpc message size in bytes
+const (
+	TimeWaitingClient = 30 * time.Second // in seconds
+	MaxMsgSize        = 1000000000       // in bytes
+)
 
-func ServerStart(cfg Config) {
-	listener, err := net.Listen("tcp", cfg.Address)
-	if err != nil {
-		unilog.Logger().Error("unable to create tcp listener", zap.Error(err))
-		panic(err)
+type server struct {
+	historicGrids  grpctransport.Handler
+	historicStatus grpctransport.Handler
+	findEvents     grpctransport.Handler
+	eventsStatus   grpctransport.Handler
+}
+
+func Server(svc Service) proto.EventDetectionServer {
+	return &server{
+		historicGrids: grpctransport.NewServer(
+			makeHistoricGridsEndpoint(svc),
+			decodeGRPCHistoricGridsRequest,
+			encodeGRPCHistoricGridsResponse,
+		),
+		findEvents: grpctransport.NewServer(
+			makeFindEventsEndpoint(svc),
+			decodeGRPCFindEventsRequest,
+			encodeGRPCFindEventsResponse,
+		),
+		historicStatus: grpctransport.NewServer(
+			makeHistoricStatusEndpoint(svc),
+			decodeGRPCStatusRequest,
+			encodeGRPCStatusResponse,
+		),
+		eventsStatus: grpctransport.NewServer(
+			makeEventsStatusEndpoint(svc),
+			decodeGRPCStatusRequest,
+			encodeGRPCStatusResponse,
+		),
 	}
-	srv := grpc.NewServer(grpc.MaxRecvMsgSize(MaxMsgSize))
-	gsrv := newGRPCServer(cfg)
-	proto.RegisterEventDetectionServer(srv, gsrv)
-	err = srv.Serve(listener)
+}
+
+func (gs *server) HistoricGrids(ctx context.Context, histReq *proto.HistoricRequest) (*proto.HistoricResponse, error) {
+	_, rep, err := gs.historicGrids.ServeGRPC(ctx, histReq)
 	if err != nil {
-		unilog.Logger().Error("error in server execution", zap.Error(err))
-		panic(err)
+		return nil, err
 	}
+	tmp := rep.(proto.HistoricResponse)
+	return &tmp, nil
 }
 
-type grpcServer struct {
-	cfg           Config
-	histSesssions []*historicSession
-	eventSessions []*eventSession
-	mut           sync.Mutex
+func (gs *server) HistoricStatus(ctx context.Context, req *proto.StatusRequest) (*proto.StatusResponse, error) {
+	_, rep, err := gs.historicStatus.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	tmp := rep.(proto.StatusResponse)
+	return &tmp, nil
 }
 
-func newGRPCServer(cfg Config) *grpcServer {
-	return &grpcServer{cfg: cfg}
+func (gs *server) FindEvents(ctx context.Context, eventReq *proto.EventRequest) (*proto.EventResponse, error) {
+	_, rep, err := gs.findEvents.ServeGRPC(ctx, eventReq)
+	if err != nil {
+		return nil, err
+	}
+	tmp := rep.(proto.EventResponse)
+	return &tmp, nil
 }
 
-func (gs *grpcServer) HistoricGrids(ctx context.Context, histReq *proto.HistoricRequest) (*proto.HistoricResponse, error) {
-	id := uuid.New().String()
-	session := newHistoricSession(gs.cfg, *histReq, id)
-	gs.mut.Lock()
-	gs.histSesssions = append(gs.histSesssions, session)
-	gs.mut.Unlock()
-	go session.generateGrids()
-	return &proto.HistoricResponse{Id: id, Err: ""}, nil
-}
-
-func (gs *grpcServer) HistoricStatus(context.Context, *proto.StatusRequest) (*proto.StatusResponse, error) {
-	return nil, nil
-}
-
-func (gs *grpcServer) FindEvents(ctx context.Context, eventReq *proto.EventRequest) (*proto.EventResponse, error) {
-	id := uuid.New().String()
-	session := newEventSession(gs.cfg, *eventReq, id)
-	gs.mut.Lock()
-	gs.eventSessions = append(gs.eventSessions, session)
-	gs.mut.Unlock()
-	go session.detectEvents()
-	return &proto.EventResponse{Id: id, Err: ""}, nil
-}
-
-func (gs *grpcServer) EventsStatus(context.Context, *proto.StatusRequest) (*proto.StatusResponse, error) {
-	return nil, nil
+func (gs *server) EventsStatus(ctx context.Context, req *proto.StatusRequest) (*proto.StatusResponse, error) {
+	_, rep, err := gs.eventsStatus.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	tmp := rep.(proto.StatusResponse)
+	return &tmp, nil
 }
