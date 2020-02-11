@@ -1,10 +1,10 @@
 package rand
 
 import (
-"math/rand"
-"time"
+	"math/rand"
+	"time"
 
-data "github.com/angrymuskrat/event-monitoring-system/services/proto"
+	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 )
 const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -90,7 +90,7 @@ func (r *Rand) Event(conf GenConfig) *data.Event {
 	lenCodes := int(r.Uint64(1, 8))
 	codes := make([]string, lenCodes)
 	for i := 0; i < lenCodes; i++ {
-		tags[i] = r.String(2, 20)
+		codes[i] = r.String(2, 20)
 	}
 
 	startTime := r.Uint64(conf.StartTime, conf.FinishTime)
