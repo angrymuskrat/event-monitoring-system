@@ -90,7 +90,7 @@ func (r *Rand) Event(conf GenConfig) *data.Event {
 	lenCodes := int(r.Uint64(1, 8))
 	codes := make([]string, lenCodes)
 	for i := 0; i < lenCodes; i++ {
-		codes[i] = r.String(2, 20)
+		codes[i] = r.FixString(10)
 	}
 
 	startTime := r.Uint64(conf.StartTime, conf.FinishTime)
