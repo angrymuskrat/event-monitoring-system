@@ -31,7 +31,7 @@ func (svc *eventService) HistoricGrids(ctx context.Context, histReq proto.Histor
 
 func (svc *eventService) HistoricStatus(ctx context.Context, req proto.StatusRequest) (string, bool, error) {
 	finished := false
-	if svc.histSesssions[req.Id].status != FinishedStatus {
+	if svc.histSesssions[req.Id].status == FinishedStatus {
 		finished = true
 	}
 	return svc.histSesssions[req.Id].status.String(), finished, nil
