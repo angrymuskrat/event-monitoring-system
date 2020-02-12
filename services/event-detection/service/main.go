@@ -3,6 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"net"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/proto"
 	kitgrpc "github.com/go-kit/kit/transport/grpc"
 	"github.com/oklog/oklog/pkg/group"
@@ -10,10 +15,6 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
-	"net"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
 func Start(ctx context.Context, confPath string) {
@@ -23,7 +24,7 @@ func Start(ctx context.Context, confPath string) {
 	}
 	//logger := setupLog(conf.LogPath)
 	var svc Service
-	svc = &eventService{}
+	svc = newEventService()
 	// TODO: implement logging middleware
 	//svc = &loggingMiddleware{logger, svc}
 	grpcServer := Server(svc)
