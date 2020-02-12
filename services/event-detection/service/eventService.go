@@ -29,8 +29,12 @@ func (svc *eventService) HistoricGrids(ctx context.Context, histReq proto.Histor
 	return id, nil
 }
 
-func (svc *eventService) HistoricStatus(ctx context.Context, req proto.StatusRequest) (string, error) {
-	return svc.histSesssions[req.Id].status.String(), nil
+func (svc *eventService) HistoricStatus(ctx context.Context, req proto.StatusRequest) (string, bool, error) {
+	finished := false
+	if svc.histSesssions[req.Id].status != FinishedStatus {
+		finished = true
+	}
+	return svc.histSesssions[req.Id].status.String(), finished, nil
 }
 
 func (svc *eventService) FindEvents(ctx context.Context, eventReq proto.EventRequest) (string, error) {
@@ -43,6 +47,10 @@ func (svc *eventService) FindEvents(ctx context.Context, eventReq proto.EventReq
 	return id, nil
 }
 
-func (svc *eventService) EventsStatus(ctx context.Context, req proto.StatusRequest) (string, error) {
-	return svc.eventSessions[req.Id].status.String(), nil
+func (svc *eventService) EventsStatus(ctx context.Context, req proto.StatusRequest) (string, bool, error) {
+	finished := false
+	if svc.histSesssions[req.Id].status == FinishedStatus {
+		finished = true
+	}
+	return svc.eventSessions[req.Id].status.String(), finished, nil
 }

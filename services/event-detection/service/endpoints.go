@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/proto"
 	"github.com/go-kit/kit/endpoint"
 )
@@ -21,12 +22,12 @@ func makeHistoricGridsEndpoint(s Service) endpoint.Endpoint {
 func makeHistoricStatusEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.StatusRequest)
-		s, err := s.HistoricStatus(ctx, req)
+		s, f, err := s.HistoricStatus(ctx, req)
 		var msg string
 		if err != nil {
 			msg = err.Error()
 		}
-		return proto.StatusResponse{Status: s, Err: msg}, nil
+		return proto.StatusResponse{Status: s, Finished: f, Err: msg}, nil
 	}
 }
 
@@ -45,11 +46,11 @@ func makeFindEventsEndpoint(s Service) endpoint.Endpoint {
 func makeEventsStatusEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.StatusRequest)
-		s, err := s.EventsStatus(ctx, req)
+		s, f, err := s.EventsStatus(ctx, req)
 		var msg string
 		if err != nil {
 			msg = err.Error()
 		}
-		return proto.StatusResponse{Status: s, Err: msg}, nil
+		return proto.StatusResponse{Status: s, Finished: f, Err: msg}, nil
 	}
 }
