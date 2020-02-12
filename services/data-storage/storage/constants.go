@@ -79,7 +79,7 @@ const CreatePostsTable = `
 		Shortcode VARCHAR (15) NOT NULL,
 		ImageURL TEXT,
 		IsVideo BOOLEAN NOT NULL,
-		Caption TEXT, -- max size of text in Instagram
+		Caption TEXT, 
 		CommentsCount BIGINT NOT NULL,
 		Timestamp BIGINT NOT NULL,
 		LikesCount BIGINT NOT NULL,
@@ -110,7 +110,7 @@ const SelectPosts = `
 
 const CreateAggrPostsView = `
 	CREATE VIEW aggr_posts
-	WITH (timescaledb.continuous)
+	WITH (timescaledb.continuous, timescaledb.refresh_lag = '-86400', timescaledb.refresh_interval = '%v')
 	AS
 	SELECT
  		time_bucket('3600', timestamp) as hour,
@@ -163,7 +163,7 @@ const SelectEvents = `
 
 const CreatePostsTimelineView = `
 	CREATE VIEW posts_timeline
-	WITH (timescaledb.continuous)
+	WITH (timescaledb.continuous, timescaledb.refresh_lag = '-86400', timescaledb.refresh_interval = '%v')
 	AS
 	SELECT
 	time_bucket('3600', timestamp) as time,
@@ -173,7 +173,7 @@ const CreatePostsTimelineView = `
 `
 const CreateEventsTimelineView = `
 	CREATE VIEW events_timeline
-	WITH (timescaledb.continuous)
+	WITH (timescaledb.continuous, timescaledb.refresh_lag = '-86400', timescaledb.refresh_interval = '%v')
 	AS
 	SELECT
 	time_bucket('3600', start) as time,

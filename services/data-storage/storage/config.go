@@ -8,11 +8,12 @@ import (
 )
 
 type Configuration struct {
-	User     string
-	Password string
-	Host     string
-	Port     string
-	GRIDSize float64
+	User            string
+	Password        string
+	Host            string
+	Port            string
+	GRIDSize        float64
+	RefreshInterval string
 }
 
 func readConfig(path string) (cfg Configuration, err error) {

@@ -1,4 +1,5 @@
 GRIDSize = 50.0
+RefreshInterval = "10 s" # timescaledb.refresh_interval for continious aggreagtion
 User = "myuser" # user should be superuser
 Password = "mypass"
 Host = "localhost"
