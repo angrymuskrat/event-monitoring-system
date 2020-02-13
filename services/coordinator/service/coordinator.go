@@ -2,8 +2,9 @@ package service
 
 import (
 	"errors"
-	"github.com/angrymuskrat/event-monitoring-system/services/coordinator/service/status"
 	"sync"
+
+	"github.com/angrymuskrat/event-monitoring-system/services/coordinator/service/status"
 )
 
 type ServiceEndpoints struct {
@@ -22,6 +23,7 @@ func (s *coordinatorService) NewSession(req SessionParameters) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	go sess.Run()
 	s.mu.Lock()
 	s.sessions = append(s.sessions, sess)
 	s.mu.Unlock()
