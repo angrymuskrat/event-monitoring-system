@@ -137,7 +137,7 @@ func test(method string, svc storagesvc.Service) {
 
 	case "pushEvents":
 		events := []data.Event{
-			{Title: "test", Start: 10000, Finish: 100, Center: data.Point{Lat: 10, Lon: 10}, PostCodes: []string{"ffdsfs", "sfdsdfsf", "sfsfsf"}, Tags: []string{"#tag1", "#tag2"}},
+			{Title: "test", Start: 1000, Finish: 2000, Center: data.Point{Lat: 10, Lon: 10}, PostCodes: []string{"ffdsfs", "sfdsdfsf", "sfsfsf"}, Tags: []string{"#tag1", "#tag2"}},
 			{Title: "test2", Start: 1, Finish: 100, Center: data.Point{Lat: 9, Lon: 9}, PostCodes: []string{"ffdsfs", "sfdsdfsf", "sfsfsf"}, Tags: []string{"#tag1", "#tag2"}},
 		}
 		err := svc.PushEvents(context.Background(), "nyc", events)
@@ -156,8 +156,8 @@ func test(method string, svc storagesvc.Service) {
 		}
 		fmt.Printf("\n%v: It is all right, len(res):%v", method, len(res))
 	case "pullEventsTags":
-		tags := []string{"tag1", "tag2"}
-		res, err := svc.PullEventsTags(context.Background(), "nyc", tags, 0, 100000)
+		tags := []string{"#tag1"}
+		res, err := svc.PullEventsTags(context.Background(), "nyc", tags, 0, 50)
 		if err != nil {
 			fmt.Printf("\n%v: error: %v", method, err)
 			return

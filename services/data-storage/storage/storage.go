@@ -528,7 +528,33 @@ func (s *Storage) PullEvents(ctx context.Context, cityId string, interval data.S
 }
 
 func (s *Storage) PullEventsTags(ctx context.Context, cityId string, tags []string, startTime, finishTime int64) (events []data.Event, err error) {
-	return nil, nil
+	conn, err := s.getCityConn(ctx, cityId)
+	if err != nil {
+		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
+		return nil, err
+	}
+
+	statement := MakeSelectEventsTags(tags, startTime, finishTime)
+	rows, err := conn.Query(ctx, statement)
+
+	if err != nil {
+		unilog.Logger().Error("error in select events", zap.Error(err))
+		return nil, ErrSelectEvents
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		e := new(data.Event)
+		p := new(data.Point)
+		err = rows.Scan(&e.Title, &e.Start, &e.Finish, pq.Array(&e.PostCodes), pq.Array(&e.Tags), &p.Lat, &p.Lon)
+		if err != nil {
+			unilog.Logger().Error("error in select events", zap.Error(err))
+			return nil, ErrSelectEvents
+		}
+		e.Center = *p
+		events = append(events, *e)
+	}
+	return
 }
 
 func (s *Storage) PushLocations(ctx context.Context, cityId string, locations []data.Location) (err error) {

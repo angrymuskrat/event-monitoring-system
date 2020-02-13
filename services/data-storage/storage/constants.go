@@ -159,7 +159,24 @@ const SelectEvents = `
 		ST_Covers(%v, Center) 
 		AND (Start BETWEEN %v AND %v)
 `
-
+const SelectEventsTags = `
+	SELECT
+		Title, Start, Finish, PostCodes, Tags,
+		ST_X(Center) as Lat, 
+		ST_Y(Center) as Lon
+	FROM events
+	WHERE
+		((%v <= Start AND %v > Start) OR (%v BETWEEN Start AND Finish)) %v;
+`
+func MakeSelectEventsTags(tags []string, start, finish int64) string {
+	tagsStr := ""
+	if len(tags) > 0 {
+		for _, tag := range tags {
+			tagsStr += fmt.Sprintf("\n		AND '%v' = ANY (Tags)", tag)
+		}
+	}
+	return fmt.Sprintf(SelectEventsTags, start, finish, start, tagsStr)
+}
 
 const CreatePostsTimelineView = `
 	CREATE VIEW posts_timeline
