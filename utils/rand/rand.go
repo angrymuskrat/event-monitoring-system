@@ -6,7 +6,7 @@ import (
 
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 )
-const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 type GenConfig struct {
 	Center     data.Point
@@ -82,12 +82,12 @@ func (r *Rand) Post(conf GenConfig) *data.Post {
 }
 
 func (r *Rand) Event(conf GenConfig) *data.Event {
-	lenTags := int(r.Uint64(1, 8))
+	lenTags := int(r.Uint64(1, 10))
 	tags := make([]string, lenTags)
 	for i := 0; i < lenTags; i++ {
-		tags[i] = r.String(2, 20)
+		tags[i] = r.String(1, 6)
 	}
-	lenCodes := int(r.Uint64(1, 8))
+	lenCodes := int(r.Uint64(1, 10))
 	codes := make([]string, lenCodes)
 	for i := 0; i < lenCodes; i++ {
 		codes[i] = r.FixString(10)
@@ -120,4 +120,3 @@ func (r *Rand) Events(length int, conf GenConfig) []data.Event {
 	}
 	return events
 }
-
