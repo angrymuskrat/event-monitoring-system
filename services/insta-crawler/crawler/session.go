@@ -77,6 +77,6 @@ func (s Session) status() OutStatus {
 }
 
 func (s *Session) stop() (bool, error) {
-	s.Status = FinishedStatus
+	s.Status.Status = FinishedStatus
 	return true, nil
 }
