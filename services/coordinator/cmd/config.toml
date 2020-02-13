@@ -1,3 +1,5 @@
 Address = "localhost:8086"
 CrawlerAddress = "localhost:8080"
 EventDetectionAddress = "localhost:8084"
+User = "user"
+Password = "pwd"
