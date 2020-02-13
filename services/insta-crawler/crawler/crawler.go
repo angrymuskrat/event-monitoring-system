@@ -86,7 +86,7 @@ func (cr *Crawler) restoreSessions() {
 		if err != nil || sess.Status == nil {
 			continue
 		}
-		if sess.Status.Status == FinishedStatus {
+		if sess.Status.Status == FailedStatus {
 			continue
 		}
 		if cr.dataStorage != nil {
