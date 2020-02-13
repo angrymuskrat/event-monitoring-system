@@ -44,6 +44,7 @@ func Start(confPath string) {
 		httptransport.ServerBefore(httptransport.PopulateRequestContext),
 	))
 	http.Handle("/", accessControl(r))
+	unilog.Logger().Info("successfully started")
 	err = http.ListenAndServe(conf.Address, nil)
 	if err != nil {
 		unilog.Logger().Error("error in service handler", zap.Error(err))

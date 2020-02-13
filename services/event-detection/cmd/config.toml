@@ -1,0 +1,4 @@
+WorkersNumber = 10
+MaxPoints = 12
+DataStorageAddress = "localhost:8082"
+Address = "localhost:8084"

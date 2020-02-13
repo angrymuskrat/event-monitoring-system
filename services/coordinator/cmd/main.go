@@ -1,10 +1,9 @@
 package main
 
 import (
-	"context"
 	"flag"
 
-	service "github.com/angrymuskrat/event-monitoring-system/services/event-detection/service"
+	service "github.com/angrymuskrat/event-monitoring-system/services/coordinator/service"
 	"github.com/visheratin/unilog"
 )
 
@@ -18,5 +17,5 @@ func main() {
 	logCfg.ErrorOutputPaths = append(logCfg.ErrorOutputPaths, *lp)
 	unilog.InitLog(logCfg)
 
-	service.Start(context.Background(), *cp)
+	service.Start(*cp)
 }
