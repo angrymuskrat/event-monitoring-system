@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/angrymuskrat/event-monitoring-system/services/coordinator/service/status"
 	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/proto"
 	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/service"
@@ -17,8 +20,6 @@ import (
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"net/http"
-	"time"
 )
 
 type Session struct {
@@ -110,7 +111,7 @@ func (s *Session) startCollect() error {
 		unilog.Logger().Error("unable to marshal crawler parameters", zap.Error(err))
 		return err
 	}
-	url := fmt.Sprintf("%s/new", s.Endpoints.Crawler)
+	url := fmt.Sprintf("http://%s/new", s.Endpoints.Crawler)
 	buf := bytes.NewBuffer(d)
 	resp, err := http.Post(url, "application/json", buf)
 	if err != nil {
