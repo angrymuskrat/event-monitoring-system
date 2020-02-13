@@ -2,3 +2,6 @@ Address  = "localhost:42080"
 LogPath  = "service.log"
 User     = "user"
 Password = "pwd"
+Connector = "storage"
+[conn-params]
+address = "localhost"

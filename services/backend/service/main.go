@@ -25,8 +25,13 @@ func Start(confPath string) {
 	}
 	logger := setupLog(conf.LogPath)
 	var svc BackendService
+	conn, err := setConnector(conf.Connector, conf.ConnectorParams)
+	if err != nil {
+		unilog.Logger().Error("unable to create storage connector", zap.Error(err))
+		return
+	}
 	svc = &backendService{
-		storageConn: MockConnector{},
+		storageConn: conn,
 	}
 	svc = &loggingMiddleware{logger, svc}
 	r := mux.NewRouter()
