@@ -2,10 +2,11 @@ package crawler
 
 import (
 	"encoding/gob"
-	"github.com/visheratin/unilog"
-	"go.uber.org/zap"
 	"os"
 	"path"
+
+	"github.com/visheratin/unilog"
+	"go.uber.org/zap"
 )
 
 type Session struct {
@@ -76,5 +77,6 @@ func (s Session) status() OutStatus {
 }
 
 func (s *Session) stop() (bool, error) {
+	s.Status = FinishedStatus
 	return true, nil
 }

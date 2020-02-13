@@ -200,6 +200,7 @@ func (cr *Crawler) Stop(id string) (bool, error) {
 	for i := range cr.sessions {
 		if cr.sessions[i].ID == id {
 			ok, err := cr.sessions[i].stop()
+			cr.sessions[i].dump(cr.config.RootDir)
 			return ok, err
 		}
 	}
@@ -218,6 +219,9 @@ func (cr *Crawler) start() error {
 			time.Sleep(10 * time.Second)
 		}
 		for i := range cr.sessions {
+			if cr.sessions[i].Status == FinishedStatus {
+				continue
+			}
 			dbPath := path.Join(cr.config.RootDir, cr.sessions[i].ID, "bolt.db")
 			err := storage.Init(dbPath)
 			if err != nil {
