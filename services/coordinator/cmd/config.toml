@@ -1,0 +1,3 @@
+Address = "localhost:8086"
+CrawlerAddress = "localhost:8080"
+EventDetectionAddress = "localhost:8084"
