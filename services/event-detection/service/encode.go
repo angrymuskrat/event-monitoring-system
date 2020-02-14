@@ -11,18 +11,18 @@ func encodeGRPCHistoricGridsRequest(_ context.Context, request interface{}) (int
 }
 
 func encodeGRPCHistoricGridsResponse(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(*proto.HistoricResponse)
-	return *req, nil
+	req := request.(proto.HistoricResponse)
+	return &req, nil
 }
 
 func encodeGRPCFindEventsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.EventRequest)
-	return &req, nil
+	return req, nil
 }
 
 func encodeGRPCFindEventsResponse(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(*proto.EventResponse)
-	return *req, nil
+	req := request.(proto.EventResponse)
+	return req, nil
 }
 
 func encodeGRPCStatusRequest(_ context.Context, request interface{}) (interface{}, error) {
@@ -31,6 +31,6 @@ func encodeGRPCStatusRequest(_ context.Context, request interface{}) (interface{
 }
 
 func encodeGRPCStatusResponse(_ context.Context, request interface{}) (interface{}, error) {
-	req := request.(*proto.StatusResponse)
-	return *req, nil
+	req := request.(proto.StatusResponse)
+	return req, nil
 }

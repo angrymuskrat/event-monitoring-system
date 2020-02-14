@@ -42,6 +42,7 @@ func newHistoricSession(config Config, histReq proto.HistoricRequest, id string)
 }
 
 func (hs *historicSession) generateGrids() {
+	unilog.Logger().Info(hs.cfg.DataStorageAddress)
 	conn, err := grpc.Dial(hs.cfg.DataStorageAddress, grpc.WithInsecure())
 	if err != nil {
 		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))

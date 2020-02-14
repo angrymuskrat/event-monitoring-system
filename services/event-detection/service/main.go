@@ -24,7 +24,7 @@ func Start(ctx context.Context, confPath string) {
 	}
 	//logger := setupLog(conf.LogPath)
 	var svc Service
-	svc = newEventService()
+	svc = newEventService(conf)
 	// TODO: implement logging middleware
 	//svc = &loggingMiddleware{logger, svc}
 	grpcServer := Server(svc)

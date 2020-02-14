@@ -15,8 +15,8 @@ type eventService struct {
 	mut           sync.Mutex
 }
 
-func newEventService() *eventService {
-	return &eventService{histSesssions: make(map[string]*historicSession), eventSessions: make(map[string]*eventSession)}
+func newEventService(cfg Config) *eventService {
+	return &eventService{cfg: cfg, histSesssions: make(map[string]*historicSession), eventSessions: make(map[string]*eventSession)}
 }
 
 func (svc *eventService) HistoricGrids(ctx context.Context, histReq proto.HistoricRequest) (string, error) {

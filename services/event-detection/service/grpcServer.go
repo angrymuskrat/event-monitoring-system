@@ -49,8 +49,7 @@ func (gs *server) HistoricGrids(ctx context.Context, histReq *proto.HistoricRequ
 	if err != nil {
 		return nil, err
 	}
-	tmp := rep.(proto.HistoricResponse)
-	return &tmp, nil
+	return rep.(*proto.HistoricResponse), nil
 }
 
 func (gs *server) HistoricStatus(ctx context.Context, req *proto.StatusRequest) (*proto.StatusResponse, error) {
@@ -67,8 +66,7 @@ func (gs *server) FindEvents(ctx context.Context, eventReq *proto.EventRequest) 
 	if err != nil {
 		return nil, err
 	}
-	tmp := rep.(proto.EventResponse)
-	return &tmp, nil
+	return rep.(*proto.EventResponse), nil
 }
 
 func (gs *server) EventsStatus(ctx context.Context, req *proto.StatusRequest) (*proto.StatusResponse, error) {
