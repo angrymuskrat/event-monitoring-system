@@ -17,7 +17,7 @@ func encodeGRPCHistoricGridsResponse(_ context.Context, request interface{}) (in
 
 func encodeGRPCFindEventsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.EventRequest)
-	return req, nil
+	return &req, nil
 }
 
 func encodeGRPCFindEventsResponse(_ context.Context, request interface{}) (interface{}, error) {

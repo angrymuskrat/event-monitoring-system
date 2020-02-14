@@ -66,8 +66,9 @@ func (hs *historicSession) generateGrids() {
 	for _, post := range posts {
 		hs.postsChan <- post
 	}
+	close(hs.postsChan)
 	wg.Wait()
-
+	wg = &sync.WaitGroup{}
 	for w := 1; w <= hs.cfg.WorkersNumber; w++ {
 		wg.Add(1)
 		go hs.gridWorker(wg, *area)
@@ -76,6 +77,7 @@ func (hs *historicSession) generateGrids() {
 	for gridID := range hs.sortedPosts {
 		hs.gridChan <- gridID
 	}
+	close(hs.gridChan)
 	wg.Wait()
 
 	err = client.PushGrid(context.Background(), hs.histReq.CityId, hs.grids)
@@ -90,20 +92,20 @@ func (hs *historicSession) generateGrids() {
 func (hs *historicSession) readWorker(wg *sync.WaitGroup, area data.Area) {
 	defer wg.Done()
 	for post := range hs.postsChan {
-		if post.Lat <= area.TopLeft.Lat && post.Lat >= area.BotRight.Lat && post.Lon >= area.TopLeft.Lon && post.Lon <= area.BotRight.Lon {
-			postTime := time.Unix(post.Timestamp, 0)
-			loc, err := time.LoadLocation(hs.histReq.Timezone)
-			if err != nil {
-				unilog.Logger().Error("can't load location", zap.Error(err))
-				hs.status = FailedStatus
-				panic(err)
-			}
-			postTime = postTime.In(loc)
-			gridNum := getGridNum(postTime.Month(), postTime.Weekday(), postTime.Hour())
-			hs.mut.Lock()
-			hs.sortedPosts[gridNum] = append(hs.sortedPosts[gridNum], post)
-			hs.mut.Unlock()
+		//if post.Lat <= area.TopLeft.Lat && post.Lat >= area.BotRight.Lat && post.Lon >= area.TopLeft.Lon && post.Lon <= area.BotRight.Lon {
+		postTime := time.Unix(post.Timestamp, 0)
+		loc, err := time.LoadLocation(hs.histReq.Timezone)
+		if err != nil {
+			unilog.Logger().Error("can't load location", zap.Error(err))
+			hs.status = FailedStatus
+			panic(err)
 		}
+		postTime = postTime.In(loc)
+		gridNum := getGridNum(postTime.Month(), postTime.Weekday(), postTime.Hour())
+		hs.mut.Lock()
+		hs.sortedPosts[gridNum] = append(hs.sortedPosts[gridNum], post)
+		hs.mut.Unlock()
+		//}
 	}
 }
 
@@ -130,7 +132,6 @@ func (hs *historicSession) gridWorker(wg *sync.WaitGroup, area data.Area) {
 			hs.status = FailedStatus
 			panic(err)
 		}
-
 		var buf bytes.Buffer
 		enc := gob.NewEncoder(&buf)
 

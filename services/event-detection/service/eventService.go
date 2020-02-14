@@ -49,7 +49,7 @@ func (svc *eventService) FindEvents(ctx context.Context, eventReq proto.EventReq
 
 func (svc *eventService) EventsStatus(ctx context.Context, req proto.StatusRequest) (string, bool, error) {
 	finished := false
-	if svc.histSesssions[req.Id].status == FinishedStatus {
+	if svc.eventSessions[req.Id].status == FinishedStatus {
 		finished = true
 	}
 	return svc.eventSessions[req.Id].status.String(), finished, nil

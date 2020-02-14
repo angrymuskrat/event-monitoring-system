@@ -73,6 +73,7 @@ func (es *eventSession) detectEvents() {
 	for _, post := range posts {
 		es.postsChan <- post
 	}
+	close(es.postsChan)
 	wg.Wait()
 
 	startId, finishId := convertDatesToGridIds(es.eventReq.StartTime, es.eventReq.FinishDate)
@@ -92,6 +93,7 @@ func (es *eventSession) detectEvents() {
 	for id, _ := range es.grids {
 		es.gridsChan <- id
 	}
+	close(es.gridsChan)
 	wg.Wait()
 
 	err = client.PushEvents(context.Background(), es.eventReq.CityId, es.events)

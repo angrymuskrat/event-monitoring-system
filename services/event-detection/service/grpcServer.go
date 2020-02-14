@@ -66,7 +66,8 @@ func (gs *server) FindEvents(ctx context.Context, eventReq *proto.EventRequest) 
 	if err != nil {
 		return nil, err
 	}
-	return rep.(*proto.EventResponse), nil
+	tmp := rep.(proto.EventResponse)
+	return &tmp, nil
 }
 
 func (gs *server) EventsStatus(ctx context.Context, req *proto.StatusRequest) (*proto.StatusResponse, error) {
