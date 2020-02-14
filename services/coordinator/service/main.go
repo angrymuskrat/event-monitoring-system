@@ -15,11 +15,19 @@ import (
 	"os"
 )
 
+type BasicAuth struct {
+	User     string
+	Password string
+}
+
+var Auth BasicAuth
+
 func Start(confPath string) {
 	conf, err := readConfig(confPath)
 	if err != nil {
 		return
 	}
+	Auth = BasicAuth{User: conf.User, Password: conf.Password}
 	endpoints := ServiceEndpoints{
 		Crawler:        conf.CrawlerAddress,
 		EventDetection: conf.EventDetectionAddress,

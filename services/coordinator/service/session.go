@@ -113,7 +113,15 @@ func (s *Session) startCollect() error {
 	}
 	url := fmt.Sprintf("http://%s/new", s.Endpoints.Crawler)
 	buf := bytes.NewBuffer(d)
-	resp, err := http.Post(url, "application/json", buf)
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", url, buf)
+	if err != nil {
+		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
+		return err
+	}
+	req.SetBasicAuth(Auth.User, Auth.Password)
+	resp, err := client.Do(req)
+	//resp, err := http.Post(url, "application/json", buf)
 	if err != nil {
 		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
 		return err
@@ -147,8 +155,16 @@ func (s *Session) checkCollect() (int, error) {
 	if !ok {
 		unilog.Logger().Error("incorrect session status", zap.String("status", s.Status.String()))
 	}
-	url := fmt.Sprintf("%s/status/%s", s.Endpoints.Crawler, cs.SessionID)
-	resp, err := http.Get(url)
+	url := fmt.Sprintf("http://%s/status/%s", s.Endpoints.Crawler, cs.SessionID)
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
+		return -1, err
+	}
+	req.SetBasicAuth(Auth.User, Auth.Password)
+	resp, err := client.Do(req)
+	//resp, err := http.Get(url)
 	if err != nil {
 		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
 		return -1, err
