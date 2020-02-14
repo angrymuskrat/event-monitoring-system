@@ -438,6 +438,10 @@ func (s *Storage) PushGrid(ctx context.Context, cityId string, grids map[int64][
 			return err
 		}
 	}
+	if err := tx.Commit(ctx); err != nil {
+		unilog.Logger().Error("is not able to commit events transaction", zap.Error(err))
+		return err
+	}
 	return err
 }
 
