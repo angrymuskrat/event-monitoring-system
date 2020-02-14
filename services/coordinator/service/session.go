@@ -41,6 +41,7 @@ type SessionParameters struct {
 	HistoricStart  int64
 	HistoricFinish int64
 	GridSize       float64
+	AuthCookie     string
 }
 
 func NewSession(p SessionParameters, e ServiceEndpoints) (Session, error) {
@@ -105,6 +106,7 @@ func (s *Session) startCollect() error {
 		Type:            crawlerdata.LocationsType,
 		Entities:        s.Params.Locations,
 		FinishTimestamp: s.Params.CrawlerFinish,
+		AuthCookie:      s.Params.AuthCookie,
 	}
 	d, err := json.Marshal(p)
 	if err != nil {
@@ -205,8 +207,16 @@ func (s *Session) deleteCollect() error {
 		return err
 	}
 	buf := bytes.NewBuffer(d)
-	url := fmt.Sprintf("%s/stop", s.Endpoints.Crawler)
-	resp, err := http.Post(url, "application/json", buf)
+	url := fmt.Sprintf("http://%s/stop", s.Endpoints.Crawler)
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", url, buf)
+	if err != nil {
+		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
+		return err
+	}
+	req.SetBasicAuth(Auth.User, Auth.Password)
+	resp, err := client.Do(req)
+	//resp, err := http.Post(url, "application/json", buf)
 	if err != nil {
 		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
 		return err
@@ -260,6 +270,7 @@ func (s *Session) historicStart() error {
 		FinishDate: s.Params.HistoricFinish,
 		GridSize:   s.Params.GridSize,
 	}
+	unilog.Logger().Info("historicStart was started")
 	respRaw, err := s.edClient.HistoricGrids(context.Background(), req)
 	if err != nil {
 		unilog.Logger().Error("error during historic building initiation", zap.Error(err))
