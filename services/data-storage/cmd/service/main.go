@@ -11,9 +11,9 @@ import (
 )
 
 func main() {
-	aLog := flag.String("al", "services/data-storage/app.log", "path to application log file")
-	serviceConfig := flag.String("sc", "services/data-storage/cmd/service/service.toml", "path to service configuration file")
-	connectorConfig := flag.String("cc", "services/data-storage/cmd/service/storage.toml", "path to db storage configuration file")
+	aLog := flag.String("al", "app.log", "path to application log file")
+	serviceConfig := flag.String("sc", "service.toml", "path to service configuration file")
+	connectorConfig := flag.String("cc", "storage.toml", "path to db storage configuration file")
 	flag.Parse()
 
 	logCfg := unilog.DefaultConfig()

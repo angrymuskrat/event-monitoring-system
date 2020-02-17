@@ -1,2 +1,2 @@
 Address  = "localhost:8082"
-LogPath  = "services/data-storage/service.log"
+LogPath  = "service.log"
