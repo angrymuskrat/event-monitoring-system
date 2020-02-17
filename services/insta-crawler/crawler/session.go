@@ -18,7 +18,7 @@ const (
 type Session struct {
 	ID     string
 	Params Parameters
-	Status *Status `toml:"-"`
+	Status *Status
 }
 
 func newSession(id string, p Parameters, rootDir string) (Session, error) {
