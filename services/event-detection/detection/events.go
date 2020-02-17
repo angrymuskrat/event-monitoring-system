@@ -1,10 +1,11 @@
 package detection
 
 import (
-	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
-	convtree "github.com/visheratin/conv-tree"
 	"regexp"
 	"strings"
+
+	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
+	convtree "github.com/visheratin/conv-tree"
 )
 
 func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints int, filterTags map[string]bool, start, finish int64) ([]data.Event, error) {
@@ -135,14 +136,20 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 						postCodes = append(postCodes, k)
 					}
 					tags := []string{}
+					var max int
+					var maxTag string
 					for k := range e.tags {
+						if e.tags[k] > max {
+							max = e.tags[k]
+							maxTag = k
+						}
 						tags = append(tags, k)
 					}
 					event := data.Event{
 						Center:    eventCenter(eventPosts, posts),
 						PostCodes: postCodes,
 						Tags:      tags,
-						Title:     "",
+						Title:     maxTag,
 						Start:     start,
 						Finish:    finish,
 					}
