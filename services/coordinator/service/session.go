@@ -42,6 +42,8 @@ type SessionParameters struct {
 	HistoricFinish int64
 	GridSize       float64
 	AuthCookie     string
+	SkipCrawling   bool
+	SkipHistoric   bool
 }
 
 func NewSession(p SessionParameters, e ServiceEndpoints) (Session, error) {
@@ -62,13 +64,18 @@ func NewSession(p SessionParameters, e ServiceEndpoints) (Session, error) {
 }
 
 func (s *Session) Run() {
-	err := s.historicCollect()
-	if err != nil {
-		return
+	var err error
+	if !s.Params.SkipCrawling {
+		err = s.historicCollect()
+		if err != nil {
+			return
+		}
 	}
-	err = s.historicBuild()
-	if err != nil {
-		return
+	if !s.Params.SkipHistoric {
+		err = s.historicBuild()
+		if err != nil {
+			return
+		}
 	}
 	s.monitoring()
 }
