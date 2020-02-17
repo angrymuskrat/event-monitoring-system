@@ -128,8 +128,7 @@ func (w *worker) proceedLocation(i int) error {
 		rawData, err := w.makeRequest(initRequest, true, "", referer, false)
 		if err != nil {
 			if rawData != nil {
-				w.entities.remove(i)
-				w.sessionStatus.updateEntitiesLeft(-1)
+				w.removeEntity(i)
 			}
 			return err
 		}
@@ -171,16 +170,14 @@ func (w *worker) proceedLocation(i int) error {
 		rawData, err := w.makeRequest(newRequest, useTor, gis, referer, false)
 		if err != nil {
 			if rawData != nil {
-				w.entities.remove(i)
-				w.sessionStatus.updateEntitiesLeft(-1)
+				w.removeEntity(i)
 			}
 			return err
 		}
 		cursor, hasNext, timestamp, zeroPosts, err = w.proceedResponse(rawData, id)
 		if err != nil {
 			if zeroPosts {
-				w.entities.remove(i)
-				w.sessionStatus.updateEntitiesLeft(-1)
+				w.removeEntity(i)
 			}
 			return err
 		}
@@ -190,14 +187,17 @@ func (w *worker) proceedLocation(i int) error {
 			return err
 		}
 		if timestamp < w.params.FinishTimestamp {
-			w.entities.remove(i)
-			w.sessionStatus.updateEntitiesLeft(-1)
+			w.removeEntity(i)
 		}
 	} else {
-		w.entities.remove(i)
-		w.sessionStatus.updateEntitiesLeft(-1)
+		w.removeEntity(i)
 	}
 	return nil
+}
+
+func (w *worker) removeEntity(i int) {
+	w.entities.remove(i)
+	w.sessionStatus.updateEntitiesLeft(-1)
 }
 
 func (w *worker) makeRequest(request string, useTor bool, gis string, referer string, auth bool) ([]byte, error) {

@@ -89,6 +89,7 @@ func (cr *Crawler) restoreSessions() {
 		if sess.Status.Status == FailedStatus {
 			continue
 		}
+		cr.sessions = append(cr.sessions, &sess)
 		if cr.dataStorage != nil {
 			err = cr.uploadUnsavedPosts(sess.ID)
 			if err != nil {
@@ -96,7 +97,6 @@ func (cr *Crawler) restoreSessions() {
 				continue
 			}
 		}
-		cr.sessions = append(cr.sessions, &sess)
 	}
 }
 
@@ -114,7 +114,7 @@ func (cr *Crawler) uploadUnsavedPosts(sessionID string) error {
 	num := 500000
 	for {
 		d, cursor := st.Posts(sessionID, lastID, num)
-		if len(d) == 0 {
+		if len(d) <= 1 { // if condition - len(d) == 0, there is infinite loop
 			break
 		}
 		err := cr.sendPostsToDataStorage(d, sessionID)
