@@ -89,18 +89,18 @@ func (cr *Crawler) restoreSessions() {
 		if sess.Status.Status == FailedStatus {
 			continue
 		}
-		cr.sessions = append(cr.sessions, &sess)
 		if cr.dataStorage != nil {
-			err = cr.uploadUnsavedPosts(sess.ID)
+			err = cr.uploadUnsavedPosts(sess.ID, sess.Params.CityID)
 			if err != nil {
 				unilog.Logger().Error("unable to restore session", zap.String("id", sess.ID))
 				continue
 			}
 		}
+		cr.sessions = append(cr.sessions, &sess)
 	}
 }
 
-func (cr *Crawler) uploadUnsavedPosts(sessionID string) error {
+func (cr *Crawler) uploadUnsavedPosts(sessionID, cityID string) error {
 	dbPath := path.Join(cr.config.RootDir, sessionID, "bolt.db")
 	err := storage.Init(dbPath)
 	if err != nil {
@@ -111,13 +111,13 @@ func (cr *Crawler) uploadUnsavedPosts(sessionID string) error {
 		return err
 	}
 	lastID := st.ReadLastSavedPost(sessionID)
-	num := 500000
+	num := 50000
 	for {
 		d, cursor := st.Posts(sessionID, lastID, num)
 		if len(d) <= 1 { // if condition - len(d) == 0, there is infinite loop
 			break
 		}
-		err := cr.sendPostsToDataStorage(d, sessionID)
+		err := cr.sendPostsToDataStorage(d, sessionID, cityID)
 		if err != nil {
 			return err
 		}
@@ -269,7 +269,7 @@ func (cr *Crawler) start() error {
 			}
 
 			if cr.dataStorage != nil {
-				cr.sendPostsToDataStorage(posts, cr.sessions[i].ID)
+				cr.sendPostsToDataStorage(posts, cr.sessions[i].ID, cr.sessions[i].Params.CityID)
 			}
 			err = st.Close()
 			if err != nil {
@@ -304,7 +304,7 @@ func combineEntities(workers []worker) []string {
 	return res
 }
 
-func (cr *Crawler) sendPostsToDataStorage(posts []data.Post, sessionID string) error {
+func (cr *Crawler) sendPostsToDataStorage(posts []data.Post, sessionID, cityID string) error {
 	if len(posts) == 0 {
 		unilog.Logger().Info("attempt to send an empty array of posts to data-storage")
 		return nil
@@ -313,12 +313,6 @@ func (cr *Crawler) sendPostsToDataStorage(posts []data.Post, sessionID string) e
 	var protoPosts []protodata.Post
 	for _, post := range posts {
 		protoPosts = append(protoPosts, convertToProtoPost(post))
-	}
-	var cityID string
-	for _, sess := range cr.sessions {
-		if sess.ID == sessionID {
-			cityID = sess.Params.CityID
-		}
 	}
 	err := cr.dataStorage.PushPosts(context.Background(), cityID, protoPosts)
 	if err != nil {
