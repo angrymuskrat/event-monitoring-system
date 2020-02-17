@@ -66,6 +66,13 @@ func NewSession(p SessionParameters, e ServiceEndpoints) (Session, error) {
 func (s *Session) Run() {
 	var err error
 	if !s.Params.SkipCrawling {
+		area := data.Area{TopLeft: &s.Params.TopLeft, BotRight: &s.Params.BottomRight}
+		city := data.City{Title: s.Params.CityName, Code: s.Params.CityID, Area: area}
+		err = Storage.InsertCity(context.Background(), city, true)
+		if err != nil {
+			unilog.Logger().Error("do not be able to insert city", zap.Any("city", city), zap.Error(err))
+			return
+		}
 		err = s.historicCollect()
 		if err != nil {
 			return

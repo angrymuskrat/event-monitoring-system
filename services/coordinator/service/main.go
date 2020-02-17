@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	storage "github.com/angrymuskrat/event-monitoring-system/services/data-storage"
 	"github.com/go-kit/kit/auth/basic"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"google.golang.org/grpc"
 	"net/http"
 	"os"
 )
@@ -21,6 +23,7 @@ type BasicAuth struct {
 }
 
 var Auth BasicAuth
+var Storage storage.GrpcService
 
 func Start(confPath string) {
 	conf, err := readConfig(confPath)
@@ -28,6 +31,13 @@ func Start(confPath string) {
 		return
 	}
 	Auth = BasicAuth{User: conf.User, Password: conf.Password}
+	conn, err := grpc.Dial(conf.DataStorageAddress, grpc.WithInsecure(), grpc.WithMaxMsgSize(storage.MaxMsgSize))
+	if err != nil {
+		unilog.Logger().Error("do not be able to connect to data-storage", zap.Error(err))
+		return
+	}
+	Storage = storage.NewGRPCClient(conn)
+
 	endpoints := ServiceEndpoints{
 		Crawler:        conf.CrawlerAddress,
 		EventDetection: conf.EventDetectionAddress,

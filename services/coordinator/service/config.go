@@ -12,6 +12,7 @@ type Config struct {
 	User                  string
 	Password              string
 	CrawlerAddress        string
+	DataStorageAddress    string
 	EventDetectionAddress string
 }
 
