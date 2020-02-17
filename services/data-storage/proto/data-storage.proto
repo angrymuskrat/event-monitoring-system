@@ -61,8 +61,7 @@ message PushPostsRequest {
 }
 
 message PushPostsReply {
-    repeated int32 ids = 1;
-    string err = 2;
+    string err = 1;
 }
 
 message SelectPostsRequest {

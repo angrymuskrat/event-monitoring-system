@@ -45,7 +45,7 @@ func (mw loggingMiddleware) GetCity(ctx context.Context, cityId string) (city *d
 	return
 }
 
-func (mw loggingMiddleware) PushPosts(ctx context.Context, cityId string, posts []data.Post) (ids []int32, err error) {
+func (mw loggingMiddleware) PushPosts(ctx context.Context, cityId string, posts []data.Post) (err error) {
 	func(begin time.Time) {
 		mw.logger.Info("push posts request",
 			zap.Int("count of posts", len(posts)),
@@ -53,7 +53,7 @@ func (mw loggingMiddleware) PushPosts(ctx context.Context, cityId string, posts 
 			zap.Error(err),
 			zap.String("took", time.Since(begin).String()))
 	}(time.Now())
-	ids, err = mw.next.PushPosts(ctx, cityId, posts)
+	err = mw.next.PushPosts(ctx, cityId, posts)
 	return
 }
 

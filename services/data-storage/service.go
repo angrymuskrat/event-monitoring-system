@@ -13,7 +13,7 @@ const (
 
 	// Max size for income messages of grpcService; in bytes
 	// For client is needed also set max income message side, but this is done by the client during initialization of grpcClient
-	MaxMsgSize        = 1000000000
+	MaxMsgSize = 1000000000
 )
 
 type Service interface {
@@ -36,7 +36,7 @@ type Service interface {
 	// output: array of commit statuses (see data-storage/data/typePushResponse) and error
 	// if all posts were successfully added to the city's db, will return statuses and nil error, otherwise statuses and some error
 	// Either all posts will be added or not a single one.
-	PushPosts(ctx context.Context, cityId string, posts []data.Post) ([]int32, error) // TODO remove []int32 from data-storage and insta-crawler
+	PushPosts(ctx context.Context, cityId string, posts []data.Post) error
 
 	// input: context, id of the city, start and finish UTC-time in second - time interval, for which posts of this city will be returned
 	// output: array of posts, area object, error
@@ -116,7 +116,7 @@ func (s basicService) GetCity(ctx context.Context, cityId string) (*data.City, e
 	return s.db.SelectCity(ctx, cityId)
 }
 
-func (s basicService) PushPosts(ctx context.Context, cityId string, posts []data.Post) ([]int32, error) {
+func (s basicService) PushPosts(ctx context.Context, cityId string, posts []data.Post) error {
 	return s.db.PushPosts(ctx, cityId, posts)
 }
 

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	storagesvc "github.com/angrymuskrat/event-monitoring-system/services/data-storage"
-	dsdata "github.com/angrymuskrat/event-monitoring-system/services/data-storage/data"
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/storage"
 	protodata "github.com/angrymuskrat/event-monitoring-system/services/proto"
@@ -306,6 +305,11 @@ func combineEntities(workers []worker) []string {
 }
 
 func (cr *Crawler) sendPostsToDataStorage(posts []data.Post, sessionID string) error {
+	if len(posts) == 0 {
+		unilog.Logger().Info("attempt to send an empty array of posts to data-storage")
+		return nil
+	}
+
 	var protoPosts []protodata.Post
 	for _, post := range posts {
 		protoPosts = append(protoPosts, convertToProtoPost(post))
@@ -316,29 +320,13 @@ func (cr *Crawler) sendPostsToDataStorage(posts []data.Post, sessionID string) e
 			cityID = sess.Params.CityID
 		}
 	}
-	statuses, err := cr.dataStorage.PushPosts(context.Background(), cityID, protoPosts)
+	err := cr.dataStorage.PushPosts(context.Background(), cityID, protoPosts)
 	if err != nil {
 		unilog.Logger().Error("error while sending to data storage", zap.Error(err))
 		return err
 	}
-	if statuses == nil {
-		unilog.Logger().Error("unable to read response")
-		return err
-	}
-	answer := make([]int, dsdata.CountPushResponseTypes())
-	var lastPost string
-	for i, s := range statuses {
-		typeResp := dsdata.ParseType(s)
-		id := posts[i].ID
-		if typeResp == dsdata.PostPushed || typeResp == dsdata.DuplicatedPostId {
-			lastPost = id
-		}
-		if typeResp == dsdata.InvalidType {
-			unilog.Logger().Error("incorrect response type in ans of data store", zap.Int32("type", s), zap.String("post id", id))
-		}
-		answer[s]++
-	}
 	unilog.Logger().Info("uploaded new posts", zap.Int("num", len(posts)), zap.String("sess", sessionID))
+	lastPost := posts[len(posts)-1].ID
 	st, err := storage.Instance()
 	if err != nil {
 		unilog.Logger().Error("unable to get storage", zap.Error(err))

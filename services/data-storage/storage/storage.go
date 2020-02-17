@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
+	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
+	"github.com/jackc/pgx/v4"
 	"github.com/lib/pq"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
-	"strings"
-
-	types "github.com/angrymuskrat/event-monitoring-system/services/data-storage/data"
-	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
-	"github.com/jackc/pgx/v4"
 )
 
 type Storage struct {
@@ -292,17 +291,17 @@ func (s *Storage) GetCities(ctx context.Context) (cities []data.City, err error)
 	return cities, nil
 }
 
-func (s *Storage) PushPosts(ctx context.Context, cityId string, posts []data.Post) (ids []int32, err error) {
+func (s *Storage) PushPosts(ctx context.Context, cityId string, posts []data.Post) (err error) {
 	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
-		return nil, err
+		return err
 	}
 
 	tx, err := conn.Begin(ctx)
 	if err != nil {
 		unilog.Logger().Error("can not begin transaction", zap.Error(err))
-		return nil, ErrDBTransaction
+		return ErrDBTransaction
 	}
 	defer tx.Rollback(ctx)
 
@@ -310,14 +309,12 @@ func (s *Storage) PushPosts(ctx context.Context, cityId string, posts []data.Pos
 		_, err = tx.Exec(ctx, InsertPost, v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp, v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lat, v.Lon)
 		if err != nil {
 			unilog.Logger().Error("is not able to exec event", zap.Error(err))
-			return nil, ErrPushPosts
-		} else {
-			ids = append(ids, types.PostPushed.Int32()) // TODO now this is useless
+			return ErrPushPosts
 		}
 	}
 	if err := tx.Commit(ctx); err != nil {
 		unilog.Logger().Error("is not able to commit events transaction", zap.Error(err))
-		return nil, ErrPushPosts
+		return ErrPushPosts
 	}
 	return
 }

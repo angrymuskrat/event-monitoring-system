@@ -66,16 +66,16 @@ func (svc GrpcService) GetCity(ctx context.Context, cityId string) (*data.City, 
 	return response.City, nil
 }
 
-func (svc GrpcService) PushPosts(ctx context.Context, cityId string, posts []data.Post) ([]int32, error) {
+func (svc GrpcService) PushPosts(ctx context.Context, cityId string, posts []data.Post) error {
 	resp, err := svc.pushPosts(ctx, proto.PushPostsRequest{CityId: cityId, Posts: posts})
 	if err != nil {
-		return nil, err
+		return err
 	}
 	response := resp.(proto.PushPostsReply)
 	if response.Err != "" {
-		return nil, errors.New(response.Err)
+		return errors.New(response.Err)
 	}
-	return response.Ids, nil
+	return nil
 }
 
 func (svc GrpcService) SelectPosts(ctx context.Context, cityId string, startTime, finishTime int64) ([]data.Post, *data.Area, error) {

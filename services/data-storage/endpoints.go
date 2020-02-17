@@ -44,12 +44,12 @@ func makeGetCityEndpoint(s Service) endpoint.Endpoint {
 func makePushPostsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PushPostsRequest)
-		ids, err := s.PushPosts(ctx, req.CityId, req.Posts)
+		err = s.PushPosts(ctx, req.CityId, req.Posts)
 		var msg string
 		if err != nil {
 			msg = err.Error()
 		}
-		return proto.PushPostsReply{Ids: ids, Err: msg}, nil
+		return proto.PushPostsReply{Err: msg}, nil
 	}
 }
 

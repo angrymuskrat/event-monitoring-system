@@ -40,7 +40,7 @@ func test(method string, svc storagesvc.Service) {
 	gen := rand.New()
 	NY := data.Point{Lat: 40.7, Lon: -74}
 	now := int64(time.Now().Second())
-	genConf := rand.GenConfig{ Center: NY, DeltaPoint: data.Point{ Lat: 0.1, Lon: 0.02 }, StartTime: now - 24 * 3600, FinishTime: now}
+	genConf := rand.GenConfig{Center: NY, DeltaPoint: data.Point{Lat: 0.1, Lon: 0.02}, StartTime: now - 24*3600, FinishTime: now}
 
 	switch method {
 	case "insertCity":
@@ -72,12 +72,12 @@ func test(method string, svc storagesvc.Service) {
 
 	case "pushPosts":
 		testPosts := gen.Posts(1000, genConf)
-		res, err := svc.PushPosts(context.Background(), "nyc", testPosts)
+		err := svc.PushPosts(context.Background(), "nyc", testPosts)
 		if err != nil {
 			fmt.Printf("\n%v: error: %v", method, err)
 			return
 		}
-		fmt.Printf("\n%v: It is all right, len(res):%v", method, len(res))
+		fmt.Printf("\n%v: It is all right", method)
 
 	case "selectPosts":
 		res, _, err := svc.SelectPosts(context.Background(), "nyc", 0, 100000000)
