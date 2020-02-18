@@ -58,7 +58,7 @@ func NewSession(p SessionParameters, e ServiceEndpoints) (Session, error) {
 		ID:        id,
 		Params:    p,
 		Endpoints: e,
-		Status:    status.HistoricBuilding{},
+		Status:    status.HistoricBuilding{SessionID: id, Status: "session is starting"},
 		edClient:  client,
 	}, nil
 }
