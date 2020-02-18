@@ -16,14 +16,16 @@ import (
 	"google.golang.org/grpc"
 )
 
+const secondsInMonth = 2592000
+
 type historicSession struct {
 	id          string
 	status      StatusType
 	cfg         Config
 	histReq     proto.HistoricRequest
-	postsChan   chan data.Post
+	postsChan   chan *data.Post
 	gridChan    chan int64
-	sortedPosts map[int64][]data.Post
+	sortedPosts map[int64][]*data.Post
 	grids       map[int64][]byte
 	mut         sync.Mutex
 }
@@ -34,9 +36,9 @@ func newHistoricSession(config Config, histReq proto.HistoricRequest, id string)
 		status:      RunningStatus,
 		cfg:         config,
 		histReq:     histReq,
-		postsChan:   make(chan data.Post),
+		postsChan:   make(chan *data.Post),
 		gridChan:    make(chan int64),
-		sortedPosts: make(map[int64][]data.Post),
+		sortedPosts: make(map[int64][]*data.Post),
 		grids:       make(map[int64][]byte),
 	}
 }
@@ -50,12 +52,24 @@ func (hs *historicSession) generateGrids() {
 		panic(err)
 	}
 	client := service.NewGRPCClient(conn)
-
-	posts, area, err := client.SelectPosts(context.Background(), hs.histReq.CityId, hs.histReq.StartTime, hs.histReq.FinishDate)
-	if err != nil {
-		unilog.Logger().Error("unable to get posts from data strorage", zap.Error(err))
-		hs.status = FailedStatus
-		panic(err)
+	var posts []data.Post
+	var ps []data.Post
+	var area *data.Area
+	startTime := hs.histReq.StartTime
+	finishTime := hs.histReq.StartTime + secondsInMonth
+	for startTime < hs.histReq.FinishDate {
+		if finishTime > hs.histReq.FinishDate {
+			finishTime = hs.histReq.FinishDate
+		}
+		ps, area, err = client.SelectPosts(context.Background(), hs.histReq.CityId, startTime, finishTime)
+		if err != nil {
+			unilog.Logger().Error("unable to get posts from data strorage", zap.Error(err))
+			hs.status = FailedStatus
+			panic(err)
+		}
+		posts = append(posts, ps...)
+		startTime += secondsInMonth
+		finishTime += secondsInMonth
 	}
 
 	wg := &sync.WaitGroup{}
@@ -64,7 +78,7 @@ func (hs *historicSession) generateGrids() {
 		go hs.readWorker(wg, *area)
 	}
 	for _, post := range posts {
-		hs.postsChan <- post
+		hs.postsChan <- &post
 	}
 	close(hs.postsChan)
 	wg.Wait()
