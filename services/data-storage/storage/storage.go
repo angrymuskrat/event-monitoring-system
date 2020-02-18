@@ -8,14 +8,15 @@ import (
 
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/lib/pq"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
 )
 
 type Storage struct {
-	general *pgx.Conn
-	cities  map[string]*pgx.Conn
+	general *pgxpool.Pool
+	cities  map[string]*pgxpool.Pool
 	config  Configuration
 }
 
@@ -54,11 +55,11 @@ func New(ctx context.Context, confPath string) (*Storage, error) {
 }
 
 func (s *Storage) initGeneral(ctx context.Context) (err error) {
-	connConfig, err := pgx.ParseConfig(s.config.makeAuthToken(PostgresDBName))
+	connConfig, err := pgxpool.ParseConfig(s.config.makeAuthToken(PostgresDBName))
 	if err != nil {
 		return err
 	}
-	conn, err := pgx.ConnectConfig(ctx, connConfig)
+	conn, err := pgxpool.ConnectConfig(ctx, connConfig)
 	if err != nil {
 		return err
 	}
@@ -73,11 +74,11 @@ func (s *Storage) initGeneral(ctx context.Context) (err error) {
 		return err
 	}
 
-	connConfig, err = pgx.ParseConfig(s.config.makeAuthToken(GeneralDBName))
+	connConfig, err = pgxpool.ParseConfig(s.config.makeAuthToken(GeneralDBName))
 	if err != nil {
 		return err
 	}
-	conn, err = pgx.ConnectConfig(ctx, connConfig)
+	conn, err = pgxpool.ConnectConfig(ctx, connConfig)
 	if err != nil {
 		return err
 	}
@@ -100,7 +101,7 @@ func (s *Storage) initCities(ctx context.Context) (err error) {
 	if err != nil {
 		return err
 	}
-	s.cities = make(map[string]*pgx.Conn)
+	s.cities = make(map[string]*pgxpool.Pool)
 	for _, city := range cities {
 		cityId := city.Code
 		err = s.initCity(ctx, cityId)
@@ -121,12 +122,12 @@ func (s *Storage) initCity(ctx context.Context, cityID string) error {
 		unilog.Logger().Error("unable to create database for the city")
 		return err
 	}
-	connConfig, err := pgx.ParseConfig(s.config.makeAuthToken(cityID))
+	connConfig, err := pgxpool.ParseConfig(s.config.makeAuthToken(cityID))
 	if err != nil {
 		unilog.Logger().Error("unable to parse config for database connection")
 		return err
 	}
-	conn, err := pgx.ConnectConfig(ctx, connConfig)
+	conn, err := pgxpool.ConnectConfig(ctx, connConfig)
 	if err != nil {
 		unilog.Logger().Error("unable to connect to the city database")
 		return nil
@@ -139,7 +140,7 @@ func (s *Storage) initCity(ctx context.Context, cityID string) error {
 	return err
 }
 
-func (s *Storage) getCityConn(ctx context.Context, cityID string) (*pgx.Conn, error) {
+func (s *Storage) getCityConn(ctx context.Context, cityID string) (*pgxpool.Pool, error) {
 	if conn, isExist := s.cities[cityID]; isExist {
 		return conn, nil
 	}
@@ -618,14 +619,8 @@ func (s *Storage) Close(ctx context.Context) {
 	if s.general == nil {
 		return
 	}
-	err := s.general.Close(ctx)
-	if err != nil {
-		unilog.Logger().Error("don't be able to close general conn", zap.Error(err))
-	}
-	for cityId, conn := range s.cities {
-		err = conn.Close(ctx)
-		if err != nil {
-			unilog.Logger().Error("don't be able to city conn", zap.String("cityId", cityId), zap.Error(err))
-		}
+	s.general.Close()
+	for _, conn := range s.cities {
+		conn.Close()
 	}
 }

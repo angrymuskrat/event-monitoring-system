@@ -26,6 +26,35 @@ func main() {
 	svc = storagesvc.NewGRPCClient(conn)
 	testAll(svc)
 	//test("pullLocations", svc)
+	//addEvents(svc)
+}
+
+func addPosts(svc storagesvc.Service) {
+	gen := rand.New()
+	NY := data.Point{Lat: 40.7, Lon: -74}
+	now := time.Now().UTC().Unix()
+	genConf := rand.GenConfig{Center: NY, DeltaPoint: data.Point{Lat: 0.01, Lon: 0.002}, StartTime: now - 48*3600, FinishTime: now}
+	testPosts := gen.Posts(1000000, genConf)
+	err := svc.PushPosts(context.Background(), "nyc", testPosts)
+	if err != nil {
+		fmt.Printf("\n: error: %v", err)
+		return
+	}
+	fmt.Printf("\n: It is all right")
+}
+
+func addEvents(svc storagesvc.Service) {
+	gen := rand.New()
+	NY := data.Point{Lat: 40.7, Lon: -74}
+	now := time.Now().UTC().Unix()
+	genConf := rand.GenConfig{Center: NY, DeltaPoint: data.Point{Lat: 0.01, Lon: 0.002}, StartTime: now - 48*3600, FinishTime: now}
+	events := gen.Events(400000, genConf)
+	err := svc.PushEvents(context.Background(), "nyc", events)
+	if err != nil {
+		fmt.Printf("\n: error: %v", err)
+		return
+	}
+	fmt.Printf("\n: It is all right")
 }
 
 var AllMethods = []string{"insertCity", "getAllCities", "getCity", "pushPosts", "selectPosts", "selectAggrPosts", "pullTimeline", "pushEvents", "pullEvents", "pullEventsTags", "pushGrid", "pullGrid", "pushLocations", "pullLocations"}
@@ -39,7 +68,7 @@ func testAll(svc storagesvc.Service) {
 func test(method string, svc storagesvc.Service) {
 	gen := rand.New()
 	NY := data.Point{Lat: 40.7, Lon: -74}
-	now := int64(time.Now().Second())
+	now := time.Now().UTC().Unix()
 	genConf := rand.GenConfig{Center: NY, DeltaPoint: data.Point{Lat: 0.1, Lon: 0.02}, StartTime: now - 24*3600, FinishTime: now}
 
 	switch method {
