@@ -7,9 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/detection"
-
 	service "github.com/angrymuskrat/event-monitoring-system/services/data-storage"
+	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/detection"
 	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/proto"
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	convtree "github.com/visheratin/conv-tree"
@@ -135,6 +134,19 @@ func convertDatesToGridIds(startDate, finishDate int64) (int64, int64) {
 	startNum := getGridNum(startTime.Month(), startTime.Weekday(), startTime.Hour())
 	finishNum := getGridNum(finishTime.Month(), finishTime.Weekday(), finishTime.Hour())
 	return startNum, finishNum
+}
+
+func getGridNum(month time.Month, day time.Weekday, hour int) int64 {
+	monthNum := int64(month)
+	var dayNum int64
+	switch day {
+	case time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday:
+		dayNum = 1
+	case time.Saturday, time.Sunday:
+		dayNum = 2
+	}
+	gridNum := monthNum*1000 + dayNum*100 + int64(hour)
+	return gridNum
 }
 
 func (es *eventSession) eventWorker(wg *sync.WaitGroup) {
