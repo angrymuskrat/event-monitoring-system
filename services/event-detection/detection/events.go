@@ -8,14 +8,17 @@ import (
 	convtree "github.com/visheratin/conv-tree"
 )
 
-func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints int, filterTags map[string]bool, start, finish int64) ([]data.Event, error) {
-	candGrid, err := findCandidates(histGrid, posts, maxPoints)
-	if err != nil {
-		return nil, err
+func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints int, filterTags map[string]bool, start, finish int64) ([]data.Event, bool) {
+	candGrid, wasFound := findCandidates(histGrid, posts, maxPoints)
+	if !wasFound {
+		return nil, false
 	}
 	splitGrid(&candGrid, maxPoints)
 	events := treeEvents(&candGrid, maxPoints, filterTags, start, finish)
-	return events, nil
+	if len(events) == 0 {
+		return nil, false
+	}
+	return events, true
 }
 
 func splitGrid(tree *convtree.ConvTree, maxPoints int) {

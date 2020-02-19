@@ -164,15 +164,12 @@ func (es *eventSession) eventWorker(wg *sync.WaitGroup) {
 			panic(err)
 		}
 
-		event, err := detection.FindEvents(grid, es.sortedPosts[id], es.cfg.MaxPoints, make(map[string]bool), es.eventReq.StartTime, es.eventReq.FinishDate)
-		if err != nil {
-			unilog.Logger().Error("can't generate grid", zap.Error(err))
-			es.status = FailedStatus
-			panic(err)
-		}
+		event, wasFound := detection.FindEvents(grid, es.sortedPosts[id], es.cfg.MaxPoints, make(map[string]bool), es.eventReq.StartTime, es.eventReq.FinishDate)
 
-		es.mut.Lock()
-		es.events = append(es.events, event...)
-		es.mut.Unlock()
+		if wasFound {
+			es.mut.Lock()
+			es.events = append(es.events, event...)
+			es.mut.Unlock()
+		}
 	}
 }
