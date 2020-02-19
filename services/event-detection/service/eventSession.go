@@ -49,7 +49,7 @@ func newEventSession(config Config, eventReq proto.EventRequest, id string) *eve
 }
 
 func (es *eventSession) detectEvents() {
-	conn, err := grpc.Dial(es.cfg.DataStorageAddress, grpc.WithInsecure())
+	conn, err := grpc.Dial(es.cfg.DataStorageAddress, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(service.MaxMsgSize)))
 	if err != nil {
 		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))
 		es.status = FailedStatus

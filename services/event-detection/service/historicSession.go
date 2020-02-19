@@ -61,7 +61,7 @@ func (hs *historicSession) generateGrids() {
 	}
 	close(hs.gridChan)
 	wg.Wait()
-	conn, err := grpc.Dial(hs.cfg.DataStorageAddress, grpc.WithInsecure(), grpc.WithMaxMsgSize(service.MaxMsgSize))
+	conn, err := grpc.Dial(hs.cfg.DataStorageAddress, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(service.MaxMsgSize)))
 	if err != nil {
 		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))
 		return
@@ -117,7 +117,7 @@ func getIntervals(start, finish int64, tz string) (map[int64][][2]int64, error) 
 }
 
 func (hs *historicSession) gridWorker(wg *sync.WaitGroup, area data.Area) {
-	conn, err := grpc.Dial(hs.cfg.DataStorageAddress, grpc.WithInsecure(), grpc.WithMaxMsgSize(service.MaxMsgSize))
+	conn, err := grpc.Dial(hs.cfg.DataStorageAddress, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(service.MaxMsgSize)))
 	if err != nil {
 		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))
 		return

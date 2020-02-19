@@ -17,7 +17,7 @@ func main() {
 		svc storagesvc.Service
 		err error
 	)
-	conn, err := grpc.Dial("localhost:8082", grpc.WithInsecure(), grpc.WithMaxMsgSize(storagesvc.MaxMsgSize))
+	conn, err := grpc.Dial("localhost:8082", grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(storagesvc.MaxMsgSize)))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v", err)
 		os.Exit(1)

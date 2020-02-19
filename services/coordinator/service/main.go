@@ -31,7 +31,7 @@ func Start(confPath string) {
 		return
 	}
 	Auth = BasicAuth{User: conf.User, Password: conf.Password}
-	conn, err := grpc.Dial(conf.DataStorageAddress, grpc.WithInsecure(), grpc.WithMaxMsgSize(storage.MaxMsgSize))
+	conn, err := grpc.Dial(conf.DataStorageAddress, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(storage.MaxMsgSize)))
 	if err != nil {
 		unilog.Logger().Error("do not be able to connect to data-storage", zap.Error(err))
 		return

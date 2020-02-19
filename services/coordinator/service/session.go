@@ -48,7 +48,7 @@ type SessionParameters struct {
 
 func NewSession(p SessionParameters, e ServiceEndpoints) (Session, error) {
 	id := uuid.New().String()
-	conn, err := grpc.Dial(e.EventDetection, grpc.WithInsecure())
+	conn, err := grpc.Dial(e.EventDetection, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(service.MaxMsgSize)))
 	if err != nil {
 		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))
 		return Session{}, err

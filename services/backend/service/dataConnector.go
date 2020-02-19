@@ -14,7 +14,7 @@ type DataConnector struct {
 }
 
 func NewDataConnector(storageAddress string) (DataConnector, error) {
-	conn, err := grpc.Dial(storageAddress, grpc.WithInsecure())
+	conn, err := grpc.Dial(storageAddress, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(service.MaxMsgSize)))
 	if err != nil {
 		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))
 		return DataConnector{}, err

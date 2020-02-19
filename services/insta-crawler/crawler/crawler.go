@@ -43,7 +43,7 @@ func NewCrawler(confPath string) (*Crawler, error) {
 	if conf.UseDataStorage {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		conn, err := grpc.DialContext(ctx, conf.DataStorageURL, grpc.WithInsecure())
+		conn, err := grpc.DialContext(ctx, conf.DataStorageURL, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(storagesvc.MaxMsgSize)))
 		if err != nil {
 			unilog.Logger().Error("unable to connect to storage service", zap.Error(err))
 		} else {
