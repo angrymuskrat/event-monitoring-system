@@ -121,7 +121,6 @@ func (cr *Crawler) uploadUnsavedPosts(sessionID, cityID string) error {
 		if err != nil {
 			return err
 		}
-		unilog.Logger().Info("uploaded unsaved posts", zap.Int("num", len(d)), zap.String("sess", sessionID))
 		lastID = cursor
 	}
 	return nil
@@ -319,7 +318,7 @@ func (cr *Crawler) sendPostsToDataStorage(posts []data.Post, sessionID, cityID s
 		unilog.Logger().Error("error while sending to data storage", zap.Error(err))
 		return err
 	}
-	unilog.Logger().Info("uploaded new posts", zap.Int("num", len(posts)), zap.String("sess", sessionID))
+	unilog.Logger().Info("uploaded posts", zap.Int("num", len(posts)), zap.String("sess", sessionID))
 	lastPost := posts[len(posts)-1].ID
 	st, err := storage.Instance()
 	if err != nil {
