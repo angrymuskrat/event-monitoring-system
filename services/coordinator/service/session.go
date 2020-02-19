@@ -281,7 +281,7 @@ func (s *Session) historicStart() error {
 		Timezone:   s.Params.Timezone,
 		CityId:     s.Params.CityID,
 		StartTime:  s.Params.HistoricStart,
-		FinishDate: s.Params.HistoricFinish,
+		FinishTime: s.Params.HistoricFinish,
 		GridSize:   s.Params.GridSize,
 	}
 	unilog.Logger().Info("historicStart was started")
