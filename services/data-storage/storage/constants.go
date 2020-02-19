@@ -2,30 +2,23 @@ package storage
 
 import (
 	"fmt"
-	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"strings"
+
+	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 )
 
 const Hour = 60 * 60
 
-
-
 const PostgresDBName = "postgres"
 const GeneralDBName = "general"
-
-
 
 const ExtensionTimescaleDB = "CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;"
 const ExtensionPostGIS = "CREATE EXTENSION IF NOT EXISTS postgis;"
 const ExtensionPostGISTopology = "CREATE EXTENSION IF NOT EXISTS postgis_topology;"
 const CreateTimeFunction = "CREATE OR REPLACE FUNCTION unix_now() returns BIGINT LANGUAGE SQL STABLE as $$ SELECT extract(epoch from now())::BIGINT $$;"
 
-
-
 const CreateDB = "CREATE DATABASE %v;"
 const SelectDB = "SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = lower('%v');"
-
-
 
 const CreateCitiesTable = `
 	CREATE TABLE IF NOT EXISTS cities(
@@ -70,7 +63,6 @@ const SelectCity = `
 	WHERE Code = '%v';
 `
 
-
 const CreateHyperTablePosts = "SELECT create_hypertable('posts', 'timestamp', chunk_time_interval => 86400, if_not_exists => TRUE);"
 const SetTimeFunctionForPosts = "SELECT set_integer_now_func('posts', 'unix_now', replace_if_exists => true);"
 const CreatePostsTable = `
@@ -95,7 +87,7 @@ const InsertPost = `
 		(ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, Location)
 	VALUES 
 		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, ST_SetSRID( ST_Point($12, $13), 4326))
-	ON CONFLICT (Shortcode, Timestamp) DO NOTHING;
+	ON CONFLICT (Shortcode, Timestamp) DO UPDATE SET Location = EXCLUDED.Location;
 `
 const SelectPosts = `
 	SELECT 
@@ -105,8 +97,6 @@ const SelectPosts = `
 	FROM posts
 	WHERE Timestamp BETWEEN %v AND %v
 `
-
-
 
 const CreateAggrPostsView = `
 	CREATE VIEW aggr_posts
@@ -127,7 +117,6 @@ const SelectAggrPosts = `
 	FROM aggr_posts
 	WHERE hour = %v AND ST_Contains(%v, center); 
 `
-
 
 const CreateHyperTableEvents = "SELECT create_hypertable('events', 'start', chunk_time_interval => 86400, if_not_exists => TRUE);"
 const SetTimeFunctionForEvents = "SELECT set_integer_now_func('events', 'unix_now', replace_if_exists => true);"
@@ -168,6 +157,7 @@ const SelectEventsTags = `
 	WHERE
 		((%v <= Start AND %v > Start) OR (%v BETWEEN Start AND Finish)) %v;
 `
+
 func MakeSelectEventsTags(tags []string, start, finish int64) string {
 	tagsStr := ""
 	if len(tags) > 0 {
@@ -215,7 +205,6 @@ const SelectTimeline = `
 	GROUP BY time;
 `
 
-
 const CreateLocationsTable = `
 	CREATE TABLE IF NOT EXISTS locations (
 		ID VARCHAR(20) NOT NULL PRIMARY KEY,
@@ -239,8 +228,6 @@ const SelectLocations = `
 	FROM locations;
 `
 
-
-
 const CreateGridsTable = `
 	CREATE TABLE IF NOT EXISTS grids(
 		ID BIGINT PRIMARY KEY,
@@ -257,9 +244,6 @@ const SelectGrid = `
 	FROM grids 
 	WHERE id BETWEEN %v AND %v;
 `
-
-
-
 
 func MakePoly(area data.Area) string {
 	return fmt.Sprintf("ST_Polygon('LINESTRING(%v %v, %v %v, %v %v, %v %v, %v %v)'::geometry, 4326)",
