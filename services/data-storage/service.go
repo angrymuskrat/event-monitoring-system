@@ -13,7 +13,7 @@ const (
 
 	// Max size for income messages of grpcService; in bytes
 	// For client is needed also set max income message side, but this is done by the client during initialization of grpcClient
-	MaxMsgSize = 1000000000
+	MaxMsgSize = 15000000000
 )
 
 type Service interface {
