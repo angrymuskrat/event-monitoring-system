@@ -280,6 +280,7 @@ func (s *Session) historicStart() error {
 	req := proto.HistoricRequest{
 		Timezone:   s.Params.Timezone,
 		CityId:     s.Params.CityID,
+		Area:       &data.Area{TopLeft: &s.Params.TopLeft, BotRight: &s.Params.BottomRight},
 		StartTime:  s.Params.HistoricStart,
 		FinishTime: s.Params.HistoricFinish,
 		GridSize:   s.Params.GridSize,
