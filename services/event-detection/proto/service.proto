@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package proto;
 
+import "proto/data.proto";
+
 service EventDetection {
     rpc HistoricGrids (HistoricRequest) returns (HistoricResponse) {
     }
@@ -18,8 +20,9 @@ message HistoricRequest {
     string timezone = 1;
     string cityId = 2;
     int64 startTime = 3;
-    int64 finishDate = 4;
-    double gridSize = 5;
+    int64 finishTime = 4;
+    data.Area area = 5;
+    double gridSize = 6;
 }
 
 // HistoricResponse represents a response containing historic generation session ID.
