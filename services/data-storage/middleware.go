@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
-	"github.com/angrymuskrat/event-monitoring-system/services/proto"
-	"go.uber.org/zap"
 	"time"
+
+	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
+	"go.uber.org/zap"
 )
 
 type loggingMiddleware struct {
@@ -13,7 +14,7 @@ type loggingMiddleware struct {
 }
 
 func (mw loggingMiddleware) InsertCity(ctx context.Context, city data.City, updateIfExists bool) (err error) {
-	func(begin time.Time) {
+	defer func(begin time.Time) {
 		mw.logger.Info("insert city request",
 			zap.Any("city", city),
 			zap.Bool("update option", updateIfExists),
@@ -25,7 +26,7 @@ func (mw loggingMiddleware) InsertCity(ctx context.Context, city data.City, upda
 }
 
 func (mw loggingMiddleware) GetAllCities(ctx context.Context) (cities []data.City, err error) {
-	func(begin time.Time) {
+	defer func(begin time.Time) {
 		mw.logger.Info("get all cities request",
 			zap.Error(err),
 			zap.String("took", time.Since(begin).String()))
@@ -35,7 +36,7 @@ func (mw loggingMiddleware) GetAllCities(ctx context.Context) (cities []data.Cit
 }
 
 func (mw loggingMiddleware) GetCity(ctx context.Context, cityId string) (city *data.City, err error) {
-	func(begin time.Time) {
+	defer func(begin time.Time) {
 		mw.logger.Info("get city by id",
 			zap.String("cityId", cityId),
 			zap.Error(err),
@@ -46,7 +47,7 @@ func (mw loggingMiddleware) GetCity(ctx context.Context, cityId string) (city *d
 }
 
 func (mw loggingMiddleware) PushPosts(ctx context.Context, cityId string, posts []data.Post) (err error) {
-	func(begin time.Time) {
+	defer func(begin time.Time) {
 		mw.logger.Info("push posts request",
 			zap.Int("count of posts", len(posts)),
 			zap.String("city id", cityId),
