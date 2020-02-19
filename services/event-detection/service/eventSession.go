@@ -1,9 +1,11 @@
 package service
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/gob"
+	"os"
 	"sync"
 	"time"
 
@@ -162,7 +164,19 @@ func (es *eventSession) eventWorker(wg *sync.WaitGroup) {
 			continue
 		}
 
-		event, wasFound := detection.FindEvents(grid, posts, es.cfg.MaxPoints, make(map[string]bool), startTime, finishTime)
+		tagsPath := "/home/alexvish/monitoring/event-detection/"
+		filterTags := map[string]bool{}
+		f, err := os.OpenFile(tagsPath, os.O_RDONLY, 0644)
+		if err == nil {
+			scanner := bufio.NewScanner(f)
+			scanner.Split(bufio.ScanLines)
+			for scanner.Scan() {
+				tag := "#" + scanner.Text()
+				filterTags[tag] = false
+			}
+		}
+
+		event, wasFound := detection.FindEvents(grid, posts, es.cfg.MaxPoints, filterTags, startTime, finishTime)
 
 		if wasFound {
 			es.mut.Lock()
