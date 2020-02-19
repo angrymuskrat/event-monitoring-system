@@ -23,28 +23,24 @@ const (
 )
 
 type eventSession struct {
-	id          string
-	status      StatusType
-	cfg         Config
-	eventReq    proto.EventRequest
-	postsChan   chan data.Post
-	gridsChan   chan int64
-	sortedPosts map[int64][]data.Post
-	grids       map[int64][]byte
-	events      []data.Event
-	mut         sync.Mutex
+	id       string
+	status   StatusType
+	cfg      Config
+	eventReq proto.EventRequest
+	timeChan chan time.Time
+	grids    map[int64][]byte
+	events   []data.Event
+	mut      sync.Mutex
 }
 
 func newEventSession(config Config, eventReq proto.EventRequest, id string) *eventSession {
 	return &eventSession{
-		id:          id,
-		status:      RunningStatus,
-		cfg:         config,
-		eventReq:    eventReq,
-		postsChan:   make(chan data.Post),
-		gridsChan:   make(chan int64),
-		sortedPosts: make(map[int64][]data.Post),
-		grids:       make(map[int64][]byte),
+		id:       id,
+		status:   RunningStatus,
+		cfg:      config,
+		eventReq: eventReq,
+		timeChan: make(chan time.Time),
+		grids:    make(map[int64][]byte),
 	}
 }
 
@@ -57,24 +53,6 @@ func (es *eventSession) detectEvents() {
 	}
 	client := service.NewGRPCClient(conn)
 
-	posts, area, err := client.SelectPosts(context.Background(), es.eventReq.CityId, es.eventReq.StartTime, es.eventReq.FinishDate)
-	if err != nil {
-		unilog.Logger().Error("unable to get posts from data strorage", zap.Error(err))
-		es.status = FailedStatus
-		panic(err)
-	}
-
-	wg := &sync.WaitGroup{}
-	for w := 1; w <= es.cfg.WorkersNumber; w++ {
-		wg.Add(1)
-		go es.readWorker(wg, *area)
-	}
-	for _, post := range posts {
-		es.postsChan <- post
-	}
-	close(es.postsChan)
-	wg.Wait()
-
 	startId, finishId := convertDatesToGridIds(es.eventReq.StartTime, es.eventReq.FinishDate)
 
 	es.grids, err = client.PullGrid(context.Background(), es.eventReq.CityId, startId, finishId)
@@ -84,15 +62,22 @@ func (es *eventSession) detectEvents() {
 		panic(err)
 	}
 
-	wg = &sync.WaitGroup{}
+	times, err := getTimes(es.eventReq.StartTime, es.eventReq.FinishDate, es.eventReq.Timezone)
+	if err != nil {
+		unilog.Logger().Error("unable to generate intervals", zap.Error(err))
+		es.status = FailedStatus
+		panic(err)
+	}
+
+	wg := &sync.WaitGroup{}
 	for w := 1; w <= es.cfg.WorkersNumber; w++ {
 		wg.Add(1)
 		go es.eventWorker(wg)
 	}
-	for id, _ := range es.grids {
-		es.gridsChan <- id
+	for _, t := range times {
+		es.timeChan <- t
 	}
-	close(es.gridsChan)
+	close(es.timeChan)
 	wg.Wait()
 
 	err = client.PushEvents(context.Background(), es.eventReq.CityId, es.events)
@@ -102,27 +87,25 @@ func (es *eventSession) detectEvents() {
 		panic(err)
 	}
 	es.status = FinishedStatus
-
 }
 
-func (es *eventSession) readWorker(wg *sync.WaitGroup, area data.Area) {
-	defer wg.Done()
-	for post := range es.postsChan {
-		if post.Lat <= area.TopLeft.Lat && post.Lat >= area.BotRight.Lat && post.Lon >= area.TopLeft.Lon && post.Lon <= area.BotRight.Lon {
-			postTime := time.Unix(post.Timestamp, 0)
-			loc, err := time.LoadLocation(es.eventReq.Timezone)
-			if err != nil {
-				unilog.Logger().Error("can't load location", zap.Error(err))
-				es.status = FailedStatus
-				panic(err)
-			}
-			postTime = postTime.In(loc)
-			gridNum := getGridNum(postTime.Month(), postTime.Weekday(), postTime.Hour())
-			es.mut.Lock()
-			es.sortedPosts[gridNum] = append(es.sortedPosts[gridNum], post)
-			es.mut.Unlock()
-		}
+func getTimes(start, finish int64, tz string) ([]time.Time, error) {
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		unilog.Logger().Error("unable to load timezone", zap.Error(err))
+		return nil, err
 	}
+	res := []time.Time{}
+	s := time.Unix(start, 0)
+	s = s.In(loc)
+	f := time.Unix(finish, 0)
+	f = f.In(loc)
+	c := s
+	for c.Before(f) {
+		res = append(res, c)
+		c = c.Add(time.Hour)
+	}
+	return res, nil
 }
 
 func convertDatesToGridIds(startDate, finishDate int64) (int64, int64) {
@@ -151,9 +134,16 @@ func getGridNum(month time.Month, day time.Weekday, hour int) int64 {
 
 func (es *eventSession) eventWorker(wg *sync.WaitGroup) {
 	defer wg.Done()
+	conn, err := grpc.Dial(es.cfg.DataStorageAddress, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(service.MaxMsgSize)))
+	if err != nil {
+		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))
+		return
+	}
+	cl := service.NewGRPCClient(conn)
 
-	for id := range es.gridsChan {
-		buf := bytes.NewBuffer(es.grids[id])
+	for t := range es.timeChan {
+		timeNum := getGridNum(t.Month(), t.Weekday(), t.Hour())
+		buf := bytes.NewBuffer(es.grids[timeNum])
 		dec := gob.NewDecoder(buf)
 
 		var grid convtree.ConvTree
@@ -164,7 +154,15 @@ func (es *eventSession) eventWorker(wg *sync.WaitGroup) {
 			panic(err)
 		}
 
-		event, wasFound := detection.FindEvents(grid, es.sortedPosts[id], es.cfg.MaxPoints, make(map[string]bool), es.eventReq.StartTime, es.eventReq.FinishDate)
+		startTime := t.Unix()
+		finishTime := t.Unix() + 3600
+		posts, _, err := cl.SelectPosts(context.Background(), es.eventReq.CityId, startTime, t.Unix()+3600)
+		if err != nil {
+			unilog.Logger().Error("unable to get posts from data strorage", zap.Error(err))
+			continue
+		}
+
+		event, wasFound := detection.FindEvents(grid, posts, es.cfg.MaxPoints, make(map[string]bool), startTime, finishTime)
 
 		if wasFound {
 			es.mut.Lock()
