@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
+	"errors"
 	"sync"
 	"time"
 
@@ -16,131 +17,120 @@ import (
 	"google.golang.org/grpc"
 )
 
-const secondsInMonth = 2592000
-
 type historicSession struct {
-	id          string
-	status      StatusType
-	cfg         Config
-	histReq     proto.HistoricRequest
-	postsChan   chan *data.Post
-	gridChan    chan int64
-	sortedPosts map[int64][]*data.Post
-	grids       map[int64][]byte
-	mut         sync.Mutex
+	id       string
+	status   StatusType
+	cfg      Config
+	histReq  proto.HistoricRequest
+	gridChan chan interval
+	grids    map[int64][]byte
+	mut      sync.Mutex
+	client   service.GrpcService
 }
 
 func newHistoricSession(config Config, histReq proto.HistoricRequest, id string) *historicSession {
+	conn, err := grpc.Dial(config.DataStorageAddress, grpc.WithInsecure(), grpc.WithMaxMsgSize(service.MaxMsgSize))
+	if err != nil {
+		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))
+		return nil
+	}
+	cl := service.NewGRPCClient(conn)
 	return &historicSession{
-		id:          id,
-		status:      RunningStatus,
-		cfg:         config,
-		histReq:     histReq,
-		postsChan:   make(chan *data.Post),
-		gridChan:    make(chan int64),
-		sortedPosts: make(map[int64][]*data.Post),
-		grids:       make(map[int64][]byte),
+		id:       id,
+		status:   RunningStatus,
+		cfg:      config,
+		histReq:  histReq,
+		gridChan: make(chan interval),
+		grids:    make(map[int64][]byte),
+		client:   cl,
 	}
 }
 
 func (hs *historicSession) generateGrids() {
-	unilog.Logger().Info(hs.cfg.DataStorageAddress)
-	conn, err := grpc.Dial(hs.cfg.DataStorageAddress, grpc.WithInsecure(), grpc.WithMaxMsgSize(service.MaxMsgSize))
+	intervals, err := getIntervals(hs.histReq.StartTime, hs.histReq.FinishTime, hs.histReq.Timezone)
 	if err != nil {
-		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))
+		unilog.Logger().Error("unable to generate intervals", zap.Error(err))
 		hs.status = FailedStatus
 		panic(err)
 	}
-	client := service.NewGRPCClient(conn)
-	var posts []data.Post
-	var ps []data.Post
-	var area *data.Area
-	startTime := hs.histReq.StartTime
-	finishTime := hs.histReq.StartTime + secondsInMonth
-	for startTime < hs.histReq.FinishDate {
-		if finishTime > hs.histReq.FinishDate {
-			finishTime = hs.histReq.FinishDate
-		}
-		ps, area, err = client.SelectPosts(context.Background(), hs.histReq.CityId, startTime, finishTime)
-		if err != nil {
-			unilog.Logger().Error("unable to get posts from data strorage", zap.Error(err))
-			hs.status = FailedStatus
-			panic(err)
-		}
-		posts = append(posts, ps...)
-		startTime += secondsInMonth
-		finishTime += secondsInMonth
-	}
-
+	area := hs.histReq.Area
 	wg := &sync.WaitGroup{}
-	for w := 1; w <= hs.cfg.WorkersNumber; w++ {
-		wg.Add(1)
-		go hs.readWorker(wg, *area)
-	}
-	for _, post := range posts {
-		hs.postsChan <- &post
-	}
-	close(hs.postsChan)
-	wg.Wait()
-	wg = &sync.WaitGroup{}
 	for w := 1; w <= hs.cfg.WorkersNumber; w++ {
 		wg.Add(1)
 		go hs.gridWorker(wg, *area)
 	}
-
-	for gridID := range hs.sortedPosts {
-		hs.gridChan <- gridID
+	for k, ils := range intervals {
+		il := interval{
+			key:   k,
+			value: ils,
+		}
+		hs.gridChan <- il
 	}
 	close(hs.gridChan)
 	wg.Wait()
-
-	err = client.PushGrid(context.Background(), hs.histReq.CityId, hs.grids)
+	err = hs.client.PushGrid(context.Background(), hs.histReq.CityId, hs.grids)
 	if err != nil {
-		unilog.Logger().Error("can't push grid to data storage", zap.Error(err))
+		unilog.Logger().Error("unable to push grid to data storage", zap.Error(err))
 		hs.status = FailedStatus
 		panic(err)
 	}
 	hs.status = FinishedStatus
 }
 
-func (hs *historicSession) readWorker(wg *sync.WaitGroup, area data.Area) {
-	defer wg.Done()
-	for post := range hs.postsChan {
-		//if post.Lat <= area.TopLeft.Lat && post.Lat >= area.BotRight.Lat && post.Lon >= area.TopLeft.Lon && post.Lon <= area.BotRight.Lon {
-		postTime := time.Unix(post.Timestamp, 0)
-		loc, err := time.LoadLocation(hs.histReq.Timezone)
-		if err != nil {
-			unilog.Logger().Error("can't load location", zap.Error(err))
-			hs.status = FailedStatus
-			panic(err)
+func getIntervals(start, finish int64, tz string) (map[int64][][2]int64, error) {
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		unilog.Logger().Error("unable to load timezone", zap.Error(err))
+		return nil, err
+	}
+	res := map[int64][][2]int64{}
+	s := time.Unix(start, 0)
+	s = s.In(loc)
+	if s.Month() != time.January || s.Day() != 1 || s.Hour() != 0 || s.Minute() != 0 || s.Second() != 0 {
+		return nil, errors.New("start timestamp must be 1 January 00:00:00")
+	}
+	f := time.Unix(finish, 0)
+	f = f.In(loc)
+	if f.Month() != time.January || f.Day() != 1 || f.Hour() != 0 || f.Minute() != 0 || f.Second() != 0 {
+		return nil, errors.New("finish timestamp must be 1 January 00:00:00")
+	}
+	c := s
+	for !c.Equal(f) {
+		wd := c.Weekday()
+		var w int64
+		switch wd {
+		case time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday:
+			w = 1
+		case time.Saturday, time.Sunday:
+			w = 2
 		}
-		postTime = postTime.In(loc)
-		gridNum := getGridNum(postTime.Month(), postTime.Weekday(), postTime.Hour())
-		hs.mut.Lock()
-		hs.sortedPosts[gridNum] = append(hs.sortedPosts[gridNum], post)
-		hs.mut.Unlock()
-		//}
+		k := 1000*int64(c.Month()) + 100*w + int64(c.Hour())
+		v, ok := res[k]
+		if !ok {
+			v = [][2]int64{}
+		}
+		t := c.Unix()
+		v = append(v, [2]int64{t, t + 3600})
+		res[k] = v
+		c = c.Add(time.Hour)
 	}
-}
-
-func getGridNum(month time.Month, day time.Weekday, hour int) int64 {
-	monthNum := int64(month)
-	var dayNum int64
-	switch day {
-	case time.Monday, time.Tuesday, time.Wednesday, time.Thursday, time.Friday:
-		dayNum = 1
-	case time.Saturday, time.Sunday:
-		dayNum = 2
-	}
-	gridNum := monthNum*1000 + dayNum*100 + int64(hour)
-	return gridNum
+	return res, nil
 }
 
 func (hs *historicSession) gridWorker(wg *sync.WaitGroup, area data.Area) {
 	defer wg.Done()
-
 	for id := range hs.gridChan {
-		grid, err := detection.HistoricGrid(hs.sortedPosts[id], *area.TopLeft, *area.BotRight, hs.cfg.MaxPoints, hs.histReq.Timezone, hs.histReq.GridSize)
+		posts := []data.Post{}
+		for _, i := range id.value {
+			ps, _, err := hs.client.SelectPosts(context.Background(), hs.histReq.CityId, i[0], i[1])
+			if err != nil {
+				unilog.Logger().Error("unable to get posts from data strorage", zap.Error(err))
+				hs.status = FailedStatus
+				panic(err)
+			}
+			posts = append(posts, ps...)
+		}
+		grid, err := detection.HistoricGrid(posts, *area.TopLeft, *area.BotRight, hs.cfg.MaxPoints, hs.histReq.Timezone, hs.histReq.GridSize)
 		if err != nil {
 			unilog.Logger().Error("can't generate grid", zap.Error(err))
 			hs.status = FailedStatus
@@ -156,7 +146,12 @@ func (hs *historicSession) gridWorker(wg *sync.WaitGroup, area data.Area) {
 		}
 
 		hs.mut.Lock()
-		hs.grids[id] = buf.Bytes()
+		hs.grids[id.key] = buf.Bytes()
 		hs.mut.Unlock()
 	}
+}
+
+type interval struct {
+	key   int64
+	value [][2]int64
 }

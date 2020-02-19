@@ -19,7 +19,7 @@ const (
 	gridSize   = 10
 )
 
-func HistoricGrid(data []*data.Post, topLeft, bottomRight data.Point, maxPoints int, tz string, gridSize float64) (convtree.ConvTree, error) {
+func HistoricGrid(data []data.Post, topLeft, bottomRight data.Point, maxPoints int, tz string, gridSize float64) (convtree.ConvTree, error) {
 	posts, numDays, err := splitPosts(data, tz, topLeft, gridSize)
 	if err != nil {
 		unilog.Logger().Error("unable to split posts", zap.Error(err))
@@ -101,7 +101,7 @@ func filterPosts(posts map[string]int, numDays int) float64 {
 	}
 }
 
-func splitPosts(data []*data.Post, tz string, topLeft data.Point, gridSize float64) (map[convtree.Point]map[string]int, int, error) {
+func splitPosts(data []data.Post, tz string, topLeft data.Point, gridSize float64) (map[convtree.Point]map[string]int, int, error) {
 	posts := map[convtree.Point]map[string]int{}
 	uniqueDays := map[string]string{}
 	loc, err := time.LoadLocation(tz)
