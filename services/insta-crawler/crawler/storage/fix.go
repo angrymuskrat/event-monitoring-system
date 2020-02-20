@@ -2,8 +2,9 @@ package storage
 
 import (
 	"encoding/json"
-	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
 	"os"
+
+	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
 )
 
 type Location struct {
@@ -35,15 +36,18 @@ func NewFixer(path string) (Fixer, error) {
 }
 
 func (f Fixer) Fix(d []data.Post) []data.Post {
-	res := make([]data.Post, len(d))
-	for i, p := range d {
-		res[i] = p
+	res := make([]data.Post, 0, len(d))
+	for _, p := range d {
+		if p.Lat != 0 {
+			continue
+		}
 		l, ok := f.loc[p.LocationID]
 		if !ok {
 			continue
 		}
-		res[i].Lat = l.Lat
-		res[i].Lon = l.Lon
+		p.Lat = l.Lat
+		p.Lon = l.Lon
+		res = append(res, p)
 	}
 	return res
 }

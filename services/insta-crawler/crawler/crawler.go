@@ -90,8 +90,8 @@ func (cr *Crawler) restoreSessions() {
 			continue
 		}
 		if sess.Status.Status == ToFix {
-			err = cr.fixPostsLocations(sess.ID)
-			if err != nil{
+			err = cr.fixPostsLocations(sess.ID, sess.Params.CityID)
+			if err != nil {
 				return
 			}
 		}
@@ -106,7 +106,7 @@ func (cr *Crawler) restoreSessions() {
 	}
 }
 
-func (cr *Crawler) fixPostsLocations(sessionID string) error {
+func (cr *Crawler) fixPostsLocations(sessionID, cityID string) error {
 	dbPath := path.Join(cr.config.RootDir, sessionID, "bolt.db")
 	err := storage.Init(dbPath)
 	if err != nil {
@@ -131,6 +131,12 @@ func (cr *Crawler) fixPostsLocations(sessionID string) error {
 		err = st.WritePosts(sessionID, d)
 		if err != nil {
 			return err
+		}
+		if cr.dataStorage != nil {
+			err := cr.sendPostsToDataStorage(d, sessionID, cityID)
+			if err != nil {
+				return err
+			}
 		}
 		lastID = cursor
 	}
