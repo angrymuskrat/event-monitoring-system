@@ -391,8 +391,9 @@ func (s *Session) eventsStatus() (bool, error) {
 		return false, err
 	}
 	s.Status = status.Monitoring{
-		SessionID: st.SessionID,
-		Status:    resp.Status,
+		SessionID:        st.SessionID,
+		CurrentTimestamp: st.CurrentTimestamp,
+		Status:           resp.Status,
 	}
 	return resp.Finished, nil
 }
