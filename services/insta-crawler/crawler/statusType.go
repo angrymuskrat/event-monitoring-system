@@ -12,6 +12,7 @@ const (
 	RunningStatus
 	FinishedStatus
 	FailedStatus
+	ToFix
 )
 
 func parseStatusType(s string) StatusType {

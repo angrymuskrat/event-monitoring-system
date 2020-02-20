@@ -356,7 +356,7 @@ func (w *worker) proceedResponse(d []byte, entityID string) (endCursor string, h
 	if w.savePosts { // save posts to tmp array for sending to data storage
 		w.posts = append(w.posts, posts...)
 	}
-	err = st.WritePosts(w.sessionID, entityID, posts)
+	err = st.WritePosts(w.sessionID, posts)
 	if len(posts) > 0 {
 		w.sessionStatus.updatePostsCollected(len(posts))
 	}

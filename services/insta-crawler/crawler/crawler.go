@@ -89,6 +89,12 @@ func (cr *Crawler) restoreSessions() {
 		if sess.Status.Status == FailedStatus {
 			continue
 		}
+		if sess.Status.Status == ToFix {
+			err = cr.fixPostsLocations(sess.ID)
+			if err != nil{
+				return
+			}
+		}
 		if cr.dataStorage != nil {
 			err = cr.uploadUnsavedPosts(sess.ID, sess.Params.CityID)
 			if err != nil {
@@ -98,6 +104,37 @@ func (cr *Crawler) restoreSessions() {
 		}
 		cr.sessions = append(cr.sessions, &sess)
 	}
+}
+
+func (cr *Crawler) fixPostsLocations(sessionID string) error {
+	dbPath := path.Join(cr.config.RootDir, sessionID, "bolt.db")
+	err := storage.Init(dbPath)
+	if err != nil {
+		return err
+	}
+	st, err := storage.Instance()
+	if err != nil {
+		return err
+	}
+	lastID := ""
+	num := 50000
+	fixer, err := storage.NewFixer("./locations.json")
+	if err != nil {
+		return err
+	}
+	for {
+		d, cursor := st.Posts(sessionID, lastID, num)
+		if len(d) <= 1 {
+			break
+		}
+		d = fixer.Fix(d)
+		err = st.WritePosts(sessionID, d)
+		if err != nil {
+			return err
+		}
+		lastID = cursor
+	}
+	return nil
 }
 
 func (cr *Crawler) uploadUnsavedPosts(sessionID, cityID string) error {

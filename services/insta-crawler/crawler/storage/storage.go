@@ -212,7 +212,7 @@ func (s Storage) Posts(sessionID, offset string, num int) ([]data.Post, string) 
 	return res, cursor
 }
 
-func (s Storage) WritePosts(sessionID, entityID string, posts []data.Post) error {
+func (s Storage) WritePosts(sessionID string, posts []data.Post) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		sessionBucket, err := tx.CreateBucketIfNotExists([]byte(sessionID))
 		if err != nil {
@@ -232,7 +232,7 @@ func (s Storage) WritePosts(sessionID, entityID string, posts []data.Post) error
 			err = dataBucket.Put([]byte(posts[i].ID), d)
 			if err != nil {
 				unilog.Logger().Error("unable to put data into a bucket", zap.String("session", sessionID),
-					zap.String("entity", entityID), zap.Error(err))
+					zap.Error(err))
 			}
 		}
 		return err
