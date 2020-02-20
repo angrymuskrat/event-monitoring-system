@@ -164,7 +164,7 @@ func (es *eventSession) eventWorker(wg *sync.WaitGroup) {
 			continue
 		}
 
-		tagsPath := "/home/alexvish/monitoring/event-detection/"
+		tagsPath := "/home/alexvish/monitoring/event-detection/spb_tags_base.txt"
 		filterTags := map[string]bool{}
 		f, err := os.OpenFile(tagsPath, os.O_RDONLY, 0644)
 		if err == nil {
