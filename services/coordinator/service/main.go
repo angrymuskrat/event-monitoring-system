@@ -17,12 +17,6 @@ import (
 	"os"
 )
 
-type BasicAuth struct {
-	User     string
-	Password string
-}
-
-var Auth BasicAuth
 var Storage storage.GrpcService
 
 func Start(confPath string) {
@@ -30,8 +24,7 @@ func Start(confPath string) {
 	if err != nil {
 		return
 	}
-	Auth = BasicAuth{User: conf.User, Password: conf.Password}
-	conn, err := grpc.Dial(conf.DataStorageAddress, grpc.WithInsecure(), grpc.WithMaxMsgSize(storage.MaxMsgSize))
+	conn, err := grpc.Dial(conf.DataStorage.Address, grpc.WithInsecure(), grpc.WithMaxMsgSize(storage.MaxMsgSize))
 	if err != nil {
 		unilog.Logger().Error("do not be able to connect to data-storage", zap.Error(err))
 		return
@@ -39,8 +32,8 @@ func Start(confPath string) {
 	Storage = storage.NewGRPCClient(conn)
 
 	endpoints := ServiceEndpoints{
-		Crawler:        conf.CrawlerAddress,
-		EventDetection: conf.EventDetectionAddress,
+		Crawler:        conf.Crawler,
+		EventDetection: conf.EventDetection,
 	}
 	//logger := setupLog(conf.LogPath)
 	var svc CoordinatorService

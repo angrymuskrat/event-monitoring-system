@@ -1,6 +1,15 @@
 Address = "localhost:8086"
-CrawlerAddress = "localhost:8080"
-DataStorageAddress = "localhost:8082"
-EventDetectionAddress = "localhost:8084"
+User = "user"
+Password = "pwd"
+[Crawler]
+Address = "localhost:8080"
+User = "user"
+Password = "pwd"
+[DataStorage]
+Address = "localhost:8082"
+User = "user"
+Password = "pwd"
+[EventDetection]
+Address = "localhost:8084"
 User = "user"
 Password = "pwd"

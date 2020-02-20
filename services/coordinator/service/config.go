@@ -6,14 +6,20 @@ import (
 	"go.uber.org/zap"
 )
 
+type ServiceConfig struct {
+	Address  string
+	User     string
+	Password string
+}
+
 type Config struct {
-	Address               string
-	LogPath               string
-	User                  string
-	Password              string
-	CrawlerAddress        string
-	DataStorageAddress    string
-	EventDetectionAddress string
+	Address        string
+	LogPath        string
+	User           string
+	Password       string
+	Crawler        ServiceConfig
+	DataStorage    ServiceConfig
+	EventDetection ServiceConfig
 }
 
 func readConfig(path string) (cfg Config, err error) {

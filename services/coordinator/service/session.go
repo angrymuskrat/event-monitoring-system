@@ -46,15 +46,15 @@ type SessionParameters struct {
 	SkipHistoric   bool
 }
 
-func NewSession(p SessionParameters, e ServiceEndpoints) (Session, error) {
+func NewSession(p SessionParameters, e ServiceEndpoints) (*Session, error) {
 	id := uuid.New().String()
-	conn, err := grpc.Dial(e.EventDetection, grpc.WithInsecure())
+	conn, err := grpc.Dial(e.EventDetection.Address, grpc.WithInsecure())
 	if err != nil {
 		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))
-		return Session{}, err
+		return nil, err
 	}
 	client := service.NewClient(conn)
-	return Session{
+	return &Session{
 		ID:        id,
 		Params:    p,
 		Endpoints: e,
@@ -70,7 +70,7 @@ func (s *Session) Run() {
 		city := data.City{Title: s.Params.CityName, Code: s.Params.CityID, Area: area}
 		err = Storage.InsertCity(context.Background(), city, true)
 		if err != nil {
-			unilog.Logger().Error("do not be able to insert city", zap.Any("city", city), zap.Error(err))
+			unilog.Logger().Error("unable to insert city", zap.Any("city", city), zap.Error(err))
 			return
 		}
 		err = s.historicCollect()
@@ -135,9 +135,8 @@ func (s *Session) startCollect() error {
 		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
 		return err
 	}
-	req.SetBasicAuth(Auth.User, Auth.Password)
+	req.SetBasicAuth(s.Endpoints.Crawler.User, s.Endpoints.Crawler.Password)
 	resp, err := client.Do(req)
-	//resp, err := http.Post(url, "application/json", buf)
 	if err != nil {
 		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
 		return err
@@ -178,7 +177,7 @@ func (s *Session) checkCollect() (int, error) {
 		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
 		return -1, err
 	}
-	req.SetBasicAuth(Auth.User, Auth.Password)
+	req.SetBasicAuth(s.Endpoints.Crawler.User, s.Endpoints.Crawler.Password)
 	resp, err := client.Do(req)
 	//resp, err := http.Get(url)
 	if err != nil {
@@ -228,7 +227,7 @@ func (s *Session) deleteCollect() error {
 		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
 		return err
 	}
-	req.SetBasicAuth(Auth.User, Auth.Password)
+	req.SetBasicAuth(s.Endpoints.Crawler.User, s.Endpoints.Crawler.Password)
 	resp, err := client.Do(req)
 	//resp, err := http.Post(url, "application/json", buf)
 	if err != nil {
