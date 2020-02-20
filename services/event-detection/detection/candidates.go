@@ -1,12 +1,11 @@
 package detection
 
 import (
-	"errors"
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	convtree "github.com/visheratin/conv-tree"
 )
 
-func findCandidates(histGrid convtree.ConvTree, posts []data.Post, maxPoints int) (convtree.ConvTree, error) {
+func findCandidates(histGrid convtree.ConvTree, posts []data.Post, maxPoints int) (convtree.ConvTree, bool) {
 	for _, post := range posts {
 		point := convtree.Point{
 			X:       post.Lon,
@@ -18,9 +17,9 @@ func findCandidates(histGrid convtree.ConvTree, posts []data.Post, maxPoints int
 	}
 	hasAnomalies := detectCandTree(histGrid, maxPoints)
 	if hasAnomalies {
-		return histGrid, nil
+		return histGrid, true
 	}
-	return convtree.ConvTree{}, errors.New("events were not found")
+	return convtree.ConvTree{}, false
 }
 
 func detectCandTree(tree convtree.ConvTree, maxPoints int) bool {
