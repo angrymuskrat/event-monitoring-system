@@ -146,7 +146,7 @@ const SelectEvents = `
 	FROM events
 	WHERE 
 		ST_Covers(%v, Center) 
-		AND (Start BETWEEN %v AND %v)
+		AND (Start BETWEEN %v AND (%v - 1))
 `
 const SelectEventsTags = `
 	SELECT
@@ -155,7 +155,7 @@ const SelectEventsTags = `
 		ST_Y(Center) as Lon
 	FROM events
 	WHERE
-		((%v <= Start AND %v > Start) OR (%v BETWEEN Start AND Finish)) %v;
+		((%v <= Start AND %v > Start) OR (%v BETWEEN Start AND (Finish - 1))) %v;
 `
 
 func MakeSelectEventsTags(tags []string, start, finish int64) string {
