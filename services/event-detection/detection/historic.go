@@ -112,7 +112,7 @@ func splitPosts(data []data.Post, tz string, topLeft data.Point, gridSize float6
 	for _, post := range data {
 		postGridLat := topLeft.Lat + float64(int((post.Lat-topLeft.Lat)/gridSize))*gridSize
 		postGridLon := topLeft.Lon + float64(int((post.Lon-topLeft.Lon)/gridSize))*gridSize
-		postGridPos := convtree.Point{X: postGridLat, Y: postGridLon}
+		postGridPos := convtree.Point{X: postGridLon, Y: postGridLat}
 		if _, ok := posts[postGridPos]; !ok {
 			posts[postGridPos] = map[string]int{}
 		}

@@ -179,8 +179,8 @@ func eventCenter(codes map[string]bool, posts []data.Post) data.Point {
 	for _, post := range posts {
 		if _, ok := codes[post.Shortcode]; ok {
 			p := convtree.Point{
-				X: post.Lat,
-				Y: post.Lon,
+				X: post.Lon,
+				Y: post.Lat,
 			}
 			if _, ok := points[p]; ok {
 				points[p]++
