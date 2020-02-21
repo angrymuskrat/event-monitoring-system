@@ -197,7 +197,7 @@ func (w *worker) proceedLocation(i int) error {
 
 func (w *worker) removeEntity(i int) {
 	w.entities.remove(i)
-	w.sessionStatus.updateEntitiesLeft(-1)
+	//w.sessionStatus.updateEntitiesLeft(-1)
 }
 
 func (w *worker) makeRequest(request string, useTor bool, gis string, referer string, auth bool) ([]byte, error) {
