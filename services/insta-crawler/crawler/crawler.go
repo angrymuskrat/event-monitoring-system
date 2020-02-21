@@ -127,12 +127,15 @@ func (cr *Crawler) fixPostsLocations(sessionID, cityID string) error {
 		if len(d) <= 1 {
 			break
 		}
+		unilog.Logger().Info("read posts to fix", zap.Int("num", len(d)),
+			zap.String("sess", sessionID))
 		d = fixer.Fix(d)
 		err = st.WritePosts(sessionID, d)
 		if err != nil {
 			return err
 		}
-		unilog.Logger().Info("fixed posts coordinates", zap.Int("# posts", len(d)))
+		unilog.Logger().Info("fixed posts coordinates", zap.Int("num", len(d)),
+			zap.String("sess", sessionID))
 		if cr.dataStorage != nil {
 			err := cr.sendPostsToDataStorage(d, sessionID, cityID)
 			if err != nil {
