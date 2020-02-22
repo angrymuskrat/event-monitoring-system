@@ -44,7 +44,7 @@ func (hs *historicSession) generateGrids() {
 	if err != nil {
 		unilog.Logger().Error("unable to generate intervals", zap.Error(err))
 		hs.status = FailedStatus
-		panic(err)
+		return
 	}
 	area := hs.histReq.Area
 	wg := &sync.WaitGroup{}
@@ -71,7 +71,7 @@ func (hs *historicSession) generateGrids() {
 	if err != nil {
 		unilog.Logger().Error("unable to push grid to data storage", zap.Error(err))
 		hs.status = FailedStatus
-		panic(err)
+		return
 	}
 	hs.status = FinishedStatus
 }
@@ -141,7 +141,7 @@ func (hs *historicSession) gridWorker(wg *sync.WaitGroup, area data.Area) {
 		if err != nil {
 			unilog.Logger().Error("can't generate grid", zap.Error(err))
 			hs.status = FailedStatus
-			panic(err)
+			return
 		}
 		var buf bytes.Buffer
 		enc := gob.NewEncoder(&buf)
@@ -149,7 +149,7 @@ func (hs *historicSession) gridWorker(wg *sync.WaitGroup, area data.Area) {
 		if err := enc.Encode(grid); err != nil {
 			hs.status = FailedStatus
 			unilog.Logger().Error("can't encode grid", zap.Error(err))
-			panic(err)
+			return
 		}
 
 		hs.mut.Lock()
