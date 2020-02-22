@@ -51,7 +51,7 @@ func (es *eventSession) detectEvents() {
 	if err != nil {
 		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))
 		es.status = FailedStatus
-		panic(err)
+		return
 	}
 	client := service.NewGRPCClient(conn)
 
@@ -61,14 +61,14 @@ func (es *eventSession) detectEvents() {
 	if err != nil {
 		unilog.Logger().Error("unable to get grids from data strorage", zap.Error(err))
 		es.status = FailedStatus
-		panic(err)
+		return
 	}
 
 	times, err := getTimes(es.eventReq.StartTime, es.eventReq.FinishDate, es.eventReq.Timezone)
 	if err != nil {
 		unilog.Logger().Error("unable to generate intervals", zap.Error(err))
 		es.status = FailedStatus
-		panic(err)
+		return
 	}
 
 	wg := &sync.WaitGroup{}
@@ -86,7 +86,7 @@ func (es *eventSession) detectEvents() {
 	if err != nil {
 		unilog.Logger().Error("unable to push events to data storage", zap.Error(err))
 		es.status = FailedStatus
-		panic(err)
+		return
 	}
 	es.status = FinishedStatus
 }
@@ -153,7 +153,7 @@ func (es *eventSession) eventWorker(wg *sync.WaitGroup) {
 		if err := dec.Decode(&grid); err != nil {
 			unilog.Logger().Error("can't decode grid", zap.Error(err))
 			es.status = FailedStatus
-			panic(err)
+			return
 		}
 
 		startTime := t.Unix()
