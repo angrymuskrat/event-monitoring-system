@@ -42,6 +42,7 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 			posts := make([]data.Post, len(tree.Points))
 			evHolders := []eventHolder{}
 			for i, item := range tree.Points {
+				tags := []string{}
 				post := item.Content.(data.Post)
 				posts[i] = post
 				//tags := []string{}
@@ -55,28 +56,7 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 					if filterTag(tag, filterTags) {
 						continue
 					}
-					exists := false
-					for _, h := range evHolders {
-						if _, ok := h.tags[tag]; ok {
-							h.posts[post.Shortcode] = true
-							h.tags[tag]++
-							exists = true
-							continue
-						}
-						if _, ok := h.posts[post.Shortcode]; ok {
-							h.tags[tag] = 1
-							exists = true
-						}
-					}
-					if !exists {
-						h := eventHolder{
-							posts: map[string]bool{},
-							tags:  map[string]int{},
-						}
-						h.posts[post.Shortcode] = true
-						h.tags[tag] = 1
-						evHolders = append(evHolders, h)
-					}
+					tags = append(tags, tag)
 				}
 				r, _ = regexp.Compile("@[^\\s|\\#|\\n|!|\\.|\\?]+")
 				usernames := r.FindAllString(post.Caption, -1)
@@ -87,27 +67,41 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 					if filterTag(tag, filterTags) {
 						continue
 					}
-					exists := false
+					tags = append(tags, tag)
+				}
+				if len(tags) == 0 {
+					continue
+				}
+				exists := false
+				for _, tag := range tags {
 					for _, h := range evHolders {
 						if _, ok := h.tags[tag]; ok {
 							h.posts[post.Shortcode] = true
-							h.tags[tag]++
+							for _, t := range tags {
+								if _, ok := h.tags[t]; ok {
+									h.tags[t]++
+								} else {
+									h.tags[t] = 1
+								}
+							}
 							exists = true
-						}
-						if _, ok := h.posts[post.Shortcode]; ok {
-							h.tags[tag] = 1
-							exists = true
+							continue
 						}
 					}
-					if !exists {
-						h := eventHolder{
-							posts: map[string]bool{},
-							tags:  map[string]int{},
-						}
-						h.posts[post.Shortcode] = true
+					if exists {
+						break
+					}
+				}
+				if !exists {
+					h := eventHolder{
+						posts: map[string]bool{},
+						tags:  map[string]int{},
+					}
+					h.posts[post.Shortcode] = true
+					for _, tag := range tags {
 						h.tags[tag] = 1
-						evHolders = append(evHolders, h)
 					}
+					evHolders = append(evHolders, h)
 				}
 				//if len(tags) > 0 {
 				//for _, tag := range tags {
@@ -147,7 +141,7 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 			for _, e := range evHolders {
 				if len(e.posts) >= maxPoints/2 {
 					for k, v := range e.tags {
-						if v < len(e.posts)/2 {
+						if v < len(e.posts)/4 {
 							delete(e.tags, k)
 						}
 					}
