@@ -214,8 +214,8 @@ func eventCenter(codes map[string]bool, posts []data.Post) data.Point {
 	}
 	lat, lon := 0.0, 0.0
 	for p, w := range points {
-		lat += p.X * float64(w) / float64(len(codes))
-		lon += p.Y * float64(w) / float64(len(codes))
+		lon += p.X * float64(w) / float64(len(codes))
+		lat += p.Y * float64(w) / float64(len(codes))
 	}
 	return data.Point{
 		Lat: lat,
