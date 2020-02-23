@@ -5,7 +5,7 @@ import (
 	convtree "github.com/visheratin/conv-tree"
 )
 
-func findCandidates(histGrid convtree.ConvTree, posts []data.Post, maxPoints int) (convtree.ConvTree, bool) {
+func findCandidates(histGrid *convtree.ConvTree, posts []data.Post, maxPoints int) (*convtree.ConvTree, bool) {
 	for _, post := range posts {
 		point := convtree.Point{
 			X:       post.Lon,
@@ -19,10 +19,10 @@ func findCandidates(histGrid convtree.ConvTree, posts []data.Post, maxPoints int
 	if hasAnomalies {
 		return histGrid, true
 	}
-	return convtree.ConvTree{}, false
+	return nil, false
 }
 
-func detectCandTree(tree convtree.ConvTree, maxPoints int) bool {
+func detectCandTree(tree *convtree.ConvTree, maxPoints int) bool {
 	if tree.IsLeaf {
 		if len(tree.Points) >= maxPoints {
 			return true
@@ -30,9 +30,9 @@ func detectCandTree(tree convtree.ConvTree, maxPoints int) bool {
 		return false
 	}
 	res := false
-	res = res || detectCandTree(*tree.ChildBottomLeft, maxPoints)
-	res = res || detectCandTree(*tree.ChildBottomRight, maxPoints)
-	res = res || detectCandTree(*tree.ChildTopLeft, maxPoints)
-	res = res || detectCandTree(*tree.ChildTopRight, maxPoints)
+	res = res || detectCandTree(tree.ChildBottomLeft, maxPoints)
+	res = res || detectCandTree(tree.ChildBottomRight, maxPoints)
+	res = res || detectCandTree(tree.ChildTopLeft, maxPoints)
+	res = res || detectCandTree(tree.ChildTopRight, maxPoints)
 	return res
 }

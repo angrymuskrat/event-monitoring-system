@@ -9,12 +9,12 @@ import (
 )
 
 func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints int, filterTags map[string]bool, start, finish int64) ([]data.Event, bool) {
-	candGrid, wasFound := findCandidates(histGrid, posts, maxPoints)
+	candGrid, wasFound := findCandidates(&histGrid, posts, maxPoints)
 	if !wasFound {
 		return nil, false
 	}
-	splitGrid(&candGrid, maxPoints)
-	events := treeEvents(&candGrid, maxPoints, filterTags, start, finish)
+	splitGrid(candGrid, maxPoints)
+	events := treeEvents(candGrid, maxPoints, filterTags, start, finish)
 	if len(events) == 0 {
 		return nil, false
 	}
@@ -38,12 +38,13 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 	if tree.IsLeaf {
 		result := []data.Event{}
 		if len(tree.Points) >= maxPoints {
-			tagPosts := map[string]map[string]bool{}
+			//tagPosts := map[string]map[string]bool{}
 			posts := make([]data.Post, len(tree.Points))
+			evHolders := []eventHolder{}
 			for i, item := range tree.Points {
 				post := item.Content.(data.Post)
 				posts[i] = post
-				tags := []string{}
+				//tags := []string{}
 				r, _ := regexp.Compile("#[^\\s|\\#|\\n|!|\\.|\\?]+")
 				hashtags := r.FindAllString(post.Caption, -1)
 				for idx := range hashtags {
@@ -55,14 +56,26 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 						continue
 					}
 					exists := false
-					for _, t := range tags {
-						if t == tag {
+					for _, h := range evHolders {
+						if _, ok := h.tags[tag]; ok {
+							h.posts[post.Shortcode] = true
+							h.tags[tag]++
 							exists = true
-							break
+							continue
+						}
+						if _, ok := h.posts[post.Shortcode]; ok {
+							h.tags[tag] = 1
+							exists = true
 						}
 					}
 					if !exists {
-						tags = append(tags, tag)
+						h := eventHolder{
+							posts: map[string]bool{},
+							tags:  map[string]int{},
+						}
+						h.posts[post.Shortcode] = true
+						h.tags[tag] = 1
+						evHolders = append(evHolders, h)
 					}
 				}
 				r, _ = regexp.Compile("@[^\\s|\\#|\\n|!|\\.|\\?]+")
@@ -75,52 +88,62 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 						continue
 					}
 					exists := false
-					for _, t := range tags {
-						if t == tag {
+					for _, h := range evHolders {
+						if _, ok := h.tags[tag]; ok {
+							h.posts[post.Shortcode] = true
+							h.tags[tag]++
 							exists = true
-							break
+						}
+						if _, ok := h.posts[post.Shortcode]; ok {
+							h.tags[tag] = 1
+							exists = true
 						}
 					}
 					if !exists {
-						tags = append(tags, tag)
-					}
-				}
-				if len(tags) > 0 {
-					for _, tag := range tags {
-						if _, ok := tagPosts[tag]; !ok {
-							tagPosts[tag] = map[string]bool{}
+						h := eventHolder{
+							posts: map[string]bool{},
+							tags:  map[string]int{},
 						}
-						tagPosts[tag][post.Shortcode] = true
+						h.posts[post.Shortcode] = true
+						h.tags[tag] = 1
+						evHolders = append(evHolders, h)
 					}
 				}
+				//if len(tags) > 0 {
+				//for _, tag := range tags {
+				//	if _, ok := tagPosts[tag]; !ok {
+				//		tagPosts[tag] = map[string]bool{}
+				//	}
+				//	tagPosts[tag][post.Shortcode] = true
+				//}
+				//}
 			}
-			evHolders := []eventHolder{}
-			for tag, tPosts := range tagPosts {
-				added := false
-				for tCode := range tPosts {
-					for idx, holder := range evHolders {
-						if _, ok := holder.posts[tCode]; ok {
-							added = true
-							for eCode := range tPosts {
-								holder.posts[eCode] = true
-							}
-							holder.tags[tag]++
-							evHolders[idx] = holder
-						}
-					}
-				}
-				if !added {
-					holder := eventHolder{
-						posts: map[string]bool{},
-						tags:  map[string]int{},
-					}
-					for code := range tPosts {
-						holder.posts[code] = true
-					}
-					holder.tags[tag] = 1
-					evHolders = append(evHolders, holder)
-				}
-			}
+			//for tag, tPosts := range tagPosts {
+			//	added := false
+			//	for tCode := range tPosts {
+			//		for idx, holder := range evHolders {
+			//			if _, ok := holder.posts[tCode]; ok {
+			//				added = true
+			//				for eCode := range tPosts {
+			//					holder.posts[eCode] = true
+			//				}
+			//				holder.tags[tag]++
+			//				evHolders[idx] = holder
+			//			}
+			//		}
+			//	}
+			//	if !added {
+			//		holder := eventHolder{
+			//			posts: map[string]bool{},
+			//			tags:  map[string]int{},
+			//		}
+			//		for code := range tPosts {
+			//			holder.posts[code] = true
+			//		}
+			//		holder.tags[tag] = 1
+			//		evHolders = append(evHolders, holder)
+			//	}
+			//}
 			for _, e := range evHolders {
 				if len(e.posts) >= maxPoints/2 {
 					for k, v := range e.tags {
@@ -128,14 +151,14 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 							delete(e.tags, k)
 						}
 					}
-					eventPosts := map[string]bool{}
-					for tag := range e.tags {
-						for p := range tagPosts[tag] {
-							eventPosts[p] = true
-						}
-					}
+					//eventPosts := map[string]bool{}
+					//for tag := range e.tags {
+					//	for p := range tagPosts[tag] {
+					//		eventPosts[p] = true
+					//	}
+					//}
 					postCodes := []string{}
-					for k := range eventPosts {
+					for k := range e.posts {
 						postCodes = append(postCodes, k)
 					}
 					tags := []string{}
@@ -149,7 +172,7 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 						tags = append(tags, k)
 					}
 					event := data.Event{
-						Center:    eventCenter(eventPosts, posts),
+						Center:    eventCenter(e.posts, posts),
 						PostCodes: postCodes,
 						Tags:      tags,
 						Title:     maxTag,

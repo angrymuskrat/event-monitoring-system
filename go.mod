@@ -27,7 +27,7 @@ require (
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/sony/gobreaker v0.4.1
 	github.com/streadway/handy v0.0.0-20190108123426-d5acb3125c2a // indirect
-	github.com/visheratin/conv-tree v0.0.0-20200221190341-d75a642acf38
+	github.com/visheratin/conv-tree v0.0.0-20200223055330-247b59364c44
 	github.com/visheratin/unilog v0.0.0-20190821155422-b654e0d4bb5f
 	go.etcd.io/bbolt v1.3.3
 	go.uber.org/zap v1.13.0

@@ -20,6 +20,7 @@ import (
 )
 
 const (
+	tagsPath     = "/home/alexvish/monitoring/event-detection/spb_tags_base.txt"
 	firstGridNum = 1100
 	lastGridNum  = 12224
 )
@@ -29,10 +30,7 @@ type eventSession struct {
 	status   StatusType
 	cfg      Config
 	eventReq proto.EventRequest
-	timeChan chan time.Time
 	grids    map[int64][]byte
-	events   []data.Event
-	mut      sync.Mutex
 }
 
 func newEventSession(config Config, eventReq proto.EventRequest, id string) *eventSession {
@@ -41,7 +39,6 @@ func newEventSession(config Config, eventReq proto.EventRequest, id string) *eve
 		status:   RunningStatus,
 		cfg:      config,
 		eventReq: eventReq,
-		timeChan: make(chan time.Time),
 		grids:    make(map[int64][]byte),
 	}
 }
@@ -49,22 +46,20 @@ func newEventSession(config Config, eventReq proto.EventRequest, id string) *eve
 func (es *eventSession) detectEvents() {
 	conn, err := grpc.Dial(es.cfg.DataStorageAddress, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(service.MaxMsgSize)))
 	if err != nil {
-		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))
+		unilog.Logger().Error("unable to connect to data storage", zap.Error(err))
 		es.status = FailedStatus
 		return
 	}
 	client := service.NewGRPCClient(conn)
-
-	startId, finishId := convertDatesToGridIds(es.eventReq.StartTime, es.eventReq.FinishDate)
-
-	es.grids, err = client.PullGrid(context.Background(), es.eventReq.CityId, startId, finishId)
+	startID, finishID := convertDatesToGridIds(es.eventReq.StartTime, es.eventReq.FinishTime)
+	es.grids, err = client.PullGrid(context.Background(), es.eventReq.CityId, startID, finishID)
 	if err != nil {
-		unilog.Logger().Error("unable to get grids from data strorage", zap.Error(err))
+		unilog.Logger().Error("unable to get grids from data storage", zap.Error(err))
 		es.status = FailedStatus
 		return
 	}
 
-	times, err := getTimes(es.eventReq.StartTime, es.eventReq.FinishDate, es.eventReq.Timezone)
+	times, err := getTimes(es.eventReq.StartTime, es.eventReq.FinishTime, es.eventReq.Timezone)
 	if err != nil {
 		unilog.Logger().Error("unable to generate intervals", zap.Error(err))
 		es.status = FailedStatus
@@ -72,19 +67,26 @@ func (es *eventSession) detectEvents() {
 	}
 
 	wg := &sync.WaitGroup{}
-	for w := 1; w <= es.cfg.WorkersNumber; w++ {
+	ewg := &sync.WaitGroup{}
+	evChan := make(chan []data.Event)
+	go loadEvents(evChan, es.cfg.DataStorageAddress, es.eventReq.CityId, ewg, &err)
+	ewg.Add(1)
+
+	timeChan := make(chan time.Time)
+	for w := 0; w < es.cfg.WorkersNumber; w++ {
 		wg.Add(1)
-		go es.eventWorker(wg)
+		go es.eventWorker(wg, timeChan, evChan)
 	}
 	for _, t := range times {
-		es.timeChan <- t
+		timeChan <- t
 	}
-	close(es.timeChan)
+	close(timeChan)
 	wg.Wait()
+	close(evChan)
+	ewg.Wait()
 
-	err = client.PushEvents(context.Background(), es.eventReq.CityId, es.events)
 	if err != nil {
-		unilog.Logger().Error("unable to push events to data storage", zap.Error(err))
+		unilog.Logger().Error("error during pushing events to data storage", zap.Error(err))
 		es.status = FailedStatus
 		return
 	}
@@ -134,7 +136,7 @@ func getGridNum(month time.Month, day time.Weekday, hour int) int64 {
 	return gridNum
 }
 
-func (es *eventSession) eventWorker(wg *sync.WaitGroup) {
+func (es *eventSession) eventWorker(wg *sync.WaitGroup, timeChan chan time.Time, eChan chan []data.Event) {
 	defer wg.Done()
 	conn, err := grpc.Dial(es.cfg.DataStorageAddress, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(service.MaxMsgSize)))
 	if err != nil {
@@ -143,7 +145,7 @@ func (es *eventSession) eventWorker(wg *sync.WaitGroup) {
 	}
 	cl := service.NewGRPCClient(conn)
 
-	for t := range es.timeChan {
+	for t := range timeChan {
 		timeNum := getGridNum(t.Month(), t.Weekday(), t.Hour())
 		buf := bytes.NewBuffer(es.grids[timeNum])
 		dec := gob.NewDecoder(buf)
@@ -151,20 +153,19 @@ func (es *eventSession) eventWorker(wg *sync.WaitGroup) {
 		var grid convtree.ConvTree
 
 		if err := dec.Decode(&grid); err != nil {
-			unilog.Logger().Error("can't decode grid", zap.Error(err))
+			unilog.Logger().Error("unable to decode grid", zap.Error(err))
 			es.status = FailedStatus
 			return
 		}
 
 		startTime := t.Unix()
 		finishTime := t.Unix() + 3600
-		posts, _, err := cl.SelectPosts(context.Background(), es.eventReq.CityId, startTime, t.Unix()+3600)
+		posts, _, err := cl.SelectPosts(context.Background(), es.eventReq.CityId, startTime, finishTime)
 		if err != nil {
-			unilog.Logger().Error("unable to get posts from data strorage", zap.Error(err))
+			unilog.Logger().Error("unable to get posts from data storage", zap.Error(err))
 			continue
 		}
 
-		tagsPath := "/home/alexvish/monitoring/event-detection/spb_tags_base.txt"
 		filterTags := map[string]bool{}
 		f, err := os.OpenFile(tagsPath, os.O_RDONLY, 0644)
 		if err == nil {
@@ -175,13 +176,29 @@ func (es *eventSession) eventWorker(wg *sync.WaitGroup) {
 				filterTags[tag] = false
 			}
 		}
+		evs, found := detection.FindEvents(grid, posts, es.cfg.MaxPoints, filterTags, startTime, finishTime)
+		unilog.Logger().Info("found events", zap.String("session", es.id), zap.Int("num", len(evs)))
+		if found {
+			eChan <- evs
+		}
+	}
+}
 
-		event, wasFound := detection.FindEvents(grid, posts, es.cfg.MaxPoints, filterTags, startTime, finishTime)
-
-		if wasFound {
-			es.mut.Lock()
-			es.events = append(es.events, event...)
-			es.mut.Unlock()
+func loadEvents(eChan chan []data.Event, storageEp string, cityID string, wg *sync.WaitGroup, outErr *error) {
+	defer wg.Done()
+	conn, err := grpc.Dial(storageEp, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(service.MaxMsgSize)))
+	if err != nil {
+		unilog.Logger().Error("unable to connect to data storage", zap.Error(err))
+		outErr = &err
+		return
+	}
+	client := service.NewGRPCClient(conn)
+	for evs := range eChan {
+		err = client.PushEvents(context.Background(), cityID, evs)
+		if err != nil {
+			unilog.Logger().Error("unable to push events to data storage", zap.Error(err))
+			outErr = &err
+			return
 		}
 	}
 }

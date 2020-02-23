@@ -244,6 +244,8 @@ github.com/visheratin/conv-tree v0.0.0-20200221185305-ef534eb8aeae h1:QP/7aXhOYU
 github.com/visheratin/conv-tree v0.0.0-20200221185305-ef534eb8aeae/go.mod h1:j1VVDgzZl5v8t5k+aTVcJUQnrDpeQa2fa3BGiFtsxuI=
 github.com/visheratin/conv-tree v0.0.0-20200221190341-d75a642acf38 h1:bsSlAIsipsB//qt5FFpqs/w1BLFqxgeWv4Xx4fTumz4=
 github.com/visheratin/conv-tree v0.0.0-20200221190341-d75a642acf38/go.mod h1:j1VVDgzZl5v8t5k+aTVcJUQnrDpeQa2fa3BGiFtsxuI=
+github.com/visheratin/conv-tree v0.0.0-20200223055330-247b59364c44 h1:+tkMikDJpE20CHAYIUtKiTTJ8ffO6kJJi4TghYHToZw=
+github.com/visheratin/conv-tree v0.0.0-20200223055330-247b59364c44/go.mod h1:j1VVDgzZl5v8t5k+aTVcJUQnrDpeQa2fa3BGiFtsxuI=
 github.com/visheratin/unilog v0.0.0-20190821155422-b654e0d4bb5f h1:5TlXF7TAyFBfQRm4jzAH05yzABSP9ySdEov0CcqynXA=
 github.com/visheratin/unilog v0.0.0-20190821155422-b654e0d4bb5f/go.mod h1:e447jsA75LzkzFTNlKw/UjkOdHrqWEJxJS6XsErlTOE=
 github.com/zenazn/goji v0.9.0/go.mod h1:7S9M489iMyHBNxwZnk9/EHS098H4/F6TATF2mIxtB1Q=

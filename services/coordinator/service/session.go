@@ -50,7 +50,7 @@ func NewSession(p SessionParameters, e ServiceEndpoints) (*Session, error) {
 	id := uuid.New().String()
 	conn, err := grpc.Dial(e.EventDetection.Address, grpc.WithInsecure())
 	if err != nil {
-		unilog.Logger().Error("unable to connect to data strorage", zap.Error(err))
+		unilog.Logger().Error("unable to connect to data storage", zap.Error(err))
 		return nil, err
 	}
 	client := service.NewClient(conn)
@@ -162,6 +162,8 @@ func (s *Session) startCollect() error {
 		LocationsLeft:  len(p.Entities),
 	}
 	s.Status = st
+	unilog.Logger().Info("started data collecting", zap.String("session", s.ID),
+		zap.String("grid session", ep.ID))
 	return nil
 }
 
@@ -185,7 +187,8 @@ func (s *Session) checkCollect() (int, error) {
 		return -1, err
 	}
 	if resp.StatusCode != 200 {
-		unilog.Logger().Error("error status code", zap.Int("code", resp.StatusCode), zap.String("status", resp.Status))
+		unilog.Logger().Error("error status code", zap.Int("code", resp.StatusCode),
+			zap.String("status", resp.Status))
 		return -1, err
 	}
 	defer resp.Body.Close()
@@ -204,6 +207,9 @@ func (s *Session) checkCollect() (int, error) {
 		PostsCollected: ep.Status.PostsCollected,
 		LocationsLeft:  ep.Status.EntitiesLeft,
 	}
+	unilog.Logger().Info("data collecting", zap.String("session", s.ID),
+		zap.String("crawler session", st.SessionID), zap.Int("collected", st.PostsCollected),
+		zap.Int("left", st.LocationsLeft))
 	s.Status = st
 	return ep.Status.EntitiesLeft, nil
 }
@@ -235,7 +241,8 @@ func (s *Session) deleteCollect() error {
 		return err
 	}
 	if resp.StatusCode != 200 {
-		unilog.Logger().Error("error status code", zap.Int("code", resp.StatusCode), zap.String("status", resp.Status))
+		unilog.Logger().Error("error status code", zap.Int("code", resp.StatusCode),
+			zap.String("status", resp.Status))
 		return err
 	}
 	defer resp.Body.Close()
@@ -254,6 +261,8 @@ func (s *Session) deleteCollect() error {
 		unilog.Logger().Error(msg)
 		return errors.New(msg)
 	}
+	unilog.Logger().Info("stopped collecting", zap.String("session", s.ID), zap.String("crawler session",
+		cs.SessionID))
 	return nil
 }
 
@@ -299,6 +308,8 @@ func (s *Session) historicStart() error {
 	s.Status = status.HistoricBuilding{
 		SessionID: resp.Id,
 	}
+	unilog.Logger().Info("started grids building", zap.String("session", s.ID),
+		zap.String("grid session", resp.Id))
 	return nil
 }
 
@@ -322,6 +333,8 @@ func (s *Session) historicStatus() (bool, error) {
 		SessionID: st.SessionID,
 		Status:    resp.Status,
 	}
+	unilog.Logger().Info("grids building", zap.String("session", s.ID),
+		zap.String("grid session", st.SessionID), zap.String("status", resp.Status))
 	return resp.Finished, nil
 }
 
@@ -354,7 +367,7 @@ func (s *Session) eventsStart(start, finish int64) error {
 		Timezone:   s.Params.Timezone,
 		CityId:     s.Params.CityID,
 		StartTime:  start,
-		FinishDate: finish,
+		FinishTime: finish,
 	}
 	respRaw, err := s.edClient.FindEvents(context.Background(), req)
 	if err != nil {
@@ -371,6 +384,8 @@ func (s *Session) eventsStart(start, finish int64) error {
 		SessionID:        resp.Id,
 		CurrentTimestamp: finish,
 	}
+	unilog.Logger().Info("started events collecting", zap.String("session", s.ID),
+		zap.String("event session", resp.Id), zap.Int64("timestamp", finish))
 	return nil
 }
 
@@ -395,5 +410,8 @@ func (s *Session) eventsStatus() (bool, error) {
 		CurrentTimestamp: st.CurrentTimestamp,
 		Status:           resp.Status,
 	}
+	unilog.Logger().Info("events searching", zap.String("session", s.ID),
+		zap.String("grid session", st.SessionID), zap.Int64("timestamp", st.CurrentTimestamp),
+		zap.String("status", resp.Status))
 	return resp.Finished, nil
 }

@@ -35,7 +35,7 @@ message EventRequest {
     string timezone = 1;
     string cityId = 2;
     int64 startTime = 3;
-    int64 finishDate = 4;
+    int64 finishTime = 4;
 }
 
 message EventResponse {
