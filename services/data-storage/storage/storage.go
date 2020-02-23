@@ -473,7 +473,7 @@ func (s *Storage) PullGrid(ctx context.Context, cityId string, ids []int64) (gri
 }
 
 func formSelectGrids(ids []int64) string {
-	s := "SELECT id, blob FROM gridsWHERE id IN ("
+	s := "SELECT id, blob FROM grids WHERE id IN ("
 	f := ");"
 	res := s
 	for i := range ids {

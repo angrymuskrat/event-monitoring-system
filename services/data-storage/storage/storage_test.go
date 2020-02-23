@@ -14,7 +14,7 @@ func Test_formSelectGrids(t *testing.T) {
 		{
 			name: "test",
 			args: args{ids: []int64{14, 88, 345}},
-			want: "SELECT id, blob FROM gridsWHERE id IN (14,88,345);",
+			want: "SELECT id, blob FROM grids WHERE id IN (14,88,345);",
 		},
 	}
 	for _, tt := range tests {
