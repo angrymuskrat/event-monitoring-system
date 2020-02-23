@@ -111,9 +111,8 @@ message PushGridReply {
 }
 
 message PullGridRequest {
-    int64 startId = 1;
-    int64 finishId = 2;
-    string cityId = 3;
+    repeated int64 ids = 1;
+    string cityId = 2;
 }
 
 message PullGridReply {

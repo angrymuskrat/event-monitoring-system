@@ -109,16 +109,14 @@ func (mw loggingMiddleware) PushGrid(ctx context.Context, cityId string, grids m
 	return
 }
 
-func (mw loggingMiddleware) PullGrid(ctx context.Context, cityId string, startId, finishId int64) (grids map[int64][]byte, err error) {
+func (mw loggingMiddleware) PullGrid(ctx context.Context, cityId string, ids []int64) (grids map[int64][]byte, err error) {
 	defer func(begin time.Time) {
 		mw.logger.Info("pull grid",
-			zap.Int64("start id", startId),
-			zap.Int64("start id", finishId),
 			zap.String("city id", cityId),
 			zap.Error(err),
 			zap.String("took", time.Since(begin).String()))
 	}(time.Now())
-	grids, err = mw.next.PullGrid(ctx, cityId, startId, finishId)
+	grids, err = mw.next.PullGrid(ctx, cityId, ids)
 	return
 }
 

@@ -51,8 +51,8 @@ func (es *eventSession) detectEvents() {
 		return
 	}
 	client := service.NewGRPCClient(conn)
-	startID, finishID := convertDatesToGridIds(es.eventReq.StartTime, es.eventReq.FinishTime)
-	es.grids, err = client.PullGrid(context.Background(), es.eventReq.CityId, startID, finishID)
+	ids := generateGridIds(es.eventReq.StartTime, es.eventReq.FinishTime)
+	es.grids, err = client.PullGrid(context.Background(), es.eventReq.CityId, ids)
 	if err != nil {
 		unilog.Logger().Error("unable to get grids from data storage", zap.Error(err))
 		es.status = FailedStatus
@@ -112,15 +112,17 @@ func getTimes(start, finish int64, tz string) ([]time.Time, error) {
 	return res, nil
 }
 
-func convertDatesToGridIds(startDate, finishDate int64) (int64, int64) {
+func generateGridIds(startDate, finishDate int64) []int64 {
 	startTime := time.Unix(startDate, 0)
 	finishTime := time.Unix(finishDate, 0)
-	if finishTime.Sub(startTime) > time.Hour*24*365 {
-		return firstGridNum, lastGridNum
+	t := startTime
+	res := []int64{}
+	for t.Before(finishTime) {
+		v := getGridNum(t.Month(), t.Weekday(), t.Hour())
+		res = append(res, v)
+		t = t.Add(time.Hour)
 	}
-	startNum := getGridNum(startTime.Month(), startTime.Weekday(), startTime.Hour())
-	finishNum := getGridNum(finishTime.Month(), finishTime.Weekday(), finishTime.Hour())
-	return startNum, finishNum
+	return res
 }
 
 func getGridNum(month time.Month, day time.Weekday, hour int) int64 {

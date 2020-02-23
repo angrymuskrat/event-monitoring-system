@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
@@ -443,14 +444,14 @@ func (s *Storage) PushGrid(ctx context.Context, cityId string, grids map[int64][
 	return err
 }
 
-func (s *Storage) PullGrid(ctx context.Context, cityId string, startId, finishId int64) (grids map[int64][]byte, err error) {
+func (s *Storage) PullGrid(ctx context.Context, cityId string, ids []int64) (grids map[int64][]byte, err error) {
 	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return nil, err
 	}
 	grids = make(map[int64][]byte)
-	statement := fmt.Sprintf(SelectGrid, startId, finishId)
+	statement := formSelectGrids(ids)
 	rows, err := conn.Query(ctx, statement)
 	if err != nil {
 		unilog.Logger().Error("error in pull grid", zap.Error(err))
@@ -469,6 +470,20 @@ func (s *Storage) PullGrid(ctx context.Context, cityId string, startId, finishId
 		grids[id] = blob
 	}
 	return
+}
+
+func formSelectGrids(ids []int64) string {
+	s := "SELECT id, blob FROM gridsWHERE id IN ("
+	f := ");"
+	res := s
+	for i := range ids {
+		res += strconv.FormatInt(ids[i], 10)
+		if i < (len(ids) - 1) {
+			res += ","
+		}
+	}
+	res += f
+	return res
 }
 
 func (s *Storage) PushEvents(ctx context.Context, cityId string, events []data.Event) (err error) {

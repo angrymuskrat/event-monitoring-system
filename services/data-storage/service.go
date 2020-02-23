@@ -68,7 +68,7 @@ type Service interface {
 	//		Example: 02013 - 02 March, 0 work day, 13 o'clock
 	// output: map of map of grids, keys of this map are ids and value is byte array
 	// result: if request was successfully finished, will return grids and nil error otherwise return nil map and some error
-	PullGrid(ctx context.Context, cityId string, startId, finishId int64) (map[int64][]byte, error)
+	PullGrid(ctx context.Context, cityId string, ids []int64) (map[int64][]byte, error)
 
 	// input: context, id of the city, array od events
 	// output: error
@@ -136,8 +136,8 @@ func (s basicService) PushGrid(ctx context.Context, cityId string, grids map[int
 	return s.db.PushGrid(ctx, cityId, grids)
 }
 
-func (s basicService) PullGrid(ctx context.Context, cityId string, startId, finishId int64) (map[int64][]byte, error) {
-	return s.db.PullGrid(ctx, cityId, startId, finishId)
+func (s basicService) PullGrid(ctx context.Context, cityId string, ids []int64) (map[int64][]byte, error) {
+	return s.db.PullGrid(ctx, cityId, ids)
 }
 
 func (s basicService) PushEvents(ctx context.Context, cityId string, events []data.Event) error {

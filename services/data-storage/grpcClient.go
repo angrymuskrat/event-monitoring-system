@@ -126,8 +126,8 @@ func (svc GrpcService) PushGrid(ctx context.Context, cityId string, grids map[in
 	return nil
 }
 
-func (svc GrpcService) PullGrid(ctx context.Context, cityId string, startId, finishId int64) (map[int64][]byte, error) {
-	resp, err := svc.pullGrid(ctx, proto.PullGridRequest{CityId: cityId, StartId: startId, FinishId: finishId})
+func (svc GrpcService) PullGrid(ctx context.Context, cityId string, ids []int64) (map[int64][]byte, error) {
+	resp, err := svc.pullGrid(ctx, proto.PullGridRequest{CityId: cityId, Ids: ids})
 	if err != nil {
 		return nil, err
 	}

@@ -104,7 +104,7 @@ func makePushGridEndpoint(s Service) endpoint.Endpoint {
 func makePullGridEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PullGridRequest)
-		grids, err := s.PullGrid(ctx, req.CityId, req.StartId, req.FinishId)
+		grids, err := s.PullGrid(ctx, req.CityId, req.Ids)
 		var msg string
 		if err != nil {
 			msg = err.Error()
