@@ -40,10 +40,12 @@ func (f Fixer) Fix(d []data.Post) []data.Post {
 	res := make([]data.Post, 0, len(d))
 	for _, p := range d {
 		if p.Lat != 0 {
+			res = append(res, p)
 			continue
 		}
 		l, ok := f.loc[p.LocationID]
 		if !ok {
+			res = append(res, p)
 			continue
 		}
 		p.Lat = l.Lat
