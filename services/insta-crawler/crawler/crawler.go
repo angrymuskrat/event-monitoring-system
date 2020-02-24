@@ -313,7 +313,6 @@ func (cr *Crawler) start() error {
 				posts = append(posts, cr.workers[j].posts...)
 				cr.workers[j].posts = nil
 			}
-
 			if cr.dataStorage != nil {
 				cr.sendPostsToDataStorage(posts, cr.sessions[i].ID, cr.sessions[i].Params.CityID)
 			}

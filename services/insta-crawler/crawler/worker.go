@@ -71,10 +71,10 @@ func (w *worker) init(port int) {
 	}
 	w.agent = uarand.GetRandom()
 	fixer, err := storage.NewFixer("./locations.json")
-	if err != nil {
-		return
+	if err == nil {
+		w.fixer = fixer
 	}
-	w.fixer = fixer
+	unilog.Logger().Info("started worker", zap.Int("id", w.id))
 }
 
 func (w *worker) start() {
@@ -359,7 +359,9 @@ func (w *worker) proceedResponse(d []byte, entityID string) (endCursor string, h
 		unilog.Logger().Error("unable to get storage", zap.Error(err))
 		return
 	}
-	posts = w.fixer.Fix(posts)
+	if w.fixer.Init {
+		posts = w.fixer.Fix(posts)
+	}
 	if w.savePosts { // save posts to tmp array for sending to data storage
 		w.posts = append(w.posts, posts...)
 	}

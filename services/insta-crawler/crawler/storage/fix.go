@@ -14,7 +14,8 @@ type Location struct {
 }
 
 type Fixer struct {
-	loc map[string]Location
+	Init bool
+	loc  map[string]Location
 }
 
 func NewFixer(path string) (Fixer, error) {
@@ -32,7 +33,7 @@ func NewFixer(path string) (Fixer, error) {
 	for _, l := range d {
 		loc[l.ID] = l
 	}
-	return Fixer{loc: loc}, nil
+	return Fixer{Init: true, loc: loc}, nil
 }
 
 func (f Fixer) Fix(d []data.Post) []data.Post {
