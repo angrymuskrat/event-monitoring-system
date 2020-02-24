@@ -63,6 +63,7 @@ func NewCrawler(confPath string) (*Crawler, error) {
 			oCh:         cr.wCh,
 			savePosts:   cr.dataStorage != nil,
 			entities:    &entities{},
+			posts:       []data.Post{},
 		}
 		cr.workers[i].init(9161)
 		go cr.workers[i].start()
