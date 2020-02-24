@@ -109,14 +109,11 @@ func (cr *Crawler) restoreSessions() {
 
 func (cr *Crawler) fixPostsLocations(sessionID, cityID string) error {
 	dbPath := path.Join(cr.config.RootDir, sessionID, "bolt.db")
-	err := storage.Init(dbPath)
+	st, err := storage.Get(dbPath)
 	if err != nil {
 		return err
 	}
-	st, err := storage.Instance()
-	if err != nil {
-		return err
-	}
+	defer st.Close()
 	lastID := ""
 	num := 50000
 	fixer, err := storage.NewFixer("./locations.json")
@@ -138,7 +135,7 @@ func (cr *Crawler) fixPostsLocations(sessionID, cityID string) error {
 		unilog.Logger().Info("fixed posts coordinates", zap.Int("num", len(d)),
 			zap.String("sess", sessionID))
 		if cr.dataStorage != nil {
-			err := cr.sendPostsToDataStorage(d, sessionID, cityID)
+			err := cr.sendPostsToDataStorage(d, sessionID, cityID, st)
 			if err != nil {
 				return err
 			}
@@ -150,14 +147,11 @@ func (cr *Crawler) fixPostsLocations(sessionID, cityID string) error {
 
 func (cr *Crawler) uploadUnsavedPosts(sessionID, cityID string) error {
 	dbPath := path.Join(cr.config.RootDir, sessionID, "bolt.db")
-	err := storage.Init(dbPath)
+	st, err := storage.Get(dbPath)
 	if err != nil {
 		return err
 	}
-	st, err := storage.Instance()
-	if err != nil {
-		return err
-	}
+	defer st.Close()
 	lastID := st.ReadLastSavedPost(sessionID)
 	num := 50000
 	for {
@@ -165,7 +159,7 @@ func (cr *Crawler) uploadUnsavedPosts(sessionID, cityID string) error {
 		if len(d) <= 1 { // if condition - len(d) == 0, there is infinite loop
 			break
 		}
-		err := cr.sendPostsToDataStorage(d, sessionID, cityID)
+		err := cr.sendPostsToDataStorage(d, sessionID, cityID, st)
 		if err != nil {
 			return err
 		}
@@ -201,23 +195,16 @@ func (cr *Crawler) Entities(id string) ([]data.Entity, error) {
 	cr.mu.Lock()
 	defer cr.mu.Unlock()
 	dbPath := path.Join(cr.config.RootDir, id, "bolt.db")
-	st, inUse, err := storage.Get(dbPath)
+	st, err := storage.Get(dbPath)
 	if err != nil {
 		return nil, err
 	}
-	if inUse {
-		cr.stUsed = true
-	}
+	defer st.Close()
 	sess, err := readSession(id, cr.config.RootDir)
 	if err != nil {
 		return nil, err
 	}
 	ents := st.Entities(id, sess.Params.Type)
-	if inUse {
-		cr.stUsed = false
-	} else {
-		st.Close()
-	}
 	return ents, nil
 }
 
@@ -225,19 +212,12 @@ func (cr *Crawler) Posts(id, cursor string, num int) ([]data.Post, string, error
 	cr.mu.Lock()
 	defer cr.mu.Unlock()
 	dbPath := path.Join(cr.config.RootDir, id, "bolt.db")
-	st, inUse, err := storage.Get(dbPath)
+	st, err := storage.Get(dbPath)
 	if err != nil {
 		return nil, "", err
 	}
-	if inUse {
-		cr.stUsed = true
-	}
+	defer st.Close()
 	posts, cursor := st.Posts(id, cursor, num)
-	if inUse {
-		cr.stUsed = false
-	} else {
-		st.Close()
-	}
 	return posts, cursor, nil
 }
 
@@ -270,7 +250,7 @@ func (cr *Crawler) start() error {
 				continue
 			}
 			dbPath := path.Join(cr.config.RootDir, cr.sessions[i].ID, "bolt.db")
-			err := storage.Init(dbPath)
+			st, err := storage.Get(dbPath)
 			if err != nil {
 				return err
 			}
@@ -283,6 +263,7 @@ func (cr *Crawler) start() error {
 				cr.workers[j].params = cr.sessions[i].Params
 				cr.workers[j].sessionID = cr.sessions[i].ID
 				cr.workers[j].sessionStatus = cr.sessions[i].Status
+				cr.workers[j].st = st
 			}
 			for j := range cr.workers {
 				cr.workers[j].pCh <- false
@@ -300,10 +281,6 @@ func (cr *Crawler) start() error {
 			nEnt := combineEntities(cr.workers)
 			cr.sessions[i].Status.updateEntities(nEnt)
 			cr.sessions[i].dump(cr.config.RootDir)
-			st, err := storage.Instance()
-			if err != nil {
-				return err
-			}
 			for cr.stUsed {
 				time.Sleep(500 * time.Millisecond)
 			}
@@ -315,7 +292,7 @@ func (cr *Crawler) start() error {
 				cr.workers[j].posts = nil
 			}
 			if cr.dataStorage != nil {
-				cr.sendPostsToDataStorage(posts, cr.sessions[i].ID, cr.sessions[i].Params.CityID)
+				cr.sendPostsToDataStorage(posts, cr.sessions[i].ID, cr.sessions[i].Params.CityID, st)
 			}
 			err = st.Close()
 			if err != nil {
@@ -350,7 +327,7 @@ func combineEntities(workers []worker) []string {
 	return res
 }
 
-func (cr *Crawler) sendPostsToDataStorage(posts []data.Post, sessionID, cityID string) error {
+func (cr *Crawler) sendPostsToDataStorage(posts []data.Post, sessionID, cityID string, st *storage.Storage) error {
 	if len(posts) == 0 {
 		unilog.Logger().Info("attempt to send an empty array of posts to data-storage")
 		return nil
@@ -367,11 +344,6 @@ func (cr *Crawler) sendPostsToDataStorage(posts []data.Post, sessionID, cityID s
 	}
 	unilog.Logger().Info("uploaded posts", zap.Int("num", len(posts)), zap.String("sess", sessionID))
 	lastPost := posts[len(posts)-1].ID
-	st, err := storage.Instance()
-	if err != nil {
-		unilog.Logger().Error("unable to get storage", zap.Error(err))
-		return err
-	}
 	return st.WriteLastSavedPost(sessionID, lastPost)
 }
 

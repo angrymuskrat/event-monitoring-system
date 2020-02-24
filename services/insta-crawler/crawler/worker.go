@@ -45,6 +45,7 @@ type worker struct {
 	savePosts     bool        // use data storage or not
 	posts         []data.Post // tmp array of posts for sending to data-storage
 	fixer         storage.Fixer
+	st            *storage.Storage
 }
 
 const useTor = true
@@ -106,11 +107,6 @@ func (w *worker) start() {
 }
 
 func (w *worker) proceedLocation(i int) error {
-	st, err := storage.Instance()
-	if err != nil {
-		unilog.Logger().Error("unable to get storage", zap.Error(err))
-		return err
-	}
 	var cursor string
 	var hasNext bool
 	var timestamp int64
@@ -125,7 +121,7 @@ func (w *worker) proceedLocation(i int) error {
 	}
 	cp, ok := w.checkpoints[id]
 	if !ok {
-		cp = st.Checkpoint(w.sessionID, id)
+		cp = w.st.Checkpoint(w.sessionID, id)
 	}
 	if cp == "" {
 		initRequest := "https://www.instagram.com/graphql/query/?query_hash=1b84447a4d8b6d6d0426fefb34514485&variables=%7B%22id%22%3A%22" + id +
@@ -143,7 +139,7 @@ func (w *worker) proceedLocation(i int) error {
 			return err
 		}
 		w.checkpoints[id] = cursor
-		err = st.WriteCheckpoint(w.sessionID, id, cursor)
+		err = w.st.WriteCheckpoint(w.sessionID, id, cursor)
 		if err != nil {
 			return err
 		}
@@ -188,7 +184,7 @@ func (w *worker) proceedLocation(i int) error {
 			return err
 		}
 		w.checkpoints[id] = cursor
-		err = st.WriteCheckpoint(w.sessionID, id, cursor)
+		err = w.st.WriteCheckpoint(w.sessionID, id, cursor)
 		if err != nil {
 			return err
 		}
@@ -302,7 +298,6 @@ func (w *worker) getCookies() error {
 func (w *worker) proceedResponse(d []byte, entityID string) (endCursor string, hasNext bool, timestamp int64,
 	zeroPosts bool, err error) {
 	var posts []data.Post
-	var st storage.Storage
 	switch w.params.Type {
 	case data.ProfilesType:
 		var profile data.Profile
@@ -310,24 +305,14 @@ func (w *worker) proceedResponse(d []byte, entityID string) (endCursor string, h
 		if err != nil {
 			return
 		}
-		st, err = storage.Instance()
-		if err != nil {
-			unilog.Logger().Error("unable to get storage", zap.Error(err))
-			return
-		}
-		err = st.WriteEntity(w.sessionID, entityID, &profile)
+		err = w.st.WriteEntity(w.sessionID, entityID, &profile)
 	case data.LocationsType:
 		var location data.Location
 		posts, location, endCursor, hasNext, timestamp, err = parser.ParseFromLocationRequest(d)
 		if err != nil {
 			return
 		}
-		st, err = storage.Instance()
-		if err != nil {
-			unilog.Logger().Error("unable to get storage", zap.Error(err))
-			return
-		}
-		err = st.WriteEntity(w.sessionID, entityID, &location)
+		err = w.st.WriteEntity(w.sessionID, entityID, &location)
 	}
 	if w.params.DetailedPosts {
 		for i := 0; i < len(posts); i++ {
@@ -354,18 +339,13 @@ func (w *worker) proceedResponse(d []byte, entityID string) (endCursor string, h
 		}
 		w.saveMedia(w.sessionID, entityID, media)
 	}
-	st, err = storage.Instance()
-	if err != nil {
-		unilog.Logger().Error("unable to get storage", zap.Error(err))
-		return
-	}
 	if w.fixer.Init {
 		posts = w.fixer.Fix(posts)
 	}
 	if w.savePosts { // save posts to tmp array for sending to data storage
 		w.posts = append(w.posts, posts...)
 	}
-	err = st.WritePosts(w.sessionID, posts)
+	err = w.st.WritePosts(w.sessionID, posts)
 	if len(posts) > 0 {
 		w.sessionStatus.updatePostsCollected(len(posts))
 	}

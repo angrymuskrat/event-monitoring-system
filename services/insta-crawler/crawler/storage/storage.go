@@ -1,14 +1,11 @@
 package storage
 
 import (
-	"errors"
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
 	"github.com/visheratin/unilog"
 	bolt "go.etcd.io/bbolt"
 	"go.uber.org/zap"
 )
-
-var instance Storage
 
 type Storage struct {
 	set  bool
@@ -16,45 +13,20 @@ type Storage struct {
 	db   *bolt.DB
 }
 
-func Get(dbPath string) (Storage, bool, error) {
-	if dbPath == instance.path {
-		return instance, true, nil
-	}
+func Get(dbPath string) (*Storage, error) {
 	db, err := bolt.Open(dbPath, 0600, nil)
 	if err != nil {
 		unilog.Logger().Error("unable to open BoltDB file", zap.Error(err))
-		return Storage{}, false, err
+		return nil, err
 	}
-	res := Storage{
+	return &Storage{
 		set:  true,
 		path: dbPath,
 		db:   db,
-	}
-	return res, false, nil
+	}, nil
 }
 
-func Init(dbPath string) error {
-	db, err := bolt.Open(dbPath, 0600, nil)
-	if err != nil {
-		unilog.Logger().Error("unable to open BoltDB file", zap.Error(err))
-		return err
-	}
-	instance = Storage{
-		set:  true,
-		path: dbPath,
-		db:   db,
-	}
-	return nil
-}
-
-func Instance() (Storage, error) {
-	if instance.set {
-		return instance, nil
-	}
-	return Storage{}, errors.New("storage was not initialized")
-}
-
-func (s Storage) Close() error {
+func (s *Storage) Close() error {
 	err := s.db.Close()
 	if err != nil {
 		unilog.Logger().Error("unable to close database connection", zap.Error(err))
@@ -62,7 +34,7 @@ func (s Storage) Close() error {
 	return err
 }
 
-func (s Storage) Checkpoint(sessionID, entityID string) string {
+func (s *Storage) Checkpoint(sessionID, entityID string) string {
 	var cp string
 	err := s.db.View(func(tx *bolt.Tx) error {
 		sessionBucket := tx.Bucket([]byte(sessionID))
@@ -89,7 +61,7 @@ func (s Storage) Checkpoint(sessionID, entityID string) string {
 	return cp
 }
 
-func (s Storage) WriteCheckpoint(sessionID, entityID, checkpoint string) error {
+func (s *Storage) WriteCheckpoint(sessionID, entityID, checkpoint string) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		sessionBucket, err := tx.CreateBucketIfNotExists([]byte(sessionID))
 		if err != nil {
@@ -110,7 +82,7 @@ func (s Storage) WriteCheckpoint(sessionID, entityID, checkpoint string) error {
 	})
 }
 
-func (s Storage) Entities(sessionID string, eType data.CrawlingType) []data.Entity {
+func (s *Storage) Entities(sessionID string, eType data.CrawlingType) []data.Entity {
 	ents := []data.Entity{}
 	err := s.db.View(func(tx *bolt.Tx) error {
 		sessionBucket := tx.Bucket([]byte(sessionID))
@@ -142,7 +114,7 @@ func (s Storage) Entities(sessionID string, eType data.CrawlingType) []data.Enti
 	return ents
 }
 
-func (s Storage) WriteEntity(sessionID, entityID string, entity data.Entity) error {
+func (s *Storage) WriteEntity(sessionID, entityID string, entity data.Entity) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		sessionBucket, err := tx.CreateBucketIfNotExists([]byte(sessionID))
 		if err != nil {
@@ -168,7 +140,7 @@ func (s Storage) WriteEntity(sessionID, entityID string, entity data.Entity) err
 	})
 }
 
-func (s Storage) Posts(sessionID, offset string, num int) ([]data.Post, string) {
+func (s *Storage) Posts(sessionID, offset string, num int) ([]data.Post, string) {
 	res := []data.Post{}
 	var cursor string
 	err := s.db.View(func(tx *bolt.Tx) error {
@@ -212,7 +184,7 @@ func (s Storage) Posts(sessionID, offset string, num int) ([]data.Post, string) 
 	return res, cursor
 }
 
-func (s Storage) WritePosts(sessionID string, posts []data.Post) error {
+func (s *Storage) WritePosts(sessionID string, posts []data.Post) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		sessionBucket, err := tx.CreateBucketIfNotExists([]byte(sessionID))
 		if err != nil {
@@ -239,7 +211,7 @@ func (s Storage) WritePosts(sessionID string, posts []data.Post) error {
 	})
 }
 
-func (s Storage) WriteLastSavedPost(sessionID string, lastPostID string) error {
+func (s *Storage) WriteLastSavedPost(sessionID string, lastPostID string) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		postsBucket, err := tx.CreateBucketIfNotExists([]byte("savedPosts"))
 		if err != nil {
@@ -254,7 +226,7 @@ func (s Storage) WriteLastSavedPost(sessionID string, lastPostID string) error {
 	})
 }
 
-func (s Storage) ReadLastSavedPost(sessionID string) string {
+func (s *Storage) ReadLastSavedPost(sessionID string) string {
 	var res string
 	err := s.db.View(func(tx *bolt.Tx) error {
 		postsBucket := tx.Bucket([]byte("savedPosts"))
