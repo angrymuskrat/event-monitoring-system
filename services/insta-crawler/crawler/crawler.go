@@ -247,6 +247,7 @@ func (cr *Crawler) start() error {
 		}
 		for i := range cr.sessions {
 			if cr.sessions[i].Status.Status == FinishedStatus {
+				time.Sleep(d)
 				continue
 			}
 			dbPath := path.Join(cr.config.RootDir, cr.sessions[i].ID, "bolt.db")
