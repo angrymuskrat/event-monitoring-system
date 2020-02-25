@@ -138,6 +138,9 @@ func (w *worker) proceedLocation(i int) error {
 		if err != nil {
 			return err
 		}
+		if zeroPosts {
+			w.removeEntity(i)
+		}
 		w.checkpoints[id] = cursor
 		err = w.st.WriteCheckpoint(w.sessionID, id, cursor)
 		if err != nil {
