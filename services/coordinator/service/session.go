@@ -128,7 +128,7 @@ func (s *Session) historicCollect() error {
 		s.Status = st
 		num := ep.Status.EntitiesLeft
 		run = num > 0
-		time.Sleep(10 * time.Second /*5 * time.Minute*/) // #tmptime
+		time.Sleep(5 * time.Minute)
 	}
 	cs, ok := s.Status.(status.HistoricCollection)
 	if !ok {
@@ -369,7 +369,7 @@ func (s *Session) monitoring() error {
 			s.Status = status.Failed{Error: err}
 			return err
 		}
-		time.Sleep(5 * time.Second /*5 * time.Minute*/) // #tmptime
+		time.Sleep(time.Minute)
 		st := s.Status.Get().(status.Monitoring)
 		start, finish = st.CurrentTimestamp, time.Now().Unix()
 	}
@@ -386,7 +386,7 @@ func (s *Session) monitoringEvents(start, finish int64) error {
 		if err != nil {
 			return err
 		}
-		time.Sleep(5 * time.Second /*20 * time.Second*/) // #tmptime
+		time.Sleep(20 * time.Second)
 	}
 	return nil
 }
