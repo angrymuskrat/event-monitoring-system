@@ -31,19 +31,21 @@ type Session struct {
 }
 
 type SessionParameters struct {
-	CityID         string
-	CityName       string
-	Timezone       string
-	TopLeft        data.Point
-	BottomRight    data.Point
-	Locations      []string
-	CrawlerFinish  int64
-	HistoricStart  int64
-	HistoricFinish int64
-	GridSize       float64
-	AuthCookie     string
-	SkipCrawling   bool
-	SkipHistoric   bool
+	CityID          string
+	CityName        string
+	Timezone        string
+	TopLeft         data.Point
+	BottomRight     data.Point
+	Locations       []string
+	CrawlerFinish   int64
+	HistoricStart   int64
+	HistoricFinish  int64
+	EventsStart     int64
+	MonitoringStart int64
+	GridSize        float64
+	AuthCookie      string
+	SkipCrawling    bool
+	SkipHistoric    bool
 }
 
 func NewSession(p SessionParameters, e ServiceEndpoints) (*Session, error) {
@@ -88,145 +90,146 @@ func (s *Session) Run() {
 }
 
 func (s *Session) historicCollect() error {
-	err := s.startCollect()
+	sessionID, err := s.startCollect(s.Params.CrawlerFinish)
 	if err != nil {
-		st := status.Failed{Error: err}
-		s.Status = st
+		s.Status = status.Failed{Error: err}
 		return err
 	}
+	s.Status = status.HistoricCollection{
+		SessionID:      sessionID,
+		PostsCollected: 0,
+		LocationsLeft:  len(s.Params.Locations),
+	}
+	unilog.Logger().Info("started data collecting", zap.String("session", s.ID),
+		zap.String("grid session", sessionID))
+
 	run := true
 	for run {
-		num, err := s.checkCollect()
+		cs, ok := s.Status.(status.HistoricCollection)
+		if !ok {
+			unilog.Logger().Error("incorrect session status", zap.String("status", s.Status.String()))
+			return errors.New("incorrect session status")
+		}
+		ep, err := s.checkCollect(cs.SessionID)
 		if err != nil {
 			st := status.Failed{Error: err}
 			s.Status = st
 			return err
 		}
-		run = num > 0
-		time.Sleep(5 * time.Minute)
-	}
-	err = s.deleteCollect()
-	if err != nil {
-		st := status.Failed{Error: err}
+		st := status.HistoricCollection{
+			SessionID:      cs.SessionID,
+			PostsCollected: ep.Status.PostsCollected,
+			LocationsLeft:  ep.Status.EntitiesLeft,
+		}
+		unilog.Logger().Info("data collecting", zap.String("session", s.ID),
+			zap.String("crawler session", st.SessionID), zap.Int("collected", st.PostsCollected),
+			zap.Int("left", st.LocationsLeft))
+
 		s.Status = st
+		num := ep.Status.EntitiesLeft
+		run = num > 0
+		time.Sleep(10 * time.Second /*5 * time.Minute*/) // #tmptime
+	}
+	cs, ok := s.Status.(status.HistoricCollection)
+	if !ok {
+		unilog.Logger().Error("incorrect session status", zap.String("status", s.Status.String()))
+		return errors.New("incorrect session status")
+	}
+	err = s.deleteCollect(cs.SessionID)
+	if err != nil {
+		s.Status = status.Failed{Error: err}
 		return err
 	}
 	return nil
 }
 
-func (s *Session) startCollect() error {
+func (s *Session) startCollect(crawlingFinish int64) (string, error) {
 	p := crawler.Parameters{
 		CityID:          s.Params.CityID,
 		Type:            crawlerdata.LocationsType,
 		Entities:        s.Params.Locations,
-		FinishTimestamp: s.Params.CrawlerFinish,
+		FinishTimestamp: crawlingFinish,
 		AuthCookie:      s.Params.AuthCookie,
 	}
 	d, err := json.Marshal(p)
 	if err != nil {
 		unilog.Logger().Error("unable to marshal crawler parameters", zap.Error(err))
-		return err
+		return "", err
 	}
-	url := fmt.Sprintf("http://%s/new", s.Endpoints.Crawler)
+	url := fmt.Sprintf("http://%s/new", s.Endpoints.Crawler.Address)
 	buf := bytes.NewBuffer(d)
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", url, buf)
 	if err != nil {
 		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
-		return err
+		return "", err
 	}
 	req.SetBasicAuth(s.Endpoints.Crawler.User, s.Endpoints.Crawler.Password)
 	resp, err := client.Do(req)
 	if err != nil {
 		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
-		return err
+		return "", err
 	}
 	if resp.StatusCode != 200 {
 		unilog.Logger().Error("error status code", zap.Int("code", resp.StatusCode), zap.String("status", resp.Status))
-		return err
+		return "", err
 	}
 	defer resp.Body.Close()
 	var ep crservice.NewEpResponse
 	err = json.NewDecoder(resp.Body).Decode(&ep)
 	if err != nil {
 		unilog.Logger().Error("unable to read response", zap.Error(err))
-		return nil
+		return "", nil
 	}
 	if ep.Error != "" {
 		unilog.Logger().Error("error in crawler", zap.String("msg", ep.Error))
-		return errors.New(ep.Error)
+		return "", errors.New(ep.Error)
 	}
-	st := status.HistoricCollection{
-		SessionID:      ep.ID,
-		PostsCollected: 0,
-		LocationsLeft:  len(p.Entities),
-	}
-	s.Status = st
-	unilog.Logger().Info("started data collecting", zap.String("session", s.ID),
-		zap.String("grid session", ep.ID))
-	return nil
+	return ep.ID, nil
 }
 
-func (s *Session) checkCollect() (int, error) {
-	cs, ok := s.Status.(status.HistoricCollection)
-	if !ok {
-		unilog.Logger().Error("incorrect session status", zap.String("status", s.Status.String()))
-	}
-	url := fmt.Sprintf("http://%s/status/%s", s.Endpoints.Crawler, cs.SessionID)
+func (s *Session) checkCollect(sessionID string) (*crservice.StatusEpResponse, error) {
+	url := fmt.Sprintf("http://%s/status/%s", s.Endpoints.Crawler.Address, sessionID)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
-		return -1, err
+		return nil, err
 	}
 	req.SetBasicAuth(s.Endpoints.Crawler.User, s.Endpoints.Crawler.Password)
 	resp, err := client.Do(req)
-	//resp, err := http.Get(url)
 	if err != nil {
 		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
-		return -1, err
+		return nil, err
 	}
 	if resp.StatusCode != 200 {
 		unilog.Logger().Error("error status code", zap.Int("code", resp.StatusCode),
 			zap.String("status", resp.Status))
-		return -1, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 	var ep crservice.StatusEpResponse
 	err = json.NewDecoder(resp.Body).Decode(&ep)
 	if err != nil {
 		unilog.Logger().Error("unable to read response", zap.Error(err))
-		return -1, nil
+		return nil, err
 	}
 	if ep.Error != "" {
 		unilog.Logger().Error("error in crawler", zap.String("msg", ep.Error))
-		return -1, errors.New(ep.Error)
+		return nil, errors.New(ep.Error)
 	}
-	st := status.HistoricCollection{
-		SessionID:      cs.SessionID,
-		PostsCollected: ep.Status.PostsCollected,
-		LocationsLeft:  ep.Status.EntitiesLeft,
-	}
-	unilog.Logger().Info("data collecting", zap.String("session", s.ID),
-		zap.String("crawler session", st.SessionID), zap.Int("collected", st.PostsCollected),
-		zap.Int("left", st.LocationsLeft))
-	s.Status = st
-	return ep.Status.EntitiesLeft, nil
+	return &ep, nil
 }
 
-func (s *Session) deleteCollect() error {
-	cs, ok := s.Status.(status.HistoricCollection)
-	if !ok {
-		unilog.Logger().Error("incorrect session status", zap.String("status", s.Status.String()))
-	}
-	p := crservice.IDEpRequest{ID: cs.SessionID}
+func (s *Session) deleteCollect(sessionID string) error {
+	p := crservice.IDEpRequest{ID: sessionID}
 	d, err := json.Marshal(p)
 	if err != nil {
 		unilog.Logger().Error("unable to marshal crawler parameters", zap.Error(err))
 		return err
 	}
 	buf := bytes.NewBuffer(d)
-	url := fmt.Sprintf("http://%s/stop", s.Endpoints.Crawler)
+	url := fmt.Sprintf("http://%s/stop", s.Endpoints.Crawler.Address)
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", url, buf)
 	if err != nil {
@@ -235,7 +238,6 @@ func (s *Session) deleteCollect() error {
 	}
 	req.SetBasicAuth(s.Endpoints.Crawler.User, s.Endpoints.Crawler.Password)
 	resp, err := client.Do(req)
-	//resp, err := http.Post(url, "application/json", buf)
 	if err != nil {
 		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
 		return err
@@ -262,7 +264,7 @@ func (s *Session) deleteCollect() error {
 		return errors.New(msg)
 	}
 	unilog.Logger().Info("stopped collecting", zap.String("session", s.ID), zap.String("crawler session",
-		cs.SessionID))
+		sessionID))
 	return nil
 }
 
@@ -339,27 +341,105 @@ func (s *Session) historicStatus() (bool, error) {
 }
 
 func (s *Session) monitoring() error {
-	start, finish := s.Params.HistoricFinish, time.Now().Unix()
-	var err error
-	for {
-		err = s.eventsStart(start, finish)
+	if s.Params.EventsStart > s.Params.MonitoringStart {
+		unilog.Logger().Error("EventsStart is higher than MonitoringStart")
+		return errors.New("incorrect start time for monitoring")
+	}
+	if s.Params.EventsStart < s.Params.MonitoringStart {
+		// search events for collected posts
+		err := s.monitoringEvents(s.Params.EventsStart, s.Params.MonitoringStart)
 		if err != nil {
 			s.Status = status.Failed{Error: err}
 			return err
 		}
-		finished := false
-		for !finished {
-			finished, err = s.eventsStatus()
-			if err != nil {
-				s.Status = status.Failed{Error: err}
-				return err
-			}
-			time.Sleep(20 * time.Second)
+	}
+
+	// crawling of posts and search events for them
+	start, finish := s.Params.MonitoringStart, time.Now().Unix()
+	var err error
+	for {
+		err = s.monitoringCollect(start)
+		if err != nil {
+			s.Status = status.Failed{Error: err}
+			return err
 		}
-		time.Sleep(5 * time.Minute)
+
+		err := s.monitoringEvents(start, finish)
+		if err != nil {
+			s.Status = status.Failed{Error: err}
+			return err
+		}
+		time.Sleep(5 * time.Second /*5 * time.Minute*/) // #tmptime
 		st := s.Status.Get().(status.Monitoring)
 		start, finish = st.CurrentTimestamp, time.Now().Unix()
 	}
+}
+
+func (s *Session) monitoringEvents(start, finish int64) error {
+	err := s.eventsStart(start, finish)
+	if err != nil {
+		return err
+	}
+	finished := false
+	for !finished {
+		finished, err = s.eventsStatus()
+		if err != nil {
+			return err
+		}
+		time.Sleep(5 * time.Second /*20 * time.Second*/) // #tmptime
+	}
+	return nil
+}
+
+func (s *Session) monitoringCollect(crawlingFinish int64) error {
+	sessionID, err := s.startCollect(crawlingFinish)
+	if err != nil {
+		return err
+	}
+	s.Status = status.Monitoring{
+		SessionID:        sessionID,
+		CurrentTimestamp: crawlingFinish,
+		Status:           "start collect data",
+	}
+	unilog.Logger().Info("started data collecting in monitoring", zap.String("session", s.ID),
+		zap.String("grid session", sessionID))
+
+	run := true
+	for run {
+		cs, ok := s.Status.(status.Monitoring)
+		if !ok {
+			unilog.Logger().Error("incorrect session status", zap.String("status", s.Status.String()))
+			return errors.New("incorrect session status")
+		}
+		ep, err := s.checkCollect(cs.SessionID)
+		if err != nil {
+			return err
+		}
+
+		st := status.Monitoring{
+			SessionID:        cs.SessionID,
+			CurrentTimestamp: crawlingFinish,
+			Status:           "crawler is collecting data",
+		}
+		unilog.Logger().Info("data collecting in monitoring", zap.String("session", s.ID),
+			zap.String("crawler session", st.SessionID), zap.Int64("current timestamp", st.CurrentTimestamp),
+			zap.Int("collected", ep.Status.PostsCollected), zap.Int("left", ep.Status.EntitiesLeft))
+
+		s.Status = st
+		num := ep.Status.EntitiesLeft
+		run = num > 0
+		time.Sleep(1 * time.Minute)
+	}
+	cs, ok := s.Status.(status.Monitoring)
+	if !ok {
+		unilog.Logger().Error("incorrect session status", zap.String("status", s.Status.String()))
+		return errors.New("incorrect session status")
+	}
+	err = s.deleteCollect(cs.SessionID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *Session) eventsStart(start, finish int64) error {
