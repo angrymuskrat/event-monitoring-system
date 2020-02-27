@@ -23,5 +23,8 @@ func (e *entities) get(i int) string {
 func (e *entities) remove(i int) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	if i >= len(e.data) { // TODO find reasons of wrong call
+		return
+	}
 	e.data = append(e.data[:i], e.data[i+1:]...)
 }
