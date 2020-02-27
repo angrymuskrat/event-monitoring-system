@@ -74,8 +74,9 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 				}
 				exists := false
 				for _, tag := range tags {
-					for _, h := range evHolders {
+					for i, h := range evHolders {
 						if _, ok := h.tags[tag]; ok {
+							h.users[post.AuthorID] = true
 							h.posts[post.Shortcode] = true
 							for _, t := range tags {
 								if _, ok := h.tags[t]; ok {
@@ -84,8 +85,9 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 									h.tags[t] = 1
 								}
 							}
+							evHolders[i] = h
 							exists = true
-							continue
+							break
 						}
 					}
 					if exists {
@@ -94,9 +96,11 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 				}
 				if !exists {
 					h := eventHolder{
+						users: map[string]bool{},
 						posts: map[string]bool{},
 						tags:  map[string]int{},
 					}
+					h.users[post.AuthorID] = true
 					h.posts[post.Shortcode] = true
 					for _, tag := range tags {
 						h.tags[tag] = 1
@@ -139,45 +143,49 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 			//	}
 			//}
 			for _, e := range evHolders {
-				if len(e.posts) >= maxPoints/2 {
-					for k, v := range e.tags {
-						if v < len(e.posts)/4 {
-							delete(e.tags, k)
-						}
-					}
-					//eventPosts := map[string]bool{}
-					//for tag := range e.tags {
-					//	for p := range tagPosts[tag] {
-					//		eventPosts[p] = true
-					//	}
-					//}
-					postCodes := []string{}
-					for k := range e.posts {
-						postCodes = append(postCodes, k)
-					}
-					tags := []string{}
-					var max int
-					var maxTag string
-					for k := range e.tags {
-						if e.tags[k] > max {
-							max = e.tags[k]
-							maxTag = k
-						}
-						tags = append(tags, k)
-					}
-					event := data.Event{
-						Center:    eventCenter(e.posts, posts),
-						PostCodes: postCodes,
-						Tags:      tags,
-						Title:     maxTag,
-						Start:     start,
-						Finish:    finish,
-					}
-					if len(postCodes) > 0 {
-						result = append(result, event)
-					}
-
+				if len(e.users) < 2 {
+					continue
 				}
+				if len(e.posts) < maxPoints/2 {
+					continue
+				}
+				for k, v := range e.tags {
+					if v < len(e.posts)/3 {
+						delete(e.tags, k)
+					}
+				}
+				//eventPosts := map[string]bool{}
+				//for tag := range e.tags {
+				//	for p := range tagPosts[tag] {
+				//		eventPosts[p] = true
+				//	}
+				//}
+				postCodes := []string{}
+				for k := range e.posts {
+					postCodes = append(postCodes, k)
+				}
+				tags := []string{}
+				var max int
+				var maxTag string
+				for k := range e.tags {
+					if e.tags[k] > max {
+						max = e.tags[k]
+						maxTag = k
+					}
+					tags = append(tags, k)
+				}
+				event := data.Event{
+					Center:    eventCenter(e.posts, posts),
+					PostCodes: postCodes,
+					Tags:      tags,
+					Title:     maxTag,
+					Start:     start,
+					Finish:    finish,
+				}
+				if len(postCodes) > 0 {
+					result = append(result, event)
+				}
+
 			}
 		}
 		return result

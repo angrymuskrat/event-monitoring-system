@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	minXLength = 0.001
-	minYLength = 0.001
-	maxDepth   = 50
+	minXLength = 0.005
+	minYLength = 0.005
+	maxDepth   = 20
 	convNumber = 3
 	gridSize   = 10
 )
