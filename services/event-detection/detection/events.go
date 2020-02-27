@@ -46,7 +46,7 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 				post := item.Content.(data.Post)
 				posts[i] = post
 				//tags := []string{}
-				r, _ := regexp.Compile("#[^\\s|\\#|\\n|!|\\.|\\?]+")
+				r, _ := regexp.Compile("#[a-zA-Z0-9а-яА-Я_]+")
 				hashtags := r.FindAllString(post.Caption, -1)
 				for idx := range hashtags {
 					hashtags[idx] = strings.ToLower(hashtags[idx])
@@ -58,7 +58,7 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 					}
 					tags = append(tags, tag)
 				}
-				r, _ = regexp.Compile("@[^\\s|\\#|\\n|!|\\.|\\?]+")
+				r, _ = regexp.Compile("@[[a-zA-Z0-9а-яА-Я_]+")
 				usernames := r.FindAllString(post.Caption, -1)
 				for idx := range usernames {
 					usernames[idx] = strings.ToLower(usernames[idx])
