@@ -258,7 +258,8 @@ func (cr *Crawler) start() error {
 			workerTasks := distributeEntities(cr.sessions[i].Status.Entities, len(cr.workers))
 			for j := range cr.workers {
 				if j > (len(workerTasks) - 1) {
-					break
+					cr.workers[j].entities = &entities{}
+					continue
 				}
 				cr.workers[j].entities = newEntities(workerTasks[j])
 				cr.workers[j].params = cr.sessions[i].Params
