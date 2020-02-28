@@ -118,16 +118,29 @@ func eventHolders(d []convtree.Point, filterTags map[string]bool) ([]eventHolder
 			evHolders = append(evHolders, h)
 		}
 	}
+	res, un := uniteHolders(evHolders)
+	for un {
+		res, un = uniteHolders(res)
+	}
+	return res, posts
+}
+
+func uniteHolders(evHolders []eventHolder) ([]eventHolder, bool) {
+	united := false
 	res := []eventHolder{}
 	for i := 0; i < len(evHolders); i++ {
 		eh1 := evHolders[i]
 		for j := i + 1; j < len(evHolders); j++ {
+			if j == (len(evHolders) - 1) {
+				continue
+			}
 			eh2 := evHolders[j]
 			found := false
 			for t1 := range eh1.tags {
 				for t2 := range eh2.tags {
 					if t1 == t2 {
 						eh1 = combineHolders(eh1, eh2)
+						united = true
 						found = true
 						break
 					}
@@ -143,7 +156,7 @@ func eventHolders(d []convtree.Point, filterTags map[string]bool) ([]eventHolder
 		}
 		res = append(res, eh1)
 	}
-	return res, posts
+	return res, united
 }
 
 func combineHolders(eh1, eh2 eventHolder) eventHolder {
@@ -189,7 +202,7 @@ func checkEvent(e eventHolder, maxPoints int, posts []data.Post, start, finish i
 		return data.Event{}, false
 	}
 	for k, v := range e.tags {
-		if v < len(e.posts)/3 {
+		if v < maxPoints/2 {
 			delete(e.tags, k)
 		}
 	}
