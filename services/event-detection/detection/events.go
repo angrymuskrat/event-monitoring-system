@@ -2,6 +2,7 @@ package detection
 
 import (
 	"regexp"
+	"sort"
 	"strings"
 
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
@@ -201,33 +202,50 @@ func checkEvent(e eventHolder, maxPoints int, posts []data.Post, start, finish i
 	if len(e.users) < maxPoints/2 {
 		return data.Event{}, false
 	}
-	for k, v := range e.tags {
-		if v < len(e.posts)/3 {
-			delete(e.tags, k)
-		}
-	}
+	tags := sortTags(e.tags, 5)
 	postCodes := []string{}
 	for k := range e.posts {
 		postCodes = append(postCodes, k)
-	}
-	tags := []string{}
-	var max int
-	var maxTag string
-	for k := range e.tags {
-		if e.tags[k] > max {
-			max = e.tags[k]
-			maxTag = k
-		}
-		tags = append(tags, k)
 	}
 	return data.Event{
 		Center:    eventCenter(e.posts, posts),
 		PostCodes: postCodes,
 		Tags:      tags,
-		Title:     maxTag,
+		Title:     tags[0],
 		Start:     start,
 		Finish:    finish,
 	}, true
+}
+
+func sortTags(tags map[string]int, max int) []string {
+	rev := map[int][]string{}
+	for t, c := range tags {
+		if _, ok := rev[c]; !ok {
+			rev[c] = []string{t}
+		} else {
+			rev[c] = append(rev[c], t)
+		}
+	}
+	keys := make([]int, 0, len(rev))
+	for k := range rev {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] > keys[j]
+	})
+	res := []string{}
+	for _, k := range keys {
+		res = append(res, rev[k]...)
+		if len(res) >= max {
+			break
+		}
+	}
+	l := max
+	if l > (len(res) - 1) {
+		l = len(res)
+	}
+	res = res[0:l]
+	return res
 }
 
 func eventCenter(codes map[string]bool, posts []data.Post) data.Point {
