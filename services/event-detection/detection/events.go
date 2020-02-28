@@ -202,7 +202,7 @@ func checkEvent(e eventHolder, maxPoints int, posts []data.Post, start, finish i
 		return data.Event{}, false
 	}
 	for k, v := range e.tags {
-		if v < maxPoints/2 {
+		if v < len(e.posts)/3 {
 			delete(e.tags, k)
 		}
 	}
