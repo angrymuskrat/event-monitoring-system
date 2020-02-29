@@ -569,9 +569,26 @@ func (s *Storage) PullEventsTags(ctx context.Context, cityId string, tags []stri
 			return nil, ErrSelectEvents
 		}
 		e.Center = *p
-		events = append(events, *e)
+		events = putEvent(*e, events)
 	}
 	return
+}
+
+func putEvent(e data.Event, evs []data.Event) []data.Event {
+	if evs == nil {
+		evs = []data.Event{e}
+		return evs
+	}
+	for i := range evs {
+		if e.Start < evs[i].Start {
+			evs = append(evs, data.Event{})
+			copy(evs[i+1:], evs[i:])
+			evs[i] = e
+			return evs
+		}
+	}
+	evs = append(evs, e)
+	return evs
 }
 
 func (s *Storage) PushLocations(ctx context.Context, cityId string, locations []data.Location) (err error) {

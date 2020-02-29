@@ -155,7 +155,7 @@ const SelectEventsTags = `
 		ST_Y(Center) as Lon
 	FROM events
 	WHERE
-		((%v <= Start AND %v > Start) OR (%v BETWEEN Start AND (Finish - 1))) %v;
+		(%v <= Finish AND %v >= Start) %v;
 `
 
 func MakeSelectEventsTags(tags []string, start, finish int64) string {
@@ -165,7 +165,7 @@ func MakeSelectEventsTags(tags []string, start, finish int64) string {
 			tagsStr += fmt.Sprintf("\n		AND '%v' = ANY (Tags)", tag)
 		}
 	}
-	return fmt.Sprintf(SelectEventsTags, start, finish, start, tagsStr)
+	return fmt.Sprintf(SelectEventsTags, start, finish, tagsStr)
 }
 
 const CreatePostsTimelineView = `

@@ -69,8 +69,5 @@ func (c DataConnector) EventsByTags(city string, keytags []string, start, finish
 		unilog.Logger().Error("unable to search events by tags", zap.Error(err))
 		return nil, err
 	}
-	sort.Slice(evs, func(i, j int) bool {
-		return evs[i].Start < evs[j].Start
-	})
 	return evs, nil
 }
