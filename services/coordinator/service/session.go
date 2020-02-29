@@ -31,21 +31,21 @@ type Session struct {
 }
 
 type SessionParameters struct {
-	CityID          string
-	CityName        string
-	Timezone        string
-	TopLeft         data.Point
-	BottomRight     data.Point
-	Locations       []string
-	CrawlerFinish   int64
-	HistoricStart   int64
-	HistoricFinish  int64
-	EventsStart     int64
-	MonitoringStart int64
-	GridSize        float64
-	AuthCookie      string
-	SkipCrawling    bool
-	SkipHistoric    bool
+	CityID           string
+	CityName         string
+	Timezone         string
+	TopLeft          data.Point
+	BottomRight      data.Point
+	Locations        []string
+	CrawlerFinish    int64
+	HistoricStart    int64
+	HistoricFinish   int64
+	MonitoringStart  int64
+	GridSize         float64
+	AuthCookie       string
+	SkipCrawling     bool
+	SkipHistoric     bool
+	RegenerateEvents bool
 }
 
 func NewSession(p SessionParameters, e ServiceEndpoints) (*Session, error) {
@@ -341,20 +341,14 @@ func (s *Session) historicStatus() (bool, error) {
 }
 
 func (s *Session) monitoring() error {
-	if s.Params.EventsStart > s.Params.MonitoringStart {
-		unilog.Logger().Error("EventsStart is higher than MonitoringStart")
-		return errors.New("incorrect start time for monitoring")
-	}
-	if s.Params.EventsStart < s.Params.MonitoringStart {
-		// search events for collected posts
-		err := s.monitoringEvents(s.Params.EventsStart, s.Params.MonitoringStart)
+	if s.Params.RegenerateEvents {
+		err := s.monitoringEvents(s.Params.HistoricFinish, s.Params.MonitoringStart)
 		if err != nil {
 			s.Status = status.Failed{Error: err}
 			return err
 		}
 	}
 
-	// crawling of posts and search events for them
 	start, finish := s.Params.MonitoringStart, time.Now().Unix()
 	var err error
 	for {
