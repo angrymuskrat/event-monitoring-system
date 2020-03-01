@@ -12,6 +12,10 @@ type Location struct {
 	Slug  string
 }
 
+func (l *Location) GetID() string {
+	return l.ID
+}
+
 func (l *Location) Marshal() ([]byte, error) {
 	b, err := json.Marshal(l)
 	return b, err

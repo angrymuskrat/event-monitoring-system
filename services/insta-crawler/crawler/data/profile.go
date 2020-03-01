@@ -13,6 +13,10 @@ type Profile struct {
 	Private        bool
 }
 
+func (l *Profile) GetID() string {
+	return l.ID
+}
+
 func (p *Profile) Marshal() ([]byte, error) {
 	b, err := json.Marshal(p)
 	return b, err

@@ -1,19 +1,15 @@
 package crawler
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
-	"path"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
@@ -26,31 +22,26 @@ import (
 )
 
 type worker struct {
-	id            int
-	entities      *entities
-	params        Parameters
-	sessionID     string
-	sessionStatus *Status
-	rootDir       string
-	pCh           chan bool
-	oCh           chan bool
-	paused        bool
-	agent         string
-	cookies       []*http.Cookie
-	token         string
-	rhx           string
-	checkpoints   map[string]string
-	http          http.Client
-	tor           http.Client
-	savePosts     bool        // use data storage or not
-	posts         []data.Post // tmp array of posts for sending to data-storage
-	fixer         storage.Fixer
-	st            *storage.Storage
+	id         int
+	inCh       chan entity
+	outCh      chan entity
+	postsCh    chan []data.Post
+	entitiesCh chan data.Entity
+	mediaCh    chan []data.Media
+	paramsCh   chan Parameters
+	fixer      storage.Fixer
+	mu         sync.Mutex
+	params     Parameters
+	agent      string
+	http       http.Client
+	tor        http.Client
 }
 
 const useTor = true
 
 func (w *worker) init(port int) {
+	//w.inCh = inCh
+	//w.outCh = outCh
 	w.http = http.Client{
 		Timeout: 30 * time.Second,
 	}
@@ -75,38 +66,29 @@ func (w *worker) init(port int) {
 	if err == nil {
 		w.fixer = fixer
 	}
+	go w.paramsEdit()
 	unilog.Logger().Info("started worker", zap.Int("id", w.id))
 }
 
-func (w *worker) start() {
-	go func() {
-		for {
-			select {
-			case p := <-w.pCh:
-				w.paused = p
-			default:
-			}
-			time.Sleep(1 * time.Second)
-		}
-	}()
-	for {
-		fmt.Print("") // this is important, this line fix freeze bug
-		if w.paused {
-			time.Sleep(1 * time.Second)
-			continue
-		}
-		for i := range w.entities.data {
-			if w.paused {
-				// w.oCh <- true
-				break
-			}
-			w.proceedLocation(i)
-			time.Sleep(2500 * time.Millisecond)
-		}
+func (w *worker) paramsEdit() {
+	for p := range w.paramsCh {
+		w.mu.Lock()
+		w.params = p
+		w.mu.Unlock()
 	}
 }
 
-func (w *worker) proceedLocation(i int) error {
+func (w *worker) start() {
+	for e := range w.inCh {
+		w.proceedLocation(e)
+		time.Sleep(2500 * time.Millisecond)
+	}
+}
+
+func (w *worker) proceedLocation(e entity) {
+	defer func() {
+		w.outCh <- e
+	}()
 	var cursor string
 	var hasNext bool
 	var timestamp int64
@@ -115,36 +97,29 @@ func (w *worker) proceedLocation(i int) error {
 	requestTemplatePt2 := "%22%2C%22first%22%3A50%2C%22after%22%3A%22"
 	requestTemplatePt3 := "%22%7D"
 	var cp string
-	id := w.entities.get(i)
-	if id == "" {
-		return nil
-	}
-	cp, ok := w.checkpoints[id]
-	if !ok {
-		cp = w.st.Checkpoint(w.sessionID, id)
-	}
-	if cp == "" {
-		initRequest := "https://www.instagram.com/graphql/query/?query_hash=1b84447a4d8b6d6d0426fefb34514485&variables=%7B%22id%22%3A%22" + id +
+	if e.checkpoint == "" {
+		initRequest := "https://www.instagram.com/graphql/query/?query_hash=1b84447a4d8b6d6d0426fefb34514485&variables=%7B%22id%22%3A%22" + e.id +
 			"%22%2C%22first%22%3A50%7D"
-		referer := "https://www.instagram.com/explore/locations/" + id
-		rawData, err := w.makeRequest(initRequest, true, "", referer, false)
+		//referer := "https://www.instagram.com/explore/locations/" + e.id
+		rawData, err := w.makeRequest(initRequest, true, "", "", false)
 		if err != nil {
 			if rawData != nil {
-				w.removeEntity(i)
+				e.finished = true
 			}
-			return err
+			return
 		}
-		cursor, hasNext, _, zeroPosts, err = w.proceedResponse(rawData, id)
+		cursor, hasNext, _, zeroPosts, err = w.proceedResponse(rawData, w.params.FinishTimestamp, true)
 		if err != nil {
-			return err
+			e.finished = true
+			return
 		}
 		if zeroPosts {
-			w.removeEntity(i)
+			e.finished = true
+			return
 		}
-		w.checkpoints[id] = cursor
-		err = w.st.WriteCheckpoint(w.sessionID, id, cursor)
-		if err != nil {
-			return err
+		e.checkpoint = cursor
+		if timestamp < w.params.FinishTimestamp {
+			e.finished = true
 		}
 	} else {
 		cursor = cp
@@ -152,57 +127,50 @@ func (w *worker) proceedLocation(i int) error {
 	}
 	if hasNext {
 		var newRequest string
-		var referer string
+		//var referer string
 		switch w.params.Type {
 		case data.LocationsType:
-			newRequest = requestTemplatePt1 + id + requestTemplatePt2 + cursor + requestTemplatePt3
-			referer = "https://www.instagram.com/explore/locations/" + id
-		case data.ProfilesType:
-			//profile, err := worker.writerInstance.ReadProfile(entityID)
-			//if err != nil {
-			//	return
-			//}
-			//newRequest = requestTemplatePt1 + profile.ID + requestTemplatePt2 + cursor + requestTemplatePt3
-			//referer = "https://www.instagram.com/" + profile.Username
-		case data.StoriesType: // TODO : StoriesType
-
+			newRequest = requestTemplatePt1 + e.id + requestTemplatePt2 + cursor + requestTemplatePt3
+			//referer = "https://www.instagram.com/explore/locations/" + e.id
 		}
-		variables := "{\"ID\":\"" + id + "\",\"first\":50,\"after\":\"" + cursor + "\"}"
-		gisString := w.rhx + ":" + variables
-		h := md5.New()
-		io.WriteString(h, gisString)
-		gis := hex.EncodeToString(h.Sum(nil))
-		rawData, err := w.makeRequest(newRequest, useTor, gis, referer, false)
+		//variables := "{\"ID\":\"" + e.id + "\",\"first\":50,\"after\":\"" + cursor + "\"}"
+		//gisString := w.rhx + ":" + variables
+		//h := md5.New()
+		//io.WriteString(h, gisString)
+		//gis := hex.EncodeToString(h.Sum(nil))
+		rawData, err := w.makeRequest(newRequest, useTor, "", "", false)
 		if err != nil {
 			if rawData != nil {
-				w.removeEntity(i)
+				e.finished = true
 			}
-			return err
+			return
 		}
-		cursor, hasNext, timestamp, zeroPosts, err = w.proceedResponse(rawData, id)
+		cursor, hasNext, timestamp, zeroPosts, err = w.proceedResponse(rawData, w.params.FinishTimestamp, false)
 		if err != nil {
-			if zeroPosts {
-				w.removeEntity(i)
-			}
-			return err
+			e.finished = true
+			return
 		}
-		w.checkpoints[id] = cursor
-		err = w.st.WriteCheckpoint(w.sessionID, id, cursor)
-		if err != nil {
-			return err
+		if zeroPosts {
+			e.finished = true
+			return
 		}
+		e.checkpoint = cursor
 		if timestamp < w.params.FinishTimestamp {
-			w.removeEntity(i)
+			e.finished = true
 		}
 	} else {
-		w.removeEntity(i)
+		e.finished = true
 	}
-	return nil
 }
 
-func (w *worker) removeEntity(i int) {
-	w.entities.remove(i)
-	//w.sessionStatus.updateEntitiesLeft(-1)
+func filterPosts(posts []data.Post, finish int64) []data.Post {
+	res := make([]data.Post, 0, len(posts))
+	for _, p := range posts {
+		if p.Timestamp >= finish {
+			res = append(res, p)
+		}
+	}
+	return res
 }
 
 func (w *worker) makeRequest(request string, useTor bool, gis string, referer string, auth bool) ([]byte, error) {
@@ -236,11 +204,11 @@ func (w *worker) makeRequest(request string, useTor bool, gis string, referer st
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 403 {
-		w.getCookies()
-		unilog.Logger().Error("cookies have expired", zap.String("URL", request), zap.Error(err))
-		return nil, err
-	}
+	//if resp.StatusCode == 403 {
+	//	w.getCookies()
+	//	unilog.Logger().Error("cookies have expired", zap.String("URL", request), zap.Error(err))
+	//	return nil, err
+	//}
 	if resp.StatusCode == 429 {
 		msg := fmt.Sprintf("too many requests from worker %d", w.id)
 		// unilog.Logger().Error(msg)
@@ -252,10 +220,8 @@ func (w *worker) makeRequest(request string, useTor bool, gis string, referer st
 		msg := "entity page was not found"
 		unilog.Logger().Error(msg, zap.String("URL", request))
 		err = errors.New(msg)
-		return []byte{}, err
+		return nil, err
 	}
-	cookies := resp.Cookies()
-	w.cookies = cookies
 	body, err := ioutil.ReadAll(resp.Body)
 	return body, nil
 }
@@ -285,20 +251,20 @@ func (w *worker) getCookies() error {
 		id = strings.Split(id, ",")[0]
 		id = strings.Replace(id, "\"", "", -1)
 		id = strings.Replace(id, ",", "", -1)
-		w.rhx = id
+		//w.rhx = id
 	}
-	cookies := resp.Cookies()
-	w.cookies = cookies
-	for _, cookie := range cookies {
-		if cookie.Name == "csrftoken" {
-			w.token = cookie.Value
-			break
-		}
-	}
+	//cookies := resp.Cookies()
+	//w.cookies = cookies
+	//for _, cookie := range cookies {
+	//	if cookie.Name == "csrftoken" {
+	//		w.token = cookie.Value
+	//		break
+	//	}
+	//}
 	return nil
 }
 
-func (w *worker) proceedResponse(d []byte, entityID string) (endCursor string, hasNext bool, timestamp int64,
+func (w *worker) proceedResponse(d []byte, finish int64, loadEntity bool) (endCursor string, hasNext bool, timestamp int64,
 	zeroPosts bool, err error) {
 	var posts []data.Post
 	switch w.params.Type {
@@ -308,14 +274,18 @@ func (w *worker) proceedResponse(d []byte, entityID string) (endCursor string, h
 		if err != nil {
 			return
 		}
-		err = w.st.WriteEntity(w.sessionID, entityID, &profile)
+		if loadEntity {
+			w.entitiesCh <- &profile
+		}
 	case data.LocationsType:
 		var location data.Location
 		posts, location, endCursor, hasNext, timestamp, err = parser.ParseFromLocationRequest(d)
 		if err != nil {
 			return
 		}
-		err = w.st.WriteEntity(w.sessionID, entityID, &location)
+		if loadEntity {
+			w.entitiesCh <- &location
+		}
 	}
 	if w.params.DetailedPosts {
 		for i := 0; i < len(posts); i++ {
@@ -340,18 +310,13 @@ func (w *worker) proceedResponse(d []byte, entityID string) (endCursor string, h
 				Data:   imgData,
 			}
 		}
-		w.saveMedia(w.sessionID, entityID, media)
+		w.mediaCh <- media
 	}
 	if w.fixer.Init {
 		posts = w.fixer.Fix(posts)
 	}
-	if w.savePosts { // save posts to tmp array for sending to data storage
-		w.posts = append(w.posts, posts...)
-	}
-	err = w.st.WritePosts(w.sessionID, posts)
-	if len(posts) > 0 {
-		w.sessionStatus.updatePostsCollected(len(posts))
-	}
+	posts = filterPosts(posts, finish)
+	w.postsCh <- posts
 	zeroPosts = len(posts) == 0
 	return
 }
@@ -368,22 +333,4 @@ func (w worker) detailedPost(post data.Post) (data.Post, error) {
 		return data.Post{}, err
 	}
 	return detailedPost, nil
-}
-
-func (w worker) saveMedia(sessionID, entityID string, media []data.Media) {
-	mediaPath := path.Join(w.rootDir, sessionID, "img", entityID)
-	err := os.MkdirAll(mediaPath, 0777)
-	if err != nil {
-		unilog.Logger().Error("unable to create media directory", zap.String("path", mediaPath), zap.Error(err))
-	}
-	for _, item := range media {
-		if item.PostID != "" {
-			imgp := path.Join(mediaPath, item.PostID+".png")
-			err = ioutil.WriteFile(imgp, item.Data, 0644)
-			if err != nil {
-				unilog.Logger().Error("unable to write post media", zap.String("path", imgp), zap.Error(err))
-				continue
-			}
-		}
-	}
 }

@@ -37,7 +37,8 @@ func (s *Storage) Close() error {
 func (s *Storage) Checkpoint(sessionID, entityID string) string {
 	var cp string
 	err := s.db.View(func(tx *bolt.Tx) error {
-		sessionBucket := tx.Bucket([]byte(sessionID))
+		id := []byte(sessionID)
+		sessionBucket := tx.Bucket(id)
 		if sessionBucket == nil {
 			return nil
 		}
@@ -78,6 +79,8 @@ func (s *Storage) WriteCheckpoint(sessionID, entityID, checkpoint string) error 
 			unilog.Logger().Error("unable to put data into a bucket", zap.String("session", sessionID),
 				zap.String("entity", entityID), zap.Error(err))
 		}
+		unilog.Logger().Info("loaded checkpoint to storage", zap.String("session", sessionID),
+			zap.String("id", entityID), zap.String("value", checkpoint))
 		return err
 	})
 }
@@ -114,7 +117,7 @@ func (s *Storage) Entities(sessionID string, eType data.CrawlingType) []data.Ent
 	return ents
 }
 
-func (s *Storage) WriteEntity(sessionID, entityID string, entity data.Entity) error {
+func (s *Storage) WriteEntity(sessionID string, entity data.Entity) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		sessionBucket, err := tx.CreateBucketIfNotExists([]byte(sessionID))
 		if err != nil {
@@ -131,11 +134,14 @@ func (s *Storage) WriteEntity(sessionID, entityID string, entity data.Entity) er
 			unilog.Logger().Error("unable to marshal entity", zap.Error(err))
 			return err
 		}
-		err = entBucket.Put([]byte(entityID), d)
+		id := entity.GetID()
+		err = entBucket.Put([]byte(id), d)
 		if err != nil {
 			unilog.Logger().Error("unable to put data into a bucket", zap.String("session", sessionID),
-				zap.String("entity", entityID), zap.Error(err))
+				zap.String("entity", id), zap.Error(err))
 		}
+		unilog.Logger().Info("loaded entity to storage", zap.String("session", sessionID),
+			zap.String("id", id))
 		return err
 	})
 }
@@ -207,6 +213,8 @@ func (s *Storage) WritePosts(sessionID string, posts []data.Post) error {
 					zap.Error(err))
 			}
 		}
+		unilog.Logger().Info("loaded posts to storage", zap.String("session", sessionID),
+			zap.Int("num", len(posts)))
 		return err
 	})
 }

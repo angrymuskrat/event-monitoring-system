@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
+	"os"
 	"path"
 	"sync"
 	"time"
@@ -22,9 +23,13 @@ type Crawler struct {
 	config      Configuration
 	mu          sync.Mutex
 	sessions    []*Session
-	workers     []worker
-	wCh         chan bool
-	stUsed      bool
+	workers     []*worker
+	inCh        chan entity
+	outCh       chan entity
+	postsCh     chan []data.Post
+	entitiesCh  chan data.Entity
+	mediaCh     chan []data.Media
+	checkpoints map[string]string
 	dataStorage storagesvc.Service // client of data storage
 }
 
@@ -34,9 +39,15 @@ func NewCrawler(confPath string) (*Crawler, error) {
 		return nil, err
 	}
 
-	cr := Crawler{
-		config:   conf,
-		sessions: []*Session{},
+	cr := &Crawler{
+		config:      conf,
+		sessions:    []*Session{},
+		inCh:        make(chan entity),
+		outCh:       make(chan entity),
+		postsCh:     make(chan []data.Post),
+		entitiesCh:  make(chan data.Entity),
+		mediaCh:     make(chan []data.Media),
+		checkpoints: map[string]string{},
 	}
 
 	// init of data storage client
@@ -51,19 +62,16 @@ func NewCrawler(confPath string) (*Crawler, error) {
 		}
 	}
 
-	cr.wCh = make(chan bool)
-	cr.workers = make([]worker, conf.WorkersNumber)
+	cr.workers = make([]*worker, conf.WorkersNumber)
 	for i := 0; i < conf.WorkersNumber; i++ {
-		cr.workers[i] = worker{
-			id:          i,
-			paused:      true,
-			checkpoints: map[string]string{},
-			rootDir:     conf.RootDir,
-			pCh:         make(chan bool),
-			oCh:         cr.wCh,
-			savePosts:   cr.dataStorage != nil,
-			entities:    &entities{},
-			posts:       []data.Post{},
+		cr.workers[i] = &worker{
+			id:         i,
+			inCh:       cr.inCh,
+			outCh:      cr.outCh,
+			postsCh:    cr.postsCh,
+			entitiesCh: cr.entitiesCh,
+			mediaCh:    cr.mediaCh,
+			paramsCh:   make(chan Parameters),
 		}
 		cr.workers[i].init(9161)
 		go cr.workers[i].start()
@@ -71,7 +79,7 @@ func NewCrawler(confPath string) (*Crawler, error) {
 	cr.restoreSessions()
 	go cr.start()
 	unilog.Logger().Info("crawler has started")
-	return &cr, nil
+	return cr, nil
 }
 
 func (cr *Crawler) restoreSessions() {
@@ -246,61 +254,11 @@ func (cr *Crawler) start() error {
 			time.Sleep(10 * time.Second)
 		}
 		for i := range cr.sessions {
-			if cr.sessions[i].Status.Status == FinishedStatus {
+			if cr.sessions[i].Status.get().Type == FinishedStatus {
 				time.Sleep(d)
 				continue
 			}
-			dbPath := path.Join(cr.config.RootDir, cr.sessions[i].ID, "bolt.db")
-			st, err := storage.Get(dbPath)
-			if err != nil {
-				return err
-			}
-			workerTasks := distributeEntities(cr.sessions[i].Status.Entities, len(cr.workers))
-			for j := range cr.workers {
-				if j > (len(workerTasks) - 1) {
-					cr.workers[j].entities = &entities{}
-					continue
-				}
-				cr.workers[j].entities = newEntities(workerTasks[j])
-				cr.workers[j].params = cr.sessions[i].Params
-				cr.workers[j].sessionID = cr.sessions[i].ID
-				cr.workers[j].sessionStatus = cr.sessions[i].Status
-				cr.workers[j].st = st
-			}
-			for j := range cr.workers {
-				cr.workers[j].pCh <- false
-			}
-			time.Sleep(d)
-
-			for j := range cr.workers {
-				cr.workers[j].pCh <- true
-			}
-
-			unilog.Logger().Info("session processed", zap.String("id", cr.sessions[i].ID),
-				zap.Int("entities left", cr.sessions[i].Status.EntitiesLeft),
-				zap.Int("posts collected", cr.sessions[i].Status.PostsCollected),
-				zap.Int("posts total", cr.sessions[i].Status.PostsTotal))
-			nEnt := combineEntities(cr.workers)
-			cr.sessions[i].Status.updateEntities(nEnt)
-			cr.sessions[i].dump(cr.config.RootDir)
-			for cr.stUsed {
-				time.Sleep(500 * time.Millisecond)
-			}
-
-			// group all collected posts from workers for sending to data storage
-			var posts []data.Post
-			for j := range cr.workers {
-				posts = append(posts, cr.workers[j].posts...)
-				cr.workers[j].posts = nil
-			}
-			if cr.dataStorage != nil {
-				cr.sendPostsToDataStorage(posts, cr.sessions[i].ID, cr.sessions[i].Params.CityID, st)
-			}
-			err = st.Close()
-			if err != nil {
-				return err
-			}
-
+			err = cr.proceedSession(cr.sessions[i], d)
 			if i == (len(cr.sessions) - 1) {
 				i = 0
 			}
@@ -308,25 +266,88 @@ func (cr *Crawler) start() error {
 	}
 }
 
-func distributeEntities(entities []string, workersNum int) [][]string {
-	var divided [][]string
-	chunkSize := (len(entities) + workersNum - 1) / workersNum
-	for i := 0; i < len(entities); i += chunkSize {
-		end := i + chunkSize
-		if end > len(entities) {
-			end = len(entities)
-		}
-		divided = append(divided, entities[i:end])
+func (cr *Crawler) proceedSession(sess *Session, sleep time.Duration) error {
+	start := time.Now()
+	dbPath := path.Join(cr.config.RootDir, sess.ID, "bolt.db")
+	st, err := storage.Get(dbPath)
+	if err != nil {
+		return err
 	}
-	return divided
+	for j := range cr.workers {
+		cr.workers[j].paramsCh <- sess.Params
+	}
+	for time.Now().Sub(start) < sleep {
+		go cr.putEntities(sess, st)
+		c := 0
+		resEntities := make([]string, 0, len(sess.Status.Entities))
+		for c < len(sess.Status.Entities) {
+			select {
+			case e := <-cr.outCh:
+				if e.finished {
+					sess.Status.updateEntitiesLeft(-1)
+				} else {
+					resEntities = append(resEntities, e.id)
+					if e.checkpoint != "" {
+						cr.checkpoints[e.id] = e.checkpoint
+						st.WriteCheckpoint(sess.ID, e.id, e.checkpoint)
+					}
+				}
+				c++
+			case e := <-cr.entitiesCh:
+				st.WriteEntity(sess.ID, e)
+			case d := <-cr.postsCh:
+				if len(d) > 0 {
+					sess.Status.updatePostsCollected(len(d))
+					st.WritePosts(sess.ID, d)
+				}
+				if cr.dataStorage != nil {
+					cr.sendPostsToDataStorage(d, sess.ID, sess.Params.CityID, st)
+				}
+			case d := <-cr.mediaCh:
+				saveMedia(sess.ID, d, cr.config.RootDir)
+			}
+		}
+		sess.Status.updateEntities(resEntities)
+		sess.dump(cr.config.RootDir)
+	}
+	unilog.Logger().Info("session processed", zap.String("id", sess.ID),
+		zap.Int("entities left", sess.Status.EntitiesLeft),
+		zap.Int("posts collected", sess.Status.PostsCollected),
+		zap.Int("posts total", sess.Status.PostsTotal))
+	err = st.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func combineEntities(workers []worker) []string {
-	res := []string{}
-	for _, w := range workers {
-		res = append(res, w.entities.data...)
+func (cr *Crawler) putEntities(sess *Session, st *storage.Storage) {
+	for _, id := range sess.Status.Entities {
+		cp, ok := cr.checkpoints[id]
+		if !ok {
+			sid := sess.ID
+			cp = st.Checkpoint(sid, id)
+		}
+		cr.inCh <- entity{id: id, checkpoint: cp}
 	}
-	return res
+}
+
+func saveMedia(sessionID string, media []data.Media, dir string) {
+	mediaPath := path.Join(dir, sessionID, "img")
+	err := os.MkdirAll(mediaPath, 0777)
+	if err != nil {
+		unilog.Logger().Error("unable to create media directory", zap.String("path", mediaPath), zap.Error(err))
+	}
+	for _, item := range media {
+		if item.PostID != "" {
+			imgp := path.Join(mediaPath, item.PostID+".png")
+			err = ioutil.WriteFile(imgp, item.Data, 0644)
+			if err != nil {
+				unilog.Logger().Error("unable to write post media", zap.String("path", imgp), zap.Error(err))
+				continue
+			}
+		}
+	}
 }
 
 func (cr *Crawler) sendPostsToDataStorage(posts []data.Post, sessionID, cityID string, st *storage.Storage) error {

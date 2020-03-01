@@ -28,3 +28,9 @@ func (e *entities) remove(i int) {
 	}
 	e.data = append(e.data[:i], e.data[i+1:]...)
 }
+
+type entity struct {
+	id         string
+	checkpoint string
+	finished   bool
+}

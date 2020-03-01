@@ -12,6 +12,7 @@ type Status struct {
 }
 
 type OutStatus struct {
+	Type           StatusType
 	Status         string
 	EntitiesLeft   int
 	PostsCollected int
