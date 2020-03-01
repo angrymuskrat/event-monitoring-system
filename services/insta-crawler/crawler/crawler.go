@@ -254,7 +254,7 @@ func (cr *Crawler) start() error {
 			time.Sleep(10 * time.Second)
 		}
 		for i := range cr.sessions {
-			if cr.sessions[i].Status.get().Type == FinishedStatus {
+			if cr.sessions[i].Status.Status == FinishedStatus {
 				time.Sleep(d)
 				continue
 			}

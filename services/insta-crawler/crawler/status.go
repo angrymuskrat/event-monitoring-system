@@ -22,6 +22,7 @@ func (s *Status) get() OutStatus {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return OutStatus{
+		Type:           s.Status,
 		Status:         s.Status.String(),
 		EntitiesLeft:   s.EntitiesLeft,
 		PostsCollected: s.PostsTotal,

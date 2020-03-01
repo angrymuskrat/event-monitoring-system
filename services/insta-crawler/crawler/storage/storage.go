@@ -166,6 +166,7 @@ func (s *Storage) Posts(sessionID, offset string, num int) ([]data.Post, string)
 			k, v = c.First()
 		} else {
 			k, v = c.Seek([]byte(offset))
+			k, v = c.Next()
 		}
 		for ; k != nil; k, v = c.Next() {
 			if i >= num {
