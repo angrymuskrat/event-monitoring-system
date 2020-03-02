@@ -236,15 +236,15 @@ func sortTags(tags map[string]int, max int) []string {
 	res := []string{}
 	for _, k := range keys {
 		res = append(res, rev[k]...)
-		if len(res) >= max {
-			break
-		}
+		//if len(res) >= max {
+		//	break
+		//}
 	}
-	l := max
-	if l > (len(res) - 1) {
-		l = len(res)
-	}
-	res = res[0:l]
+	//l := max
+	//if l > (len(res) - 1) {
+	//	l = len(res)
+	//}
+	//res = res[0:l]
 	return res
 }
 

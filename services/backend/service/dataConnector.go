@@ -59,6 +59,9 @@ func (c DataConnector) Events(city string, topLeft, botRight data.Point, hour in
 		unilog.Logger().Error("unable to get events", zap.Error(err))
 		return nil, err
 	}
+	for i := range evs {
+		evs[i].Tags = filterTags(evs[i].Tags, 5)
+	}
 	return evs, nil
 }
 
@@ -68,5 +71,17 @@ func (c DataConnector) EventsByTags(city string, keytags []string, start, finish
 		unilog.Logger().Error("unable to search events by tags", zap.Error(err))
 		return nil, err
 	}
+	for i := range evs {
+		evs[i].Tags = filterTags(evs[i].Tags, 5)
+	}
 	return evs, nil
+}
+
+func filterTags(tags []string, max int) []string {
+	l := max
+	if l > (len(tags) - 1) {
+		l = len(tags)
+	}
+	tags = tags[0:l]
+	return tags
 }
