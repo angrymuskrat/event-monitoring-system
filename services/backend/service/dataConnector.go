@@ -7,7 +7,6 @@ import (
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"sort"
 )
 
 type DataConnector struct {
