@@ -209,8 +209,8 @@ const CreateLocationsTable = `
 	CREATE TABLE IF NOT EXISTS locations (
 		ID VARCHAR(20) NOT NULL PRIMARY KEY,
 		Position geometry,
-		Title VARCHAR(100),
-		Slug VARCHAR(100)
+		Title TEXT,
+		Slug TEXT
 	);
 `
 const InsertLocation = `
