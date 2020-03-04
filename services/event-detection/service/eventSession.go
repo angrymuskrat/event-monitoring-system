@@ -72,7 +72,7 @@ func (es *eventSession) detectEvents() {
 	go loadEvents(evChan, es.cfg.DataStorageAddress, es.eventReq.CityId, ewg, &err)
 	ewg.Add(1)
 
-	timeChan := make(chan time.Time)
+	timeChan := make(chan [2]time.Time)
 	for w := 0; w < es.cfg.WorkersNumber; w++ {
 		wg.Add(1)
 		go es.eventWorker(wg, timeChan, evChan)
@@ -93,20 +93,26 @@ func (es *eventSession) detectEvents() {
 	es.status = FinishedStatus
 }
 
-func getTimes(start, finish int64, tz string) ([]time.Time, error) {
+func getTimes(start, finish int64, tz string) ([][2]time.Time, error) {
 	loc, err := time.LoadLocation(tz)
 	if err != nil {
 		unilog.Logger().Error("unable to load timezone", zap.Error(err))
 		return nil, err
 	}
-	res := []time.Time{}
+	res := [][2]time.Time{}
 	s := time.Unix(start, 0)
 	s = s.In(loc)
 	f := time.Unix(finish, 0)
 	f = f.In(loc)
 	c := s
 	for c.Before(f) {
-		res = append(res, c)
+		var r [2]time.Time
+		if f.Sub(c) > time.Hour {
+			r = [2]time.Time{c, c.Add(time.Hour)}
+		} else {
+			r = [2]time.Time{c, f}
+		}
+		res = append(res, r)
 		c = c.Add(time.Hour)
 	}
 	return res, nil
@@ -138,7 +144,7 @@ func getGridNum(month time.Month, day time.Weekday, hour int) int64 {
 	return gridNum
 }
 
-func (es *eventSession) eventWorker(wg *sync.WaitGroup, timeChan chan time.Time, eChan chan []data.Event) {
+func (es *eventSession) eventWorker(wg *sync.WaitGroup, timeChan chan [2]time.Time, eChan chan []data.Event) {
 	defer wg.Done()
 	conn, err := grpc.Dial(es.cfg.DataStorageAddress, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(service.MaxMsgSize)))
 	if err != nil {
@@ -148,7 +154,7 @@ func (es *eventSession) eventWorker(wg *sync.WaitGroup, timeChan chan time.Time,
 	cl := service.NewGRPCClient(conn)
 
 	for t := range timeChan {
-		timeNum := getGridNum(t.Month(), t.Weekday(), t.Hour())
+		timeNum := getGridNum(t[0].Month(), t[0].Weekday(), t[0].Hour())
 		buf := bytes.NewBuffer(es.grids[timeNum])
 		dec := gob.NewDecoder(buf)
 
@@ -160,8 +166,8 @@ func (es *eventSession) eventWorker(wg *sync.WaitGroup, timeChan chan time.Time,
 			return
 		}
 
-		startTime := t.Unix()
-		finishTime := t.Unix() + 3600
+		startTime := t[0].Unix()
+		finishTime := t[1].Unix()
 		posts, _, err := cl.SelectPosts(context.Background(), es.eventReq.CityId, startTime, finishTime)
 		if err != nil {
 			unilog.Logger().Error("unable to get posts from data storage", zap.Error(err))
