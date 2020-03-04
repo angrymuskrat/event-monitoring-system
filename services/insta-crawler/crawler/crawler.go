@@ -260,6 +260,8 @@ func (cr *Crawler) proceedSession(sess *Session, sleep time.Duration) error {
 				}
 			case d := <-cr.mediaCh:
 				saveMedia(sess.ID, d, cr.config.RootDir)
+			default:
+				continue
 			}
 		}
 		sess.Status.updateEntities(resEntities)
