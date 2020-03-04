@@ -31,21 +31,19 @@ type Session struct {
 }
 
 type SessionParameters struct {
-	CityID           string
-	CityName         string
-	Timezone         string
-	TopLeft          data.Point
-	BottomRight      data.Point
-	Locations        []string
-	CrawlerFinish    int64
-	HistoricStart    int64
-	HistoricFinish   int64
-	MonitoringStart  int64
-	GridSize         float64
-	AuthCookie       string
-	SkipCrawling     bool
-	SkipHistoric     bool
-	RegenerateEvents bool
+	CityID          string
+	CityName        string
+	Timezone        string
+	TopLeft         data.Point
+	BottomRight     data.Point
+	Locations       []string
+	CrawlerFinish   int64
+	HistoricStart   int64
+	HistoricFinish  int64
+	MonitoringStart int64
+	GridSize        float64
+	SkipCrawling    bool
+	SkipHistoric    bool
 }
 
 func NewSession(p SessionParameters, e ServiceEndpoints) (*Session, error) {
@@ -149,7 +147,6 @@ func (s *Session) startCollect(crawlingFinish int64) (string, error) {
 		Type:            crawlerdata.LocationsType,
 		Entities:        s.Params.Locations,
 		FinishTimestamp: crawlingFinish,
-		AuthCookie:      s.Params.AuthCookie,
 	}
 	d, err := json.Marshal(p)
 	if err != nil {
@@ -341,16 +338,12 @@ func (s *Session) historicStatus() (bool, error) {
 }
 
 func (s *Session) monitoring() error {
-	if s.Params.RegenerateEvents {
-		err := s.monitoringEvents(s.Params.HistoricFinish, s.Params.MonitoringStart)
-		if err != nil {
-			s.Status = status.Failed{Error: err}
-			return err
-		}
+	err := s.monitoringEvents(s.Params.HistoricFinish, s.Params.MonitoringStart)
+	if err != nil {
+		s.Status = status.Failed{Error: err}
+		return err
 	}
-
 	start, finish := s.Params.MonitoringStart, time.Now().Unix()
-	var err error
 	for {
 		err = s.monitoringCollect(start)
 		if err != nil {
@@ -370,6 +363,9 @@ func (s *Session) monitoring() error {
 }
 
 func (s *Session) monitoringEvents(start, finish int64) error {
+	if start == finish {
+		return nil
+	}
 	err := s.eventsStart(start, finish)
 	if err != nil {
 		return err
