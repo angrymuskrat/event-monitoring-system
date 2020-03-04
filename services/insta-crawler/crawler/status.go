@@ -12,7 +12,6 @@ type Status struct {
 }
 
 type OutStatus struct {
-	Type           StatusType
 	Status         string
 	EntitiesLeft   int
 	PostsCollected int
@@ -22,7 +21,6 @@ func (s *Status) get() OutStatus {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return OutStatus{
-		Type:           s.Status,
 		Status:         s.Status.String(),
 		EntitiesLeft:   s.EntitiesLeft,
 		PostsCollected: s.PostsTotal,

@@ -1,5 +1,5 @@
-RootDir                 = "/home/mikhail/workplace/test"
-CheckpointUpdateTimeout = "1m"
-WorkersNumber           = 10
-DataStorageURL          = "localhost:8082"
-UseDataStorage          = true
+RootDir                 = "/run/media/alexvish/Data/insta-crawler"
+CheckpointUpdateTimeout = "4m"
+WorkersNumber           = 20
+DataStorageURL          = "10.9.14.118:8082"
+UseDataStorage          = false

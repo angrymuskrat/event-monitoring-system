@@ -9,9 +9,9 @@ import (
 type Configuration struct {
 	RootDir                 string
 	CheckpointUpdateTimeout string
-	WorkersNumber           int
 	DataStorageURL          string
 	UseDataStorage          bool
+	TorPorts                []int
 }
 
 func readConfig(path string) (cfg Configuration, err error) {

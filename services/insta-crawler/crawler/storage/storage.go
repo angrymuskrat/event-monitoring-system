@@ -5,6 +5,7 @@ import (
 	"github.com/visheratin/unilog"
 	bolt "go.etcd.io/bbolt"
 	"go.uber.org/zap"
+	"time"
 )
 
 type Storage struct {
@@ -149,6 +150,7 @@ func (s *Storage) WriteEntity(sessionID string, entity data.Entity) error {
 func (s *Storage) Posts(sessionID, offset string, num int) ([]data.Post, string) {
 	res := []data.Post{}
 	var cursor string
+	st := time.Now()
 	err := s.db.View(func(tx *bolt.Tx) error {
 		sessionBucket := tx.Bucket([]byte(sessionID))
 		if sessionBucket == nil {
@@ -185,6 +187,7 @@ func (s *Storage) Posts(sessionID, offset string, num int) ([]data.Post, string)
 
 		return nil
 	})
+	unilog.Logger().Info("extracted data", zap.String("took", time.Since(st).String()))
 	if err != nil {
 		unilog.Logger().Error("unable to extract posts", zap.String("sessionID", sessionID), zap.Error(err))
 	}

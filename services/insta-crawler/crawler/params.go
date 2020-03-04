@@ -10,5 +10,4 @@ type Parameters struct {
 	FinishTimestamp int64
 	DetailedPosts   bool
 	LoadMedia       bool
-	AuthCookie      string
 }

@@ -30,7 +30,7 @@ type Crawler struct {
 	entitiesCh  chan data.Entity
 	mediaCh     chan []data.Media
 	checkpoints map[string]string
-	dataStorage storagesvc.Service // client of data storage
+	dataStorage storagesvc.Service
 }
 
 func NewCrawler(confPath string) (*Crawler, error) {
@@ -50,7 +50,6 @@ func NewCrawler(confPath string) (*Crawler, error) {
 		checkpoints: map[string]string{},
 	}
 
-	// init of data storage client
 	if conf.UseDataStorage {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
@@ -62,8 +61,8 @@ func NewCrawler(confPath string) (*Crawler, error) {
 		}
 	}
 
-	cr.workers = make([]*worker, conf.WorkersNumber)
-	for i := 0; i < conf.WorkersNumber; i++ {
+	cr.workers = make([]*worker, len(conf.TorPorts))
+	for i, p := range conf.TorPorts {
 		cr.workers[i] = &worker{
 			id:         i,
 			inCh:       cr.inCh,
@@ -73,7 +72,7 @@ func NewCrawler(confPath string) (*Crawler, error) {
 			mediaCh:    cr.mediaCh,
 			paramsCh:   make(chan Parameters),
 		}
-		cr.workers[i].init(9161)
+		cr.workers[i].init(p)
 		go cr.workers[i].start()
 	}
 	cr.restoreSessions()
@@ -98,12 +97,6 @@ func (cr *Crawler) restoreSessions() {
 		if sess.Status.Status == FailedStatus {
 			continue
 		}
-		if sess.Status.Status == ToFix {
-			err = cr.fixPostsLocations(sess.ID, sess.Params.CityID)
-			if err != nil {
-				return
-			}
-		}
 		if cr.dataStorage != nil {
 			err = cr.uploadUnsavedPosts(sess.ID, sess.Params.CityID)
 			if err != nil {
@@ -113,44 +106,6 @@ func (cr *Crawler) restoreSessions() {
 		}
 		cr.sessions = append(cr.sessions, &sess)
 	}
-}
-
-func (cr *Crawler) fixPostsLocations(sessionID, cityID string) error {
-	dbPath := path.Join(cr.config.RootDir, sessionID, "bolt.db")
-	st, err := storage.Get(dbPath)
-	if err != nil {
-		return err
-	}
-	defer st.Close()
-	lastID := ""
-	num := 50000
-	fixer, err := storage.NewFixer("./locations.json")
-	if err != nil {
-		return err
-	}
-	for {
-		d, cursor := st.Posts(sessionID, lastID, num)
-		if len(d) <= 1 {
-			break
-		}
-		unilog.Logger().Info("read posts to fix", zap.Int("num", len(d)),
-			zap.String("sess", sessionID))
-		d = fixer.Fix(d)
-		err = st.WritePosts(sessionID, d)
-		if err != nil {
-			return err
-		}
-		unilog.Logger().Info("fixed posts coordinates", zap.Int("num", len(d)),
-			zap.String("sess", sessionID))
-		if cr.dataStorage != nil {
-			err := cr.sendPostsToDataStorage(d, sessionID, cityID, st)
-			if err != nil {
-				return err
-			}
-		}
-		lastID = cursor
-	}
-	return nil
 }
 
 func (cr *Crawler) uploadUnsavedPosts(sessionID, cityID string) error {
@@ -164,7 +119,7 @@ func (cr *Crawler) uploadUnsavedPosts(sessionID, cityID string) error {
 	num := 50000
 	for {
 		d, cursor := st.Posts(sessionID, lastID, num)
-		if len(d) <= 1 { // if condition - len(d) == 0, there is infinite loop
+		if len(d) == 0 {
 			break
 		}
 		err := cr.sendPostsToDataStorage(d, sessionID, cityID, st)
@@ -242,12 +197,12 @@ func (cr *Crawler) Stop(id string) (bool, error) {
 	return false, errors.New("session was not found")
 }
 
-func (cr *Crawler) start() error {
+func (cr *Crawler) start() {
 	d, err := time.ParseDuration(cr.config.CheckpointUpdateTimeout)
 	if err != nil {
 		unilog.Logger().Error("unable to parse checkpoint timeout",
 			zap.String("value", cr.config.CheckpointUpdateTimeout), zap.Error(err))
-		return err
+		return
 	}
 	for {
 		if len(cr.sessions) == 0 {
