@@ -358,7 +358,8 @@ func (s *Session) monitoring() error {
 		}
 		time.Sleep(time.Minute)
 		st := s.Status.Get().(status.Monitoring)
-		start, finish = st.CurrentTimestamp, time.Now().Unix()
+		rounded := st.CurrentTimestamp - st.CurrentTimestamp%3600
+		start, finish = rounded, time.Now().Unix()
 	}
 }
 
