@@ -343,23 +343,26 @@ func (s *Session) monitoring() error {
 		s.Status = status.Failed{Error: err}
 		return err
 	}
-	start, finish := s.Params.MonitoringStart, time.Now().Unix()
+	start := s.Params.MonitoringStart
 	for {
-		err = s.monitoringCollect(start)
+		nextStart, err := s.monitoringCollect(start)
 		if err != nil {
 			s.Status = status.Failed{Error: err}
 			return err
 		}
 
-		err := s.monitoringEvents(start, finish)
-		if err != nil {
-			s.Status = status.Failed{Error: err}
-			return err
+		nextStart -= 60 //crawler may have finished minute earlier
+
+		for finish := start - (start % 600) + 600; nextStart-finish > 600; finish += 600 {
+
+			err = s.monitoringEvents(finish-3600, finish)
+			if err != nil {
+				s.Status = status.Failed{Error: err}
+				return err
+			}
 		}
-		time.Sleep(time.Minute)
-		st := s.Status.Get().(status.Monitoring)
-		rounded := st.CurrentTimestamp - st.CurrentTimestamp%3600
-		start, finish = rounded, time.Now().Unix()
+
+		start = nextStart
 	}
 }
 
@@ -382,10 +385,10 @@ func (s *Session) monitoringEvents(start, finish int64) error {
 	return nil
 }
 
-func (s *Session) monitoringCollect(crawlingFinish int64) error {
+func (s *Session) monitoringCollect(crawlingFinish int64) (int64, error) {
 	sessionID, err := s.startCollect(crawlingFinish)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	s.Status = status.Monitoring{
 		SessionID:        sessionID,
@@ -395,16 +398,16 @@ func (s *Session) monitoringCollect(crawlingFinish int64) error {
 	unilog.Logger().Info("started data collecting in monitoring", zap.String("session", s.ID),
 		zap.String("grid session", sessionID))
 
-	run := true
-	for run {
+	var finishTime int64
+	for {
 		cs, ok := s.Status.(status.Monitoring)
 		if !ok {
 			unilog.Logger().Error("incorrect session status", zap.String("status", s.Status.String()))
-			return errors.New("incorrect session status")
+			return 0, errors.New("incorrect session status")
 		}
 		ep, err := s.checkCollect(cs.SessionID)
 		if err != nil {
-			return err
+			return 0, err
 		}
 
 		st := status.Monitoring{
@@ -417,20 +420,22 @@ func (s *Session) monitoringCollect(crawlingFinish int64) error {
 			zap.Int("collected", ep.Status.PostsCollected), zap.Int("left", ep.Status.EntitiesLeft))
 
 		s.Status = st
-		num := ep.Status.EntitiesLeft
-		run = num > 0
+		if ep.Status.EntitiesLeft < 1 {
+			finishTime = time.Now().Unix()
+			break
+		}
 		time.Sleep(1 * time.Minute)
 	}
 	cs, ok := s.Status.(status.Monitoring)
 	if !ok {
 		unilog.Logger().Error("incorrect session status", zap.String("status", s.Status.String()))
-		return errors.New("incorrect session status")
+		return 0, errors.New("incorrect session status")
 	}
 	err = s.deleteCollect(cs.SessionID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return finishTime, nil
 }
 
 func (s *Session) eventsStart(start, finish int64) error {
