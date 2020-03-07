@@ -102,7 +102,8 @@ func (w *worker) proceedLocation(e entity) {
 			}
 			return
 		}
-		cursor, hasNext, timestamp, zeroPosts, err = w.proceedResponse(rawData, w.params.FinishTimestamp, true)
+		cursor, hasNext, timestamp, zeroPosts, err = w.proceedResponse(rawData, w.params.FinishTimestamp,
+			true, e.id)
 		if err != nil {
 			e.finished = true
 			return
@@ -132,7 +133,8 @@ func (w *worker) proceedLocation(e entity) {
 			}
 			return
 		}
-		cursor, hasNext, timestamp, zeroPosts, err = w.proceedResponse(rawData, w.params.FinishTimestamp, false)
+		cursor, hasNext, timestamp, zeroPosts, err = w.proceedResponse(rawData, w.params.FinishTimestamp,
+			false, e.id)
 		if err != nil {
 			e.finished = true
 			return
@@ -196,7 +198,7 @@ func (w *worker) makeRequest(request string, useTor bool) ([]byte, error) {
 	return body, nil
 }
 
-func (w *worker) proceedResponse(d []byte, finish int64, loadEntity bool) (endCursor string, hasNext bool, timestamp int64,
+func (w *worker) proceedResponse(d []byte, finish int64, loadEntity bool, entityID string) (endCursor string, hasNext bool, timestamp int64,
 	zeroPosts bool, err error) {
 	var posts []data.Post
 	switch w.params.Type {
@@ -204,6 +206,8 @@ func (w *worker) proceedResponse(d []byte, finish int64, loadEntity bool) (endCu
 		var profile data.Profile
 		posts, profile, endCursor, hasNext, timestamp, err = parser.ParseFromProfileRequest(d)
 		if err != nil {
+			unilog.Logger().Error("error during parsing response",
+				zap.String("data", string(d)), zap.String("entity", entityID), zap.Error(err))
 			return
 		}
 		if loadEntity {
@@ -213,6 +217,8 @@ func (w *worker) proceedResponse(d []byte, finish int64, loadEntity bool) (endCu
 		var location data.Location
 		posts, location, endCursor, hasNext, timestamp, err = parser.ParseFromLocationRequest(d)
 		if err != nil {
+			unilog.Logger().Error("error during parsing response",
+				zap.String("data", string(d)), zap.String("entity", entityID), zap.Error(err))
 			return
 		}
 		if loadEntity {
