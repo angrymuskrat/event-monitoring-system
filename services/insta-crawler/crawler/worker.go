@@ -102,7 +102,7 @@ func (w *worker) proceedLocation(e entity) {
 			}
 			return
 		}
-		cursor, hasNext, _, zeroPosts, err = w.proceedResponse(rawData, w.params.FinishTimestamp, true)
+		cursor, hasNext, timestamp, zeroPosts, err = w.proceedResponse(rawData, w.params.FinishTimestamp, true)
 		if err != nil {
 			e.finished = true
 			return
@@ -183,7 +183,7 @@ func (w *worker) makeRequest(request string, useTor bool) ([]byte, error) {
 		msg := fmt.Sprintf("too many requests from worker %d", w.id)
 		// unilog.Logger().Error(msg)
 		err = errors.New(msg)
-		time.Sleep(10 * time.Second)
+		//time.Sleep(10 * time.Second)
 		return nil, err
 	}
 	if resp.StatusCode == 404 || resp.StatusCode == 500 {
