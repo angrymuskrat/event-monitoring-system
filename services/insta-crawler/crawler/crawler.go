@@ -98,7 +98,7 @@ func (cr *Crawler) restoreSessions() {
 			continue
 		}
 		if cr.dataStorage != nil {
-			err = cr.uploadUnsavedPosts(sess.ID, sess.Params.CityID)
+			err = cr.uploadUnsavedPosts(sess.ID, sess.Params.CityID, sess.Params.Reupload)
 			if err != nil {
 				unilog.Logger().Error("unable to restore session", zap.String("id", sess.ID))
 				continue
@@ -108,14 +108,17 @@ func (cr *Crawler) restoreSessions() {
 	}
 }
 
-func (cr *Crawler) uploadUnsavedPosts(sessionID, cityID string) error {
+func (cr *Crawler) uploadUnsavedPosts(sessionID, cityID string, reupload bool) error {
 	dbPath := path.Join(cr.config.RootDir, sessionID, "bolt.db")
 	st, err := storage.Get(dbPath)
 	if err != nil {
 		return err
 	}
 	defer st.Close()
-	lastID := st.ReadLastSavedPost(sessionID)
+	var lastID string
+	if !reupload {
+		lastID = st.ReadLastSavedPost(sessionID)
+	}
 	num := 50000
 	for {
 		d, cursor := st.Posts(sessionID, lastID, num)
