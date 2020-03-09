@@ -1,6 +1,9 @@
 package crawler
 
-import "github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
+import (
+	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
+	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/storage"
+)
 
 type Parameters struct {
 	CityID          string
@@ -11,4 +14,5 @@ type Parameters struct {
 	DetailedPosts   bool
 	LoadMedia       bool
 	Reupload        bool
+	FixLocations    []storage.Location
 }

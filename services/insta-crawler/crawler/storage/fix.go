@@ -1,9 +1,6 @@
 package storage
 
 import (
-	"encoding/json"
-	"os"
-
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
 )
 
@@ -18,19 +15,9 @@ type Fixer struct {
 	loc  map[string]Location
 }
 
-func NewFixer(path string) (Fixer, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return Fixer{}, err
-	}
-	defer f.Close()
-	var d []Location
-	err = json.NewDecoder(f).Decode(&d)
-	if err != nil {
-		return Fixer{}, err
-	}
+func NewFixer(ls []Location) (Fixer, error) {
 	loc := map[string]Location{}
-	for _, l := range d {
+	for _, l := range ls {
 		loc[l.ID] = l
 	}
 	return Fixer{Init: true, loc: loc}, nil

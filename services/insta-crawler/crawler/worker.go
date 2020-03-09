@@ -56,10 +56,6 @@ func (w *worker) init(port int) {
 		Timeout:   30 * time.Second,
 	}
 	w.agent = uarand.GetRandom()
-	fixer, err := storage.NewFixer("./locations.json")
-	if err == nil {
-		w.fixer = fixer
-	}
 	go w.paramsEdit()
 	unilog.Logger().Info("started worker", zap.Int("id", w.id))
 }
@@ -68,6 +64,10 @@ func (w *worker) paramsEdit() {
 	for p := range w.paramsCh {
 		w.mu.Lock()
 		w.params = p
+		fixer, err := storage.NewFixer(p.FixLocations)
+		if err == nil {
+			w.fixer = fixer
+		}
 		w.mu.Unlock()
 	}
 }
