@@ -349,24 +349,18 @@ func (s *Session) monitoring() error {
 	}
 	start := s.Params.MonitoringStart
 	for {
-		nextStart, err := s.monitoringCollect(start)
+		finish := time.Now().Unix()
+		_, err = s.monitoringCollect(start)
 		if err != nil {
 			s.Status = status.Failed{Error: err}
 			return err
 		}
-
-		nextStart -= 60 //crawler may have finished minute earlier
-
-		for finish := start - (start % 600) + 600; nextStart-finish > 600; finish += 600 {
-
-			err = s.monitoringEvents(finish-3600, finish)
-			if err != nil {
-				s.Status = status.Failed{Error: err}
-				return err
-			}
+		err := s.monitoringEvents(start, finish)
+		if err != nil {
+			s.Status = status.Failed{Error: err}
+			return err
 		}
-
-		start = nextStart
+		start = finish
 	}
 }
 
