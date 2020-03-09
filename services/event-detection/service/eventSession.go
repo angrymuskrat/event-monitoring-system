@@ -169,7 +169,8 @@ func (es *eventSession) eventWorker(wg *sync.WaitGroup, timeChan chan [2]time.Ti
 		filterTags := filterTags(es.eventReq.FilterTags)
 		evs, found := detection.FindEvents(grid, posts, es.cfg.MaxPoints, filterTags, startTime, finishTime)
 		if found {
-			unilog.Logger().Info("found events", zap.String("session", es.id), zap.Int("num", len(evs)))
+			unilog.Logger().Info("found events", zap.String("session", es.id),
+				zap.Int("num", len(evs)), zap.String("timestamp", t[0].String()))
 			eChan <- evs
 		}
 	}
