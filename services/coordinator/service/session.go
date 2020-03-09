@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/storage"
 	"net/http"
 	"time"
 
@@ -45,6 +46,7 @@ type SessionParameters struct {
 	SkipCrawling    bool
 	SkipHistoric    bool
 	FilterTags      []string
+	FixLocations    []storage.Location
 }
 
 func NewSession(p SessionParameters, e ServiceEndpoints) (*Session, error) {
@@ -89,7 +91,7 @@ func (s *Session) Run() {
 }
 
 func (s *Session) historicCollect() error {
-	sessionID, err := s.startCollect(s.Params.CrawlerFinish)
+	sessionID, err := s.startCollect(s.Params.CrawlerFinish, s.Params.FixLocations)
 	if err != nil {
 		s.Status = status.Failed{Error: err}
 		return err
@@ -142,12 +144,13 @@ func (s *Session) historicCollect() error {
 	return nil
 }
 
-func (s *Session) startCollect(crawlingFinish int64) (string, error) {
+func (s *Session) startCollect(crawlingFinish int64, fixLocations []storage.Location) (string, error) {
 	p := crawler.Parameters{
 		CityID:          s.Params.CityID,
 		Type:            crawlerdata.LocationsType,
 		Entities:        s.Params.Locations,
 		FinishTimestamp: crawlingFinish,
+		FixLocations:    fixLocations,
 	}
 	d, err := json.Marshal(p)
 	if err != nil {
@@ -387,7 +390,7 @@ func (s *Session) monitoringEvents(start, finish int64) error {
 }
 
 func (s *Session) monitoringCollect(crawlingFinish int64) (int64, error) {
-	sessionID, err := s.startCollect(crawlingFinish)
+	sessionID, err := s.startCollect(crawlingFinish, s.Params.FixLocations)
 	if err != nil {
 		return 0, err
 	}
