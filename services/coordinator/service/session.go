@@ -44,6 +44,7 @@ type SessionParameters struct {
 	GridSize        float64
 	SkipCrawling    bool
 	SkipHistoric    bool
+	FilterTags      []string
 }
 
 func NewSession(p SessionParameters, e ServiceEndpoints) (*Session, error) {
@@ -444,6 +445,7 @@ func (s *Session) eventsStart(start, finish int64) error {
 		CityId:     s.Params.CityID,
 		StartTime:  start,
 		FinishTime: finish,
+		FilterTags: s.Params.FilterTags,
 	}
 	respRaw, err := s.edClient.FindEvents(context.Background(), req)
 	if err != nil {

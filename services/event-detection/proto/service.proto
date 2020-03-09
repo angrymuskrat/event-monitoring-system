@@ -36,6 +36,7 @@ message EventRequest {
     string cityId = 2;
     int64 startTime = 3;
     int64 finishTime = 4;
+    repeated string filterTags = 5;
 }
 
 message EventResponse {

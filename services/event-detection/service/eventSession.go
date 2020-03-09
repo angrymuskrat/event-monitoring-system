@@ -1,11 +1,9 @@
 package service
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/gob"
-	"os"
 	"sync"
 	"time"
 
@@ -17,12 +15,6 @@ import (
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-)
-
-const (
-	tagsPath     = "/home/alexvish/monitoring/event-detection/spb_tags_base.txt"
-	firstGridNum = 1100
-	lastGridNum  = 12224
 )
 
 type eventSession struct {
@@ -174,22 +166,21 @@ func (es *eventSession) eventWorker(wg *sync.WaitGroup, timeChan chan [2]time.Ti
 			continue
 		}
 
-		filterTags := map[string]bool{}
-		f, err := os.OpenFile(tagsPath, os.O_RDONLY, 0644)
-		if err == nil {
-			scanner := bufio.NewScanner(f)
-			scanner.Split(bufio.ScanLines)
-			for scanner.Scan() {
-				tag := "#" + scanner.Text()
-				filterTags[tag] = false
-			}
-		}
+		filterTags := filterTags(es.eventReq.FilterTags)
 		evs, found := detection.FindEvents(grid, posts, es.cfg.MaxPoints, filterTags, startTime, finishTime)
 		if found {
 			unilog.Logger().Info("found events", zap.String("session", es.id), zap.Int("num", len(evs)))
 			eChan <- evs
 		}
 	}
+}
+
+func filterTags(tags []string) map[string]bool {
+	filterTags := map[string]bool{}
+	for _, t := range tags {
+		filterTags[t] = true
+	}
+	return filterTags
 }
 
 func loadEvents(eChan chan []data.Event, storageEp string, cityID string, wg *sync.WaitGroup, outErr *error) {
