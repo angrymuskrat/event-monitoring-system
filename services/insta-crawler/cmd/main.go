@@ -18,8 +18,8 @@ func main() {
 	logCfg := unilog.DefaultConfig()
 	logCfg.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
 	if len(*aLog) > 0 {
-		logCfg.OutputPaths = append(logCfg.OutputPaths, *aLog)
-		logCfg.ErrorOutputPaths = append(logCfg.ErrorOutputPaths, *aLog)
+		logCfg.OutputPaths = []string{*aLog}
+		logCfg.ErrorOutputPaths = []string{*aLog}
 	}
 	unilog.InitLog(logCfg)
 	cr, err := crawler.NewCrawler(*crawlerConfig)
