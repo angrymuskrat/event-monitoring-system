@@ -276,8 +276,8 @@ func setupLog(path string) *zap.Logger {
 		},
 	}
 	if len(path) > 0 {
-		conf.OutputPaths = append(conf.OutputPaths, path)
-		conf.ErrorOutputPaths = append(conf.ErrorOutputPaths, path)
+		conf.OutputPaths = []string{path}
+		conf.ErrorOutputPaths = []string{path}
 	}
 	log, err := conf.Build()
 	if err != nil {

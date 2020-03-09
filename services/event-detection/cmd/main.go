@@ -14,8 +14,8 @@ func main() {
 	flag.Parse()
 
 	logCfg := unilog.DefaultConfig()
-	logCfg.OutputPaths = append(logCfg.OutputPaths, *lp)
-	logCfg.ErrorOutputPaths = append(logCfg.ErrorOutputPaths, *lp)
+	logCfg.OutputPaths = []string{*lp}
+	logCfg.ErrorOutputPaths = []string{*lp}
 	unilog.InitLog(logCfg)
 
 	service.Start(context.Background(), *cp)
