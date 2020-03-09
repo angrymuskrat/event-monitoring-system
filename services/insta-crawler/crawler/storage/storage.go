@@ -59,6 +59,9 @@ func (s *Storage) Checkpoint(sessionID, entityID string) string {
 	if err != nil {
 		unilog.Logger().Error("unable to search for checkpoints", zap.String("sessionID", sessionID),
 			zap.String("entityID", entityID), zap.Error(err))
+	} else {
+		unilog.Logger().Info("read checkpoint from storage", zap.String("session", sessionID),
+			zap.String("id", entityID), zap.String("value", cp))
 	}
 	return cp
 }

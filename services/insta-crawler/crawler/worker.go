@@ -90,7 +90,6 @@ func (w *worker) proceedLocation(e entity) {
 	requestTemplatePt1 := "https://www.instagram.com/graphql/query/?query_hash=1b84447a4d8b6d6d0426fefb34514485&variables=%7B%22id%22%3A%22"
 	requestTemplatePt2 := "%22%2C%22first%22%3A50%2C%22after%22%3A%22"
 	requestTemplatePt3 := "%22%7D"
-	var cp string
 	if e.checkpoint == "" {
 		initRequest := "https://www.instagram.com/graphql/query/?query_hash=1b84447a4d8b6d6d0426fefb34514485&variables=%7B%22id%22%3A%22" + e.id +
 			"%22%2C%22first%22%3A50%7D"
@@ -117,7 +116,8 @@ func (w *worker) proceedLocation(e entity) {
 			e.finished = true
 		}
 	} else {
-		cursor = cp
+		cursor = e.checkpoint
+		e.checkpoint = ""
 		hasNext = true
 	}
 	if hasNext {

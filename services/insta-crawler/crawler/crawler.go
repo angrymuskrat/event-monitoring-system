@@ -274,6 +274,8 @@ func (cr *Crawler) proceedSession(sess *Session, sleep time.Duration) error {
 		zap.Int("entities left", sess.Status.EntitiesLeft),
 		zap.Int("posts collected", sess.Status.PostsCollected),
 		zap.Int("posts total", sess.Status.PostsTotal))
+	sess.Status.PostsCollected = 0
+	sess.dump(cr.config.RootDir)
 	err = st.Close()
 	if err != nil {
 		return err

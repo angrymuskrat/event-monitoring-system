@@ -32,7 +32,6 @@ func (s *Status) updateEntities(ent []string) {
 	defer s.mu.Unlock()
 	s.Entities = ent
 	s.EntitiesLeft = len(ent)
-	s.PostsCollected = 0
 }
 
 func (s *Status) updateEntitiesLeft(inc int) {
