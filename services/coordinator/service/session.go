@@ -6,9 +6,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/storage"
 	"net/http"
 	"time"
+
+	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/storage"
 
 	"github.com/angrymuskrat/event-monitoring-system/services/coordinator/service/status"
 	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/proto"
@@ -349,24 +350,20 @@ func (s *Session) monitoring() error {
 	}
 	start := s.Params.MonitoringStart
 	for {
-		st := time.Now().Unix()
+		finish := time.Now().Unix()
 		err := s.monitoringCollect(start)
 		if err != nil {
 			s.Status = status.Failed{Error: err}
 			return err
 		}
-		t := time.Now().Unix()
 
-		for finish := start - (start % 600) + 600; t-finish > 600; finish += 600 {
-
-			err = s.monitoringEvents(finish-3600, finish)
-			if err != nil {
-				s.Status = status.Failed{Error: err}
-				return err
-			}
+		err = s.monitoringEvents(start, finish)
+		if err != nil {
+			s.Status = status.Failed{Error: err}
+			return err
 		}
 
-		start = st
+		start = finish
 	}
 }
 

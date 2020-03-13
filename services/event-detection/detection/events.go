@@ -9,13 +9,13 @@ import (
 	convtree "github.com/visheratin/conv-tree"
 )
 
-func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints int, filterTags map[string]bool, start, finish int64) ([]data.Event, bool) {
+func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints int, filterTags map[string]bool, start, finish int64, oldEvents []data.Event) ([]data.Event, bool) {
 	candGrid, wasFound := findCandidates(&histGrid, posts, maxPoints)
 	if !wasFound {
 		return nil, false
 	}
 	splitGrid(candGrid, maxPoints)
-	events := treeEvents(candGrid, maxPoints, filterTags, start, finish)
+	events := treeEvents(candGrid, maxPoints, filterTags, start, finish, oldEvents)
 	if len(events) == 0 {
 		return nil, false
 	}
@@ -35,7 +35,7 @@ func splitGrid(tree *convtree.ConvTree, maxPoints int) {
 	}
 }
 
-func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bool, start, finish int64) []data.Event {
+func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bool, start, finish int64, oldEvents []data.Event) []data.Event {
 	if tree.IsLeaf {
 		result := []data.Event{}
 		if len(tree.Points) >= maxPoints {
@@ -51,10 +51,31 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 		return result
 	} else {
 		result := []data.Event{}
-		result = append(result, treeEvents(tree.ChildBottomLeft, maxPoints, filterTags, start, finish)...)
-		result = append(result, treeEvents(tree.ChildBottomRight, maxPoints, filterTags, start, finish)...)
-		result = append(result, treeEvents(tree.ChildTopLeft, maxPoints, filterTags, start, finish)...)
-		result = append(result, treeEvents(tree.ChildTopRight, maxPoints, filterTags, start, finish)...)
+		var eventsBL []data.Event
+		var eventsBR []data.Event
+		var eventsTL []data.Event
+		var eventsTR []data.Event
+		del := tree.ChildBottomRight.TopLeft
+		for _, event := range oldEvents {
+			if event.Center.Lat > del.Y {
+				if event.Center.Lon > del.X {
+					eventsTR = append(eventsTR, event)
+				} else {
+					eventsTL = append(eventsTL, event)
+				}
+			} else {
+				if event.Center.Lon > del.X {
+					eventsBR = append(eventsBR, event)
+				} else {
+					eventsBL = append(eventsBL, event)
+				}
+			}
+		}
+
+		result = append(result, treeEvents(tree.ChildBottomLeft, maxPoints, filterTags, start, finish, eventsBL)...)
+		result = append(result, treeEvents(tree.ChildBottomRight, maxPoints, filterTags, start, finish, eventsBR)...)
+		result = append(result, treeEvents(tree.ChildTopLeft, maxPoints, filterTags, start, finish, eventsTL)...)
+		result = append(result, treeEvents(tree.ChildTopRight, maxPoints, filterTags, start, finish, eventsTR)...)
 		return result
 	}
 }
