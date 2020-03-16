@@ -45,9 +45,10 @@ message Event {
     Point Center = 1 [(gogoproto.nullable) = false];
     repeated string PostCodes = 2;
     repeated string Tags = 3;
-    string Title = 4;
-    int64 Start = 5;
-    int64 Finish = 6;
+    repeated int32 TagsCount = 4;
+    string Title = 5;
+    int64 Start = 6;
+    int64 Finish = 7;
 }
 
 message AggregatedPost {

@@ -129,14 +129,15 @@ const CreateEventsTable = `
 		Center geometry,
 		PostCodes VARCHAR(15)[],
 		Tags TEXT[],
+		TagsCount INTEGER[],
 		PRIMARY KEY (Id, Start)
 	);
 `
 const InsertEvent = `
 	INSERT INTO events
-		(Title, Start, Finish, Center, PostCodes, Tags)
+		(Title, Start, Finish, Center, PostCodes, Tags, TagsCount)
 	VALUES
-		($1, $2, $3, ST_SetSRID( ST_Point($4, $5), 4326), $6, $7)
+		($1, $2, $3, ST_SetSRID( ST_Point($4, $5), 4326), $6, $7, $8)
 `
 const SelectEvents = `
 	SELECT 

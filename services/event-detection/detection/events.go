@@ -223,7 +223,7 @@ func checkEvent(e eventHolder, maxPoints int, posts []data.Post, start, finish i
 	if len(e.users) < maxPoints/2 {
 		return data.Event{}, false
 	}
-	tags := sortTags(e.tags, 5)
+	tags, counts := sortTags(e.tags, 5)
 	postCodes := []string{}
 	for k := range e.posts {
 		postCodes = append(postCodes, k)
@@ -232,13 +232,14 @@ func checkEvent(e eventHolder, maxPoints int, posts []data.Post, start, finish i
 		Center:    eventCenter(e.posts, posts),
 		PostCodes: postCodes,
 		Tags:      tags,
+		TagsCount: counts,
 		Title:     tags[0],
 		Start:     start,
 		Finish:    finish,
 	}, true
 }
 
-func sortTags(tags map[string]int, max int) []string {
+func sortTags(tags map[string]int, max int) ([]string, []int32) {
 	rev := map[int][]string{}
 	for t, c := range tags {
 		if _, ok := rev[c]; !ok {
@@ -261,12 +262,16 @@ func sortTags(tags map[string]int, max int) []string {
 		//	break
 		//}
 	}
+	counts := make([]int32, len(res))
+	for ind, t := range res {
+		counts[ind] = int32(tags[t])
+	}
 	//l := max
 	//if l > (len(res) - 1) {
 	//	l = len(res)
 	//}
 	//res = res[0:l]
-	return res
+	return res, counts
 }
 
 func eventCenter(codes map[string]bool, posts []data.Post) data.Point {
