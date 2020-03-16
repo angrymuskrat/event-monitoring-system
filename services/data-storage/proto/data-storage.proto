@@ -21,8 +21,10 @@ service DataStorage {
     rpc PullGrid (PullGridRequest) returns (PullGridReply) {}
 
     rpc PushEvents (PushEventsRequest) returns (PushEventsReply) {}
+    rpc UpdateEvents (UpdateEventsRequest) returns (UpdateEventsReply) {}
     rpc PullEvents (PullEventsRequest) returns (PullEventsReply) {}
     rpc PullEventsTags (PullEventsTagsRequest) returns (PullEventsTagsReply) {}
+    rpc PullEventsWithIDs (PullEventsWithIDsRequest) returns (PullEventsWithIDsReply) {}
 
     rpc PushLocations (PushLocationsRequest) returns (PushLocationsReply) {}
     rpc PullLocations (PullLocationsRequest) returns (PullLocationsReply) {}
@@ -130,6 +132,15 @@ message PushEventsReply {
     string err = 1;
 }
 
+message UpdateEventsRequest {
+    repeated data.Event events = 1 [(gogoproto.nullable) = false];
+    string cityId = 2;
+}
+
+message UpdateEventsReply {
+    string err = 1;
+}
+
 message PullEventsRequest {
     data.SpatioHourInterval interval = 1 [(gogoproto.nullable) = false];
     string cityId = 2;
@@ -148,6 +159,17 @@ message PullEventsTagsRequest {
 }
 
 message PullEventsTagsReply {
+    repeated data.Event events = 1 [(gogoproto.nullable) = false];
+    string err = 2;
+}
+
+message PullEventsWithIDsRequest{
+    string cityId = 1;
+    int64 startTime = 2;
+    int64 finishTime = 3;
+}
+
+message PullEventsWithIDsReply {
     repeated data.Event events = 1 [(gogoproto.nullable) = false];
     string err = 2;
 }
