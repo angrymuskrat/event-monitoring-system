@@ -59,16 +59,16 @@ func (m *AuthManager) Handler(next http.Handler) http.Handler {
 		sess, err := m.store.Get(r, cookieName)
 		if err != nil {
 			m.logger.Error("unable to get session from the store", zap.Error(err))
-			w.WriteHeader(http.StatusInternalServerError)
+			http.Error(w, "server error", http.StatusInternalServerError)
 			return
 		}
 		if ar, ok := sess.Values["auth"]; !ok {
-			w.WriteHeader(http.StatusUnauthorized)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		} else {
 			auth, ok := ar.(bool)
 			if !ok || !auth {
-				w.WriteHeader(http.StatusUnauthorized)
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
 			}
 			next.ServeHTTP(w, r)
@@ -80,19 +80,17 @@ func (m *AuthManager) login(w http.ResponseWriter, r *http.Request) {
 	req, err := m.decodeLoginRequest(r)
 	if err != nil {
 		m.logger.Error("unable to decode request", zap.Error(err))
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	if req.Login != adminUser || req.Password != adminPassword {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("login/password incorrect"))
+		http.Error(w, "login/password incorrect", http.StatusUnauthorized)
 		return
 	}
 	sess, err := m.store.Get(r, cookieName)
 	if err != nil {
 		m.logger.Error("unable to get session from the store", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
 	uid := uuid.New().String()
