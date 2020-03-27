@@ -132,6 +132,18 @@ func (mw loggingMiddleware) PushEvents(ctx context.Context, cityId string, event
 	return
 }
 
+func (mw loggingMiddleware) UpdateEvents(ctx context.Context, cityId string, events []data.Event) (err error) {
+	defer func(begin time.Time) {
+		mw.logger.Info("update events",
+			zap.Int("len of events", len(events)),
+			zap.String("city id", cityId),
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	err = mw.next.UpdateEvents(ctx, cityId, events)
+	return
+}
+
 func (mw loggingMiddleware) PullEvents(ctx context.Context, cityId string, interval data.SpatioHourInterval) (events []data.Event, err error) {
 	defer func(begin time.Time) {
 		mw.logger.Info("pull events",
@@ -153,6 +165,17 @@ func (mw loggingMiddleware) PullEventsTags(ctx context.Context, cityId string, t
 			zap.Any("tags", tags))
 	}(time.Now())
 	events, err = mw.next.PullEventsTags(ctx, cityId, tags, startTime, finishTime)
+	return
+}
+
+func (mw loggingMiddleware) PullEventsWithIDs(ctx context.Context, cityId string, startTime, finishTime int64) (events []data.Event, err error) {
+	defer func(begin time.Time) {
+		mw.logger.Info("pull events with ids",
+			zap.String("city id", cityId),
+			zap.Int64("Start time", startTime),
+			zap.Int64("Finish time", finishTime))
+	}(time.Now())
+	events, err = mw.next.PullEventsWithIDs(ctx, cityId, startTime, finishTime)
 	return
 }
 

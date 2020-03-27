@@ -206,6 +206,26 @@ func decodeGRPCPushEventsResponse(_ context.Context, grpcReply interface{}) (int
 	return *reply, nil
 }
 
+func encodeGRPCUpdateEventsRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(proto.UpdateEventsRequest)
+	return &req, nil
+}
+
+func decodeGRPCUpdateEventsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.UpdateEventsRequest)
+	return *req, nil
+}
+
+func encodeGRPCUpdateEventsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.UpdateEventsReply)
+	return &resp, nil
+}
+
+func decodeGRPCUpdateEventsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.UpdateEventsReply)
+	return *reply, nil
+}
+
 func encodeGRPCPullEventsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PullEventsRequest)
 	return &req, nil
@@ -243,6 +263,26 @@ func encodeGRPCPullEventsTagsResponse(_ context.Context, response interface{}) (
 
 func decodeGRPCPullEventsTagsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
 	reply := grpcReply.(*proto.PullEventsTagsReply)
+	return *reply, nil
+}
+
+func encodeGRPCPullEventsWithIDsRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(proto.PullEventsWithIDsRequest)
+	return &req, nil
+}
+
+func decodeGRPCPullEventsWithIDsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PullEventsWithIDsRequest)
+	return *req, nil
+}
+
+func encodeGRPCPullEventsWithIDsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.PullEventsWithIDsReply)
+	return &resp, nil
+}
+
+func decodeGRPCPullEventsWithIDsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PullEventsWithIDsReply)
 	return *reply, nil
 }
 

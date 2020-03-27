@@ -139,6 +139,18 @@ const InsertEvent = `
 	VALUES
 		($1, $2, $3, ST_SetSRID( ST_Point($4, $5), 4326), $6, $7, $8)
 `
+const UpdateEvent = `
+	UPDATE events
+	SET
+		Title = $1,
+		Start = $2,
+		Finish = $3,
+		Center = ST_SetSRID( ST_Point($4, $5), 4326),
+		PostCodes = $6,
+		Tags = $7,
+		TagsCount = $8
+	WHERE id = $9
+`
 const SelectEvents = `
 	SELECT 
 		Title, Start, Finish, PostCodes, Tags,  
@@ -167,6 +179,39 @@ func MakeSelectEventsTags(tags []string, start, finish int64) string {
 		}
 	}
 	return fmt.Sprintf(SelectEventsTags, start, finish, tagsStr)
+}
+
+const SelectEventsWithIDs = `
+	SELECT
+		ID, Title, Start, Finish, PostCodes, Tags, TagsCount,
+		ST_X(Center) as Lat, 
+		ST_Y(Center) as Lon
+	FROM events
+	WHERE
+		%v <= Finish AND %v >= Start;
+`
+const SelectEventPosts = `
+	SELECT 
+		ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, 
+		ST_X(Location) as Lat, 
+		ST_Y(Location) as Lon
+	FROM posts
+	WHERE ShortCode IN %v;
+`
+
+func MakeSelectEventPosts(posts []string) string {
+	postsStr := "("
+	if len(posts) > 0 {
+		for i, post := range posts {
+			if i != len(posts)-1 {
+				postsStr += "'" + post + "', "
+			} else {
+				postsStr += "'" + post + "')"
+			}
+		}
+	}
+
+	return fmt.Sprintf(SelectEventPosts, postsStr)
 }
 
 const CreatePostsTimelineView = `

@@ -9,7 +9,6 @@ import (
 	service "github.com/angrymuskrat/event-monitoring-system/services/data-storage"
 	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/detection"
 	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/proto"
-	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	convtree "github.com/visheratin/conv-tree"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
@@ -40,6 +39,7 @@ func (es *eventSession) detectEvents() {
 		return
 	}
 	cl := service.NewGRPCClient(conn)
+
 	ids := generateGridIds(es.eventReq.StartTime, es.eventReq.FinishTime)
 	rawGrids, err := cl.PullGrid(context.Background(), es.eventReq.CityId, ids)
 	if err != nil {
@@ -47,7 +47,6 @@ func (es *eventSession) detectEvents() {
 		es.status = FailedStatus
 		return
 	}
-
 	grids := make(map[int64]convtree.ConvTree)
 	for n, rawGrid := range rawGrids {
 		buf := bytes.NewBuffer(rawGrid)
@@ -72,6 +71,7 @@ func (es *eventSession) detectEvents() {
 		center := t[0].Add(t[1].Sub(t[0]) / 2)
 		timeNum := getGridNum(center.Month(), center.Weekday(), center.Hour())
 		grid := grids[timeNum]
+
 		startTime := t[0].Unix()
 		finishTime := t[1].Unix()
 		posts, _, err := cl.SelectPosts(context.Background(), es.eventReq.CityId, startTime, finishTime)
@@ -80,38 +80,32 @@ func (es *eventSession) detectEvents() {
 			continue
 		}
 
-		dsi := data.SpatioHourInterval{
-			Hour: startTime - 3600,
-			Area: data.Area{
-				TopLeft: &data.Point{
-					Lat: grid.TopLeft.Y,
-					Lon: grid.TopLeft.X,
-				},
-				BotRight: &data.Point{
-					Lat: grid.BottomRight.Y,
-					Lon: grid.BottomRight.X,
-				},
-			},
-		}
-		oldEvents, err := cl.PullEvents(context.Background(), es.eventReq.CityId, dsi)
+		expireTime := t[0].Add(-25 * time.Hour).Unix()
+		oldEvents, err := cl.PullEventsWithIDs(context.Background(), es.eventReq.CityId, expireTime, startTime)
 		if err != nil {
 			unilog.Logger().Error("unable to get events from data storage", zap.Error(err))
 			continue
 		}
 
 		filterTags := filterTags(es.eventReq.FilterTags)
-		evs, found := detection.FindEvents(grid, posts, es.cfg.MaxPoints, filterTags, startTime, finishTime, oldEvents)
+		newEvents, updatedEvents, found := detection.FindEvents(grid, posts, es.cfg.MaxPoints, filterTags, startTime, finishTime, oldEvents)
 		if found {
 			unilog.Logger().Info("found events", zap.String("session", es.id),
-				zap.Int("num", len(evs)), zap.String("timestamp", t[0].String()))
+				zap.Int("num", len(newEvents)+len(updatedEvents)), zap.String("timestamp", t[0].String()))
 
-			err = cl.PushEvents(context.Background(), es.eventReq.CityId, evs)
+			err = cl.PushEvents(context.Background(), es.eventReq.CityId, newEvents)
 			if err != nil {
 				unilog.Logger().Error("unable to push events to data storage", zap.Error(err))
 				return
 			}
+
+			err = cl.UpdateEvents(context.Background(), es.eventReq.CityId, updatedEvents)
+			if err != nil {
+				unilog.Logger().Error("unable to update events in data storage", zap.Error(err))
+				return
+			}
 		} else {
-			unilog.Logger().Error("no events found", zap.String("session", es.id), zap.String("timestamp", t[0].String()), zap.Error(err))
+			unilog.Logger().Info("no events found", zap.String("session", es.id), zap.String("timestamp", t[0].String()), zap.Error(err))
 		}
 	}
 	es.status = FinishedStatus
@@ -130,7 +124,7 @@ func getTimes(start, finish int64, tz string) ([][2]time.Time, error) {
 	f = f.In(loc)
 	c := s.Truncate(10 * time.Minute).Add(10 * time.Minute)
 	for c.Before(f) {
-		r := [2]time.Time{c, c.Add(-1 * time.Hour)}
+		r := [2]time.Time{c.Add(-1 * time.Hour), c}
 		res = append(res, r)
 		c = c.Add(10 * time.Minute)
 	}

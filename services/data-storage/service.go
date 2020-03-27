@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
-	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/storage"
-	"github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"time"
+
+	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/storage"
+	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 )
 
 const (
@@ -76,6 +77,12 @@ type Service interface {
 	// Either all events will be added or not a single one.
 	PushEvents(ctx context.Context, cityId string, events []data.Event) error
 
+	// input: context, id of the city, array od events
+	// output: error
+	// if all events were successfully updated to the city's db, will return nil error, otherwise statuses and some error
+	// Either all events will be added or not a single one.
+	UpdateEvents(ctx context.Context, cityId string, events []data.Event) error
+
 	// input: context, id of the city, interval, which contains UTC-time in second - start time of needed hour and
 	// 		area - TopLeft and BotRight Points of needed space
 	// output: events and error
@@ -87,6 +94,12 @@ type Service interface {
 	// result: if request was successfully finished, will return events,
 	//		which include all input tags and have time between startTime and finishTime, and nil error, otherwise, empty array and some error
 	PullEventsTags(ctx context.Context, cityId string, tags []string, startTime, finishTime int64) ([]data.Event, error)
+
+	// input: context, id of the city, start hour and finish hour UTC-time in seconds, both are beginning of needed hours
+	// output: events, posts and error
+	// result: if request was successfully finished, will return events with ids,
+	//		which have time between startTime and finishTime, their posts and nil error, otherwise, empty array and some error
+	PullEventsWithIDs(ctx context.Context, cityId string, startTime, finishTime int64) ([]data.Event, error)
 
 	// input: context, id of the city, array of locations - Instagram's locations for this city
 	// output: error
@@ -144,12 +157,20 @@ func (s basicService) PushEvents(ctx context.Context, cityId string, events []da
 	return s.db.PushEvents(ctx, cityId, events)
 }
 
+func (s basicService) UpdateEvents(ctx context.Context, cityId string, events []data.Event) error {
+	return s.db.UpdateEvents(ctx, cityId, events)
+}
+
 func (s basicService) PullEvents(ctx context.Context, cityId string, interval data.SpatioHourInterval) ([]data.Event, error) {
 	return s.db.PullEvents(ctx, cityId, interval)
 }
 
 func (s basicService) PullEventsTags(ctx context.Context, cityId string, tags []string, startTime, finishTime int64) ([]data.Event, error) {
 	return s.db.PullEventsTags(ctx, cityId, tags, startTime, finishTime)
+}
+
+func (s basicService) PullEventsWithIDs(ctx context.Context, cityId string, startTime, finishTime int64) ([]data.Event, error) {
+	return s.db.PullEventsWithIDs(ctx, cityId, startTime, finishTime)
 }
 
 func (s basicService) PushLocations(ctx context.Context, cityId string, locations []data.Location) error {

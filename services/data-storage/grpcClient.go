@@ -14,20 +14,22 @@ import (
 )
 
 type GrpcService struct {
-	insertCity      endpoint.Endpoint
-	getAllCities    endpoint.Endpoint
-	getCity         endpoint.Endpoint
-	pushPosts       endpoint.Endpoint
-	selectPosts     endpoint.Endpoint
-	selectAggrPosts endpoint.Endpoint
-	pullTimeline    endpoint.Endpoint
-	pushGrid        endpoint.Endpoint
-	pullGrid        endpoint.Endpoint
-	pushEvents      endpoint.Endpoint
-	pullEvents      endpoint.Endpoint
-	pullEventsTags  endpoint.Endpoint
-	pushLocations   endpoint.Endpoint
-	pullLocations   endpoint.Endpoint
+	insertCity        endpoint.Endpoint
+	getAllCities      endpoint.Endpoint
+	getCity           endpoint.Endpoint
+	pushPosts         endpoint.Endpoint
+	selectPosts       endpoint.Endpoint
+	selectAggrPosts   endpoint.Endpoint
+	pullTimeline      endpoint.Endpoint
+	pushGrid          endpoint.Endpoint
+	pullGrid          endpoint.Endpoint
+	pushEvents        endpoint.Endpoint
+	updateEvents      endpoint.Endpoint
+	pullEvents        endpoint.Endpoint
+	pullEventsTags    endpoint.Endpoint
+	pullEventsWithIDs endpoint.Endpoint
+	pushLocations     endpoint.Endpoint
+	pullLocations     endpoint.Endpoint
 }
 
 func (svc GrpcService) InsertCity(ctx context.Context, city data.City, updateIfExists bool) error {
@@ -150,6 +152,18 @@ func (svc GrpcService) PushEvents(ctx context.Context, cityId string, events []d
 	return nil
 }
 
+func (svc GrpcService) UpdateEvents(ctx context.Context, cityId string, events []data.Event) error {
+	resp, err := svc.updateEvents(ctx, proto.UpdateEventsRequest{CityId: cityId, Events: events})
+	if err != nil {
+		return err
+	}
+	response := resp.(proto.UpdateEventsReply)
+	if response.Err != "" {
+		return errors.New(response.Err)
+	}
+	return nil
+}
+
 func (svc GrpcService) PullEvents(ctx context.Context, cityId string, interval data.SpatioHourInterval) ([]data.Event, error) {
 	resp, err := svc.pullEvents(ctx, proto.PullEventsRequest{CityId: cityId, Interval: interval})
 	if err != nil {
@@ -168,6 +182,18 @@ func (svc GrpcService) PullEventsTags(ctx context.Context, cityId string, tags [
 		return nil, err
 	}
 	response := resp.(proto.PullEventsTagsReply)
+	if response.Err != "" {
+		return nil, errors.New(response.Err)
+	}
+	return response.Events, nil
+}
+
+func (svc GrpcService) PullEventsWithIDs(ctx context.Context, cityId string, startTime, finishTime int64) ([]data.Event, error) {
+	resp, err := svc.pullEventsWithIDs(ctx, proto.PullEventsWithIDsRequest{CityId: cityId, StartTime: startTime, FinishTime: finishTime})
+	if err != nil {
+		return nil, err
+	}
+	response := resp.(proto.PullEventsWithIDsReply)
 	if response.Err != "" {
 		return nil, errors.New(response.Err)
 	}
@@ -310,6 +336,17 @@ func NewGRPCClient(conn *grpc.ClientConn) GrpcService {
 		Timeout: TimeWaitingClient,
 	}))(pushEventsEndpoint)
 
+	updateEventsEndpoint := grpctransport.NewClient(
+		conn, "proto.DataStorage", "UpdateEvents",
+		encodeGRPCUpdateEventsRequest,
+		decodeGRPCUpdateEventsResponse,
+		proto.UpdateEventsReply{},
+	).Endpoint()
+	svc.updateEvents = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+		Name:    "UpdateEvents",
+		Timeout: TimeWaitingClient,
+	}))(updateEventsEndpoint)
+
 	pullEventsEndpoint := grpctransport.NewClient(
 		conn, "proto.DataStorage", "PullEvents",
 		encodeGRPCPullEventsRequest,
@@ -331,6 +368,17 @@ func NewGRPCClient(conn *grpc.ClientConn) GrpcService {
 		Name:    "PullEventsTags",
 		Timeout: TimeWaitingClient,
 	}))(pullEventsTagsEndpoint)
+
+	pullEventsWithIDsEndpoint := grpctransport.NewClient(
+		conn, "proto.DataStorage", "PullEventsWithIDs",
+		encodeGRPCPullEventsWithIDsRequest,
+		decodeGRPCPullEventsWithIDsResponse,
+		proto.PullEventsWithIDsReply{},
+	).Endpoint()
+	svc.pullEventsWithIDs = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+		Name:    "PullEventsWithIDs",
+		Timeout: TimeWaitingClient,
+	}))(pullEventsWithIDsEndpoint)
 
 	pushLocationsEndpoint := grpctransport.NewClient(
 		conn, "proto.DataStorage", "PushLocations",

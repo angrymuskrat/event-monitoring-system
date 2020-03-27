@@ -513,6 +513,33 @@ func (s *Storage) PushEvents(ctx context.Context, cityId string, events []data.E
 	return
 }
 
+func (s *Storage) UpdateEvents(ctx context.Context, cityId string, events []data.Event) (err error) {
+	conn, err := s.getCityConn(ctx, cityId)
+	if err != nil {
+		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
+		return err
+	}
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		unilog.Logger().Error("can not begin transaction", zap.Error(err))
+		return ErrDBTransaction
+	}
+	defer tx.Rollback(ctx)
+
+	for _, event := range events {
+		_, err = tx.Exec(ctx, UpdateEvent, event.Title, event.Start, event.Finish, event.Center.Lat, event.Center.Lon, pq.Array(event.PostCodes), pq.Array(event.Tags), pq.Array(event.TagsCount), event.ID)
+		if err != nil {
+			unilog.Logger().Error("is not able to exec event", zap.Error(err))
+			return ErrPushEvents
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		unilog.Logger().Error("is not able to commit events transaction", zap.Error(err))
+		return ErrPushEvents
+	}
+	return
+}
+
 func (s *Storage) PullEvents(ctx context.Context, cityId string, interval data.SpatioHourInterval) (events []data.Event, err error) {
 	conn, err := s.getCityConn(ctx, cityId)
 	if err != nil {
@@ -589,6 +616,57 @@ func putEvent(e data.Event, evs []data.Event) []data.Event {
 	}
 	evs = append(evs, e)
 	return evs
+}
+
+func (s *Storage) PullEventsWithIDs(ctx context.Context, cityId string, startTime, finishTime int64) (events []data.Event, err error) {
+	conn, err := s.getCityConn(ctx, cityId)
+	if err != nil {
+		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
+		return nil, err
+	}
+
+	statement := fmt.Sprintf(SelectEventsWithIDs, startTime, finishTime)
+	rows, err := conn.Query(ctx, statement)
+	if err != nil {
+		unilog.Logger().Error("error in select events", zap.Error(err))
+		return nil, ErrSelectEvents
+	}
+	defer rows.Close()
+	for rows.Next() {
+		e := new(data.Event)
+		p := new(data.Point)
+		err = rows.Scan(&e.ID, &e.Title, &e.Start, &e.Finish, pq.Array(&e.PostCodes), pq.Array(&e.Tags), pq.Array(&e.TagsCount), &p.Lat, &p.Lon)
+		if err != nil {
+			unilog.Logger().Error("error in select events", zap.Error(err))
+			return nil, ErrSelectEvents
+		}
+		e.Center = *p
+		events = append(events, *e)
+	}
+
+	for _, event := range events {
+		postsRows, err := conn.Query(ctx, MakeSelectEventPosts(event.PostCodes))
+		if err != nil {
+			unilog.Logger().Error("error in select posts", zap.Error(err))
+			return nil, ErrSelectPosts
+		}
+
+		posts := []*data.Post{}
+		for postsRows.Next() {
+			p := new(data.Post)
+			err = postsRows.Scan(&p.ID, &p.Shortcode, &p.ImageURL, &p.IsVideo, &p.Caption, &p.CommentsCount, &p.Timestamp,
+				&p.LikesCount, &p.IsAd, &p.AuthorID, &p.LocationID, &p.Lat, &p.Lon)
+			if err != nil {
+				unilog.Logger().Error("error in select posts", zap.Error(err))
+				postsRows.Close()
+				return nil, ErrSelectPosts
+			}
+			posts = append(posts, p)
+			event.Posts = posts
+		}
+		postsRows.Close()
+	}
+	return
 }
 
 func (s *Storage) PushLocations(ctx context.Context, cityId string, locations []data.Location) (err error) {

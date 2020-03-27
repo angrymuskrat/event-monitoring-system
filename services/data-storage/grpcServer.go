@@ -2,25 +2,28 @@ package service
 
 import (
 	"context"
+
 	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/proto"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
 )
 
 type grpcServer struct {
-	insertCity      grpctransport.Handler
-	getAllCities    grpctransport.Handler
-	getCity         grpctransport.Handler
-	pushPosts       grpctransport.Handler
-	selectPosts     grpctransport.Handler
-	selectAggrPosts grpctransport.Handler
-	pullTimeline    grpctransport.Handler
-	pushGrid        grpctransport.Handler
-	pullGrid        grpctransport.Handler
-	pushEvents      grpctransport.Handler
-	pullEvents      grpctransport.Handler
-	pullEventsTags  grpctransport.Handler
-	pushLocations   grpctransport.Handler
-	pullLocations   grpctransport.Handler
+	insertCity        grpctransport.Handler
+	getAllCities      grpctransport.Handler
+	getCity           grpctransport.Handler
+	pushPosts         grpctransport.Handler
+	selectPosts       grpctransport.Handler
+	selectAggrPosts   grpctransport.Handler
+	pullTimeline      grpctransport.Handler
+	pushGrid          grpctransport.Handler
+	pullGrid          grpctransport.Handler
+	pushEvents        grpctransport.Handler
+	updateEvents      grpctransport.Handler
+	pullEvents        grpctransport.Handler
+	pullEventsTags    grpctransport.Handler
+	pullEventsWithIDs grpctransport.Handler
+	pushLocations     grpctransport.Handler
+	pullLocations     grpctransport.Handler
 }
 
 func NewGRPCServer(svc Service) proto.DataStorageServer {
@@ -75,6 +78,11 @@ func NewGRPCServer(svc Service) proto.DataStorageServer {
 			decodeGRPCPushEventsRequest,
 			encodeGRPCPushEventsResponse,
 		),
+		updateEvents: grpctransport.NewServer(
+			makeUpdateEventsEndpoint(svc),
+			decodeGRPCUpdateEventsRequest,
+			encodeGRPCUpdateEventsResponse,
+		),
 		pullEvents: grpctransport.NewServer(
 			makePullEventsEndpoint(svc),
 			decodeGRPCPullEventsRequest,
@@ -84,6 +92,11 @@ func NewGRPCServer(svc Service) proto.DataStorageServer {
 			makePullEventsTagsEndpoint(svc),
 			decodeGRPCPullEventsTagsRequest,
 			encodeGRPCPullEventsTagsResponse,
+		),
+		pullEventsWithIDs: grpctransport.NewServer(
+			makePullEventsWithIDsEndpoint(svc),
+			decodeGRPCPullEventsWithIDsRequest,
+			encodeGRPCPullEventsWithIDsResponse,
 		),
 		pushLocations: grpctransport.NewServer(
 			makePushLocationsEndpoint(svc),
@@ -183,6 +196,14 @@ func (s *grpcServer) PushEvents(ctx context.Context, req *proto.PushEventsReques
 	return rep.(*proto.PushEventsReply), nil
 }
 
+func (s *grpcServer) UpdateEvents(ctx context.Context, req *proto.UpdateEventsRequest) (*proto.UpdateEventsReply, error) {
+	_, rep, err := s.updateEvents.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*proto.UpdateEventsReply), nil
+}
+
 func (s *grpcServer) PullEvents(ctx context.Context, req *proto.PullEventsRequest) (*proto.PullEventsReply, error) {
 	_, rep, err := s.pullEvents.ServeGRPC(ctx, req)
 	if err != nil {
@@ -197,6 +218,14 @@ func (s *grpcServer) PullEventsTags(ctx context.Context, req *proto.PullEventsTa
 		return nil, err
 	}
 	return rep.(*proto.PullEventsTagsReply), nil
+}
+
+func (s *grpcServer) PullEventsWithIDs(ctx context.Context, req *proto.PullEventsWithIDsRequest) (*proto.PullEventsWithIDsReply, error) {
+	_, rep, err := s.pullEventsWithIDs.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*proto.PullEventsWithIDsReply), nil
 }
 
 func (s *grpcServer) PushLocations(ctx context.Context, req *proto.PushLocationsRequest) (*proto.PushLocationsReply, error) {

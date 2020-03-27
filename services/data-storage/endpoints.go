@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/angrymuskrat/event-monitoring-system/services/data-storage/proto"
 	"github.com/go-kit/kit/endpoint"
 )
@@ -125,6 +126,18 @@ func makePushEventsEndpoint(s Service) endpoint.Endpoint {
 	}
 }
 
+func makeUpdateEventsEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(proto.UpdateEventsRequest)
+		err = s.UpdateEvents(ctx, req.CityId, req.Events)
+		var msg string
+		if err != nil {
+			msg = err.Error()
+		}
+		return proto.UpdateEventsReply{Err: msg}, nil
+	}
+}
+
 func makePullEventsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PullEventsRequest)
@@ -146,6 +159,18 @@ func makePullEventsTagsEndpoint(s Service) endpoint.Endpoint {
 			msg = err.Error()
 		}
 		return proto.PullEventsTagsReply{Events: events, Err: msg}, nil
+	}
+}
+
+func makePullEventsWithIDsEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(proto.PullEventsWithIDsRequest)
+		events, err := s.PullEventsWithIDs(ctx, req.CityId, req.StartTime, req.FinishTime)
+		var msg string
+		if err != nil {
+			msg = err.Error()
+		}
+		return proto.PullEventsWithIDsReply{Events: events, Err: msg}, nil
 	}
 }
 
