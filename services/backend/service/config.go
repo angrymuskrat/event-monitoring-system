@@ -9,6 +9,9 @@ import (
 type Config struct {
 	Address         string
 	LogPath         string
+	AuthLogPath     string
+	SessionKey      string
+	TimerLogPath    string
 	User            string
 	Password        string
 	Connector       string

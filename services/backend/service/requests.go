@@ -2,6 +2,11 @@ package service
 
 import data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 
+type LoginRequest struct {
+	Login    string `json:"login"`
+	Password string `json:"password"`
+}
+
 type HeatmapRequest struct {
 	City        string     `json:"city"`
 	TopLeft     data.Point `json:"top-left"`
