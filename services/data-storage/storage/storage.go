@@ -644,8 +644,9 @@ func (s *Storage) PullEventsWithIDs(ctx context.Context, cityId string, startTim
 		events = append(events, *e)
 	}
 
-	for _, event := range events {
-		postsRows, err := conn.Query(ctx, MakeSelectEventPosts(event.PostCodes))
+	for i, event := range events {
+		postStatement := MakeSelectEventPosts(event.PostCodes)
+		postsRows, err := conn.Query(ctx, postStatement)
 		if err != nil {
 			unilog.Logger().Error("error in select posts", zap.Error(err))
 			return nil, ErrSelectPosts
@@ -662,8 +663,9 @@ func (s *Storage) PullEventsWithIDs(ctx context.Context, cityId string, startTim
 				return nil, ErrSelectPosts
 			}
 			posts = append(posts, p)
-			event.Posts = posts
+
 		}
+		events[i].Posts = posts
 		postsRows.Close()
 	}
 	return

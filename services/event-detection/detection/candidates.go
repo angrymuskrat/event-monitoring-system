@@ -6,6 +6,7 @@ import (
 )
 
 func findCandidates(histGrid *convtree.ConvTree, posts []data.Post, maxPoints int) (*convtree.ConvTree, bool) {
+	grid := copyTree(histGrid)
 	for _, post := range posts {
 		point := convtree.Point{
 			X:       post.Lon,
@@ -13,13 +14,25 @@ func findCandidates(histGrid *convtree.ConvTree, posts []data.Post, maxPoints in
 			Content: post,
 			Weight:  1,
 		}
-		histGrid.Insert(point, false)
+		grid.Insert(point, false)
 	}
-	hasAnomalies := detectCandTree(histGrid, maxPoints)
+	hasAnomalies := detectCandTree(grid, maxPoints)
 	if hasAnomalies {
-		return histGrid, true
+		return grid, true
 	}
 	return nil, false
+}
+
+func copyTree(oldTree *convtree.ConvTree) *convtree.ConvTree {
+	if oldTree == nil {
+		return nil
+	}
+	newTree := *oldTree
+	newTree.ChildBottomLeft = copyTree(oldTree.ChildBottomLeft)
+	newTree.ChildBottomRight = copyTree(oldTree.ChildBottomRight)
+	newTree.ChildTopLeft = copyTree(oldTree.ChildTopLeft)
+	newTree.ChildTopRight = copyTree(oldTree.ChildTopRight)
+	return &newTree
 }
 
 func detectCandTree(tree *convtree.ConvTree, maxPoints int) bool {

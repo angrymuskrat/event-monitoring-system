@@ -9,7 +9,7 @@ import (
 	convtree "github.com/visheratin/conv-tree"
 )
 
-const closeDistanse = 0.001
+const closeDistanse = 0.005
 
 func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints int, filterTags map[string]bool, start, finish int64, existingEvents []data.Event) (newEvents, updatedEvents []data.Event, found bool) {
 	candGrid, wasFound := findCandidates(&histGrid, posts, maxPoints)
@@ -316,6 +316,8 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, existingEvent
 
 	resultStart := start
 	isNew = true
+	var id int64
+SEARCH:
 	for _, oldEvent := range existingEvents {
 		for _, oldTag := range oldEvent.Tags {
 			for newTag := range e.tags {
@@ -343,9 +345,10 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, existingEvent
 						}
 					}
 
+					id = oldEvent.ID
 					resultStart = oldEvent.Start
 					isNew = false
-					break
+					break SEARCH
 				}
 			}
 		}
@@ -358,6 +361,7 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, existingEvent
 	tags, counts := sortTags(tagsMap, 5)
 
 	event = data.Event{
+		ID:        id,
 		Center:    eventCenter(postsMap),
 		PostCodes: postCodes,
 		Tags:      tags,
