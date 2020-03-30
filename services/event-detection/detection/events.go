@@ -42,7 +42,7 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 		if len(tree.Points) >= maxPoints {
 			evHolders := eventHolders(tree.Points, filterTags)
 			for _, e := range evHolders {
-				event, isNew, isEvent := checkEvent(e, maxPoints, start, finish, existingEvents)
+				event, isEvent, isNew := checkEvent(e, maxPoints, start, finish, existingEvents)
 				if isEvent {
 					if isNew {
 						newEvents = append(newEvents, event)
