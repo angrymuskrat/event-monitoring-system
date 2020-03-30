@@ -16,6 +16,7 @@ type Config struct {
 	Password        string
 	Connector       string
 	ConnectorParams map[string]string `toml:"conn-params"`
+	CORSOrigin      string            `toml:"cors-origin"`
 }
 
 func readConfig(path string) (cfg Config, err error) {

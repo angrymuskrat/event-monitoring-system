@@ -44,16 +44,17 @@ func Start(confPath string) {
 	r.Use(sm.Handler)
 	r.Use(tm.Handler)
 
-	http.Handle("/", accessControl(r))
+	http.Handle("/", accessControl(r, conf.CORSOrigin))
 	err = http.ListenAndServe(conf.Address, nil)
 	if err != nil {
 		unilog.Logger().Error("error in service handler", zap.Error(err))
 	}
 }
 
-func accessControl(h http.Handler) http.Handler {
+func accessControl(h http.Handler, origin string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 		w.Header().Set("Access-Control-Expose-Headers", "Access-Token, Uid, Authorization, Set-Cookie")

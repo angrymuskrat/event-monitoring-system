@@ -1,7 +1,11 @@
 Address  = "localhost:42080"
 LogPath  = "service.log"
+AuthLogPath  = "auth.log"
+SessionKey = ""
+TimerLogPath  = "timer.log"
 User     = "user"
 Password = "pwd"
 Connector = "storage"
+cors-origin = "http://localhost:3000"
 [conn-params]
-address = "localhost"
+address = "10.9.14.118:8082"
