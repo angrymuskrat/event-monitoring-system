@@ -40,7 +40,12 @@ func (es *eventSession) detectEvents() {
 	}
 	cl := service.NewGRPCClient(conn)
 
-	ids := generateGridIds(es.eventReq.StartTime, es.eventReq.FinishTime)
+	ids, err := generateGridIds(es.eventReq.StartTime, es.eventReq.FinishTime, es.eventReq.Timezone)
+	if err != nil {
+		unilog.Logger().Error("unable to generate grid ids", zap.Error(err))
+		es.status = FailedStatus
+		return
+	}
 	rawGrids, err := cl.PullGrid(context.Background(), es.eventReq.CityId, ids)
 	if err != nil {
 		unilog.Logger().Error("unable to get grids from data storage", zap.Error(err))
@@ -66,11 +71,14 @@ func (es *eventSession) detectEvents() {
 		es.status = FailedStatus
 		return
 	}
-
 	for _, t := range times {
 		center := t[0].Add(t[1].Sub(t[0]) / 2)
 		timeNum := getGridNum(center.Month(), center.Weekday(), center.Hour())
-		grid := grids[timeNum]
+		grid, ok := grids[timeNum]
+		if !ok {
+			unilog.Logger().Error("unable to get grid", zap.Int64("grid number", timeNum))
+			continue
+		}
 
 		startTime := t[0].Unix()
 		finishTime := t[1].Unix()
@@ -90,8 +98,10 @@ func (es *eventSession) detectEvents() {
 		filterTags := filterTags(es.eventReq.FilterTags)
 		newEvents, updatedEvents, found := detection.FindEvents(grid, posts, es.cfg.MaxPoints, filterTags, startTime, finishTime, oldEvents)
 		if found {
-			unilog.Logger().Info("found events", zap.String("session", es.id),
-				zap.Int("num", len(newEvents)+len(updatedEvents)), zap.String("timestamp", t[0].String()))
+			unilog.Logger().Info("found new events", zap.String("session", es.id),
+				zap.Int("num", len(newEvents)), zap.String("timestamp", t[0].String()))
+			unilog.Logger().Info("updated events", zap.String("session", es.id),
+				zap.Int("num", len(updatedEvents)), zap.String("timestamp", t[0].String()))
 
 			err = cl.PushEvents(context.Background(), es.eventReq.CityId, newEvents)
 			if err != nil {
@@ -131,17 +141,28 @@ func getTimes(start, finish int64, tz string) ([][2]time.Time, error) {
 	return res, nil
 }
 
-func generateGridIds(startDate, finishDate int64) []int64 {
+func generateGridIds(startDate, finishDate int64, tz string) ([]int64, error) {
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		unilog.Logger().Error("unable to load timezone", zap.Error(err))
+		return nil, err
+	}
 	startTime := time.Unix(startDate, 0)
+	startTime = startTime.In(loc)
 	finishTime := time.Unix(finishDate, 0)
-	t := startTime
+	finishTime = finishTime.In(loc)
+	t := startTime.Add(-1 * time.Hour)
 	res := []int64{}
+	set := map[int64]bool{}
 	for t.Before(finishTime) {
 		v := getGridNum(t.Month(), t.Weekday(), t.Hour())
-		res = append(res, v)
 		t = t.Add(time.Hour)
+		if _, ok := set[v]; !ok {
+			set[v] = true
+			res = append(res, v)
+		}
 	}
-	return res
+	return res, nil
 }
 
 func getGridNum(month time.Month, day time.Weekday, hour int) int64 {
