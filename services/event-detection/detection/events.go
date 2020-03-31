@@ -164,6 +164,7 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 
 func extractTags(post data.Post, filterTags map[string]bool) []string {
 	tags := []string{}
+	mapTag := map[string]bool{}
 	r, _ := regexp.Compile("#[a-zA-Z0-9а-яА-Я_]+")
 	hashtags := r.FindAllString(post.Caption, -1)
 	for idx := range hashtags {
@@ -174,7 +175,10 @@ func extractTags(post data.Post, filterTags map[string]bool) []string {
 		if filterTag(tag, filterTags) {
 			continue
 		}
-		tags = append(tags, tag)
+		if _, ok := mapTag[tag]; !ok {
+			tags = append(tags, tag)
+			mapTag[tag] = true
+		}
 	}
 	r, _ = regexp.Compile("@[a-zA-Z0-9а-яА-Я_]+")
 	usernames := r.FindAllString(post.Caption, -1)
@@ -185,7 +189,10 @@ func extractTags(post data.Post, filterTags map[string]bool) []string {
 		if filterTag(tag, filterTags) {
 			continue
 		}
-		tags = append(tags, tag)
+		if _, ok := mapTag[tag]; !ok {
+			tags = append(tags, tag)
+			mapTag[tag] = true
+		}
 	}
 	return tags
 }
@@ -311,8 +318,6 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, existingEvent
 	if len(e.users) < maxPoints/2 {
 		return
 	}
-	tagsMap := e.tags
-	postsMap := e.posts
 
 	resultStart := start
 	isNew = true
@@ -326,22 +331,22 @@ SEARCH:
 						if _, ok := e.posts[oldPostCode]; !ok {
 							for _, existingEventsPost := range oldEvent.Posts {
 								if existingEventsPost.Shortcode == oldPostCode {
-									postsMap[oldPostCode] = *existingEventsPost
+									e.posts[oldPostCode] = *existingEventsPost
 									break
 								}
 							}
 						} else {
 							for _, oldPostTag := range e.postTags[oldPostCode] {
-								tagsMap[oldPostTag]--
+								e.tags[oldPostTag]--
 							}
 						}
 					}
 
 					for i, ot := range oldEvent.Tags {
-						if _, ok := tagsMap[ot]; ok {
-							tagsMap[ot] += int(oldEvent.TagsCount[i])
+						if _, ok := e.tags[ot]; ok {
+							e.tags[ot] += int(oldEvent.TagsCount[i])
 						} else {
-							tagsMap[ot] = int(oldEvent.TagsCount[i])
+							e.tags[ot] = int(oldEvent.TagsCount[i])
 						}
 					}
 
@@ -355,14 +360,14 @@ SEARCH:
 	}
 
 	postCodes := []string{}
-	for k := range postsMap {
+	for k := range e.posts {
 		postCodes = append(postCodes, k)
 	}
-	tags, counts := sortTags(tagsMap, 5)
+	tags, counts := sortTags(e.tags, 5)
 
 	event = data.Event{
 		ID:        id,
-		Center:    eventCenter(postsMap),
+		Center:    eventCenter(e.posts),
 		PostCodes: postCodes,
 		Tags:      tags,
 		TagsCount: counts,
