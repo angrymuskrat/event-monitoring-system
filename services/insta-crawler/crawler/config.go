@@ -7,11 +7,9 @@ import (
 )
 
 type Configuration struct {
-	RootDir                 string
-	CheckpointUpdateTimeout string
-	DataStorageURL          string
-	UseDataStorage          bool
-	TorPorts                []int
+	RootDir        string
+	DataStorageURL string
+	TorPorts       []int
 }
 
 func readConfig(path string) (cfg Configuration, err error) {

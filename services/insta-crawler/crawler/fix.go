@@ -1,4 +1,4 @@
-package storage
+package crawler
 
 import (
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"

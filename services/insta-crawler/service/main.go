@@ -42,18 +42,6 @@ func Start(confPath string, cr *crawler.Crawler) {
 		encodeResponse,
 		httptransport.ServerBefore(httptransport.PopulateRequestContext),
 	))
-	r.Methods("GET").Path("/entities/{id}").Handler(httptransport.NewServer(
-		basic.AuthMiddleware(conf.User, conf.Password, "realm")(makeEntitiesEndpoint(svc)),
-		decodeStatusRequest,
-		encodeResponse,
-		httptransport.ServerBefore(httptransport.PopulateRequestContext),
-	))
-	r.Methods("GET").Path("/posts/{id}/{cursor}/{num}").Handler(httptransport.NewServer(
-		basic.AuthMiddleware(conf.User, conf.Password, "realm")(makePostsEndpoint(svc)),
-		decodePostsRequest,
-		encodeResponse,
-		httptransport.ServerBefore(httptransport.PopulateRequestContext),
-	))
 	r.Methods("POST").Path("/stop").Handler(httptransport.NewServer(
 		basic.AuthMiddleware(conf.User, conf.Password, "realm")(makeStopEndpoint(svc)),
 		decodeStopRequest,

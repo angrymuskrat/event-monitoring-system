@@ -11,7 +11,6 @@ import (
 
 	storagesvc "github.com/angrymuskrat/event-monitoring-system/services/data-storage"
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
-	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/storage"
 	protodata "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"github.com/google/uuid"
 	"github.com/visheratin/unilog"
@@ -38,7 +37,6 @@ func NewCrawler(confPath string) (*Crawler, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	cr := &Crawler{
 		config:      conf,
 		sessions:    []*Session{},
@@ -49,18 +47,14 @@ func NewCrawler(confPath string) (*Crawler, error) {
 		mediaCh:     make(chan []data.Media),
 		checkpoints: map[string]string{},
 	}
-
-	if conf.UseDataStorage {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		conn, err := grpc.DialContext(ctx, conf.DataStorageURL, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(storagesvc.MaxMsgSize)))
-		if err != nil {
-			unilog.Logger().Error("unable to connect to storage service", zap.Error(err))
-		} else {
-			cr.dataStorage = storagesvc.NewGRPCClient(conn)
-		}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	conn, err := grpc.DialContext(ctx, conf.DataStorageURL, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(storagesvc.MaxMsgSize)))
+	if err != nil {
+		unilog.Logger().Error("unable to connect to storage service", zap.Error(err))
+	} else {
+		cr.dataStorage = storagesvc.NewGRPCClient(conn)
 	}
-
 	cr.workers = make([]*worker, len(conf.TorPorts))
 	for i, p := range conf.TorPorts {
 		cr.workers[i] = &worker{
@@ -97,41 +91,8 @@ func (cr *Crawler) restoreSessions() {
 		if sess.Status.Status == FailedStatus {
 			continue
 		}
-		if cr.dataStorage != nil {
-			err = cr.uploadUnsavedPosts(sess.ID, sess.Params.CityID, sess.Params.Reupload)
-			if err != nil {
-				unilog.Logger().Error("unable to restore session", zap.String("id", sess.ID))
-				continue
-			}
-		}
 		cr.sessions = append(cr.sessions, &sess)
 	}
-}
-
-func (cr *Crawler) uploadUnsavedPosts(sessionID, cityID string, reupload bool) error {
-	dbPath := path.Join(cr.config.RootDir, sessionID, "bolt.db")
-	st, err := storage.Get(dbPath)
-	if err != nil {
-		return err
-	}
-	defer st.Close()
-	var lastID string
-	if !reupload {
-		lastID = st.ReadLastSavedPost(sessionID)
-	}
-	num := 50000
-	for {
-		d, cursor := st.Posts(sessionID, lastID, num)
-		if len(d) == 0 {
-			break
-		}
-		err := cr.sendPostsToDataStorage(d, sessionID, cityID, st)
-		if err != nil {
-			return err
-		}
-		lastID = cursor
-	}
-	return nil
 }
 
 func (cr *Crawler) NewSession(p Parameters) (string, error) {
@@ -157,36 +118,6 @@ func (cr *Crawler) Status(id string) (OutStatus, error) {
 	return OutStatus{}, errors.New("session was not found")
 }
 
-func (cr *Crawler) Entities(id string) ([]data.Entity, error) {
-	cr.mu.Lock()
-	defer cr.mu.Unlock()
-	dbPath := path.Join(cr.config.RootDir, id, "bolt.db")
-	st, err := storage.Get(dbPath)
-	if err != nil {
-		return nil, err
-	}
-	defer st.Close()
-	sess, err := readSession(id, cr.config.RootDir)
-	if err != nil {
-		return nil, err
-	}
-	ents := st.Entities(id, sess.Params.Type)
-	return ents, nil
-}
-
-func (cr *Crawler) Posts(id, cursor string, num int) ([]data.Post, string, error) {
-	cr.mu.Lock()
-	defer cr.mu.Unlock()
-	dbPath := path.Join(cr.config.RootDir, id, "bolt.db")
-	st, err := storage.Get(dbPath)
-	if err != nil {
-		return nil, "", err
-	}
-	defer st.Close()
-	posts, cursor := st.Posts(id, cursor, num)
-	return posts, cursor, nil
-}
-
 func (cr *Crawler) Stop(id string) (bool, error) {
 	cr.mu.Lock()
 	defer cr.mu.Unlock()
@@ -201,22 +132,15 @@ func (cr *Crawler) Stop(id string) (bool, error) {
 }
 
 func (cr *Crawler) start() {
-	d, err := time.ParseDuration(cr.config.CheckpointUpdateTimeout)
-	if err != nil {
-		unilog.Logger().Error("unable to parse checkpoint timeout",
-			zap.String("value", cr.config.CheckpointUpdateTimeout), zap.Error(err))
-		return
-	}
 	for {
 		if len(cr.sessions) == 0 {
 			time.Sleep(10 * time.Second)
 		}
 		for i := range cr.sessions {
 			if cr.sessions[i].Status.Status == FinishedStatus {
-				time.Sleep(d)
 				continue
 			}
-			err = cr.proceedSession(cr.sessions[i], d)
+			cr.proceedSession(cr.sessions[i])
 			if i == (len(cr.sessions) - 1) {
 				i = 0
 			}
@@ -224,72 +148,65 @@ func (cr *Crawler) start() {
 	}
 }
 
-func (cr *Crawler) proceedSession(sess *Session, sleep time.Duration) error {
-	start := time.Now()
-	dbPath := path.Join(cr.config.RootDir, sess.ID, "bolt.db")
-	st, err := storage.Get(dbPath)
-	if err != nil {
-		return err
-	}
+func (cr *Crawler) proceedSession(sess *Session) {
 	for j := range cr.workers {
 		cr.workers[j].paramsCh <- sess.Params
 	}
-	for time.Now().Sub(start) < sleep {
-		go cr.putEntities(sess, st)
+	resEntities := sess.Params.Entities
+	num := 0
+	s := time.Now().Unix()
+	l := len(resEntities)
+	for len(resEntities) > 0 {
 		c := 0
-		resEntities := make([]string, 0, len(sess.Status.Entities))
-		for c < len(sess.Status.Entities) {
+		go cr.putEntities(sess)
+		resEntities = make([]string, 0, len(sess.Params.Entities))
+		for c < l {
 			select {
 			case e := <-cr.outCh:
-				if e.finished {
-					sess.Status.updateEntitiesLeft(-1)
-				} else {
+				if !e.finished {
 					resEntities = append(resEntities, e.id)
 					if e.checkpoint != "" {
-						cr.checkpoints[e.id] = e.checkpoint
-						st.WriteCheckpoint(sess.ID, e.id, e.checkpoint)
+						if sess.Params.Checkpoints == nil {
+							sess.Params.Checkpoints = map[string]string{}
+						}
+						sess.Params.Checkpoints[e.id] = e.checkpoint
 					}
+				} else {
+					sess.Status.updateEntitiesLeft(-1)
 				}
 				c++
-			case e := <-cr.entitiesCh:
-				st.WriteEntity(sess.ID, e)
 			case d := <-cr.postsCh:
 				if len(d) > 0 {
-					sess.Status.updatePostsCollected(len(d))
-					st.WritePosts(sess.ID, d)
-				}
-				if cr.dataStorage != nil {
-					cr.sendPostsToDataStorage(d, sess.ID, sess.Params.CityID, st)
+					num += len(d)
+					if len(d) > 0 {
+						sess.Status.updatePostsCollected(len(d))
+						if cr.dataStorage != nil {
+							cr.sendPostsToDataStorage(d, sess.ID, sess.Params.CityID)
+						}
+					}
 				}
 			case d := <-cr.mediaCh:
 				saveMedia(sess.ID, d, cr.config.RootDir)
 			default:
-				continue
+				time.Sleep(5 * time.Second)
 			}
 		}
-		sess.Status.updateEntities(resEntities)
 		sess.dump(cr.config.RootDir)
+		l = len(resEntities)
 	}
+	sess.Params.FinishTimestamp = s
+	sess.Params.Checkpoints = map[string]string{}
+	sess.Status.PostsCollected = 0
+	sess.dump(cr.config.RootDir)
 	unilog.Logger().Info("session processed", zap.String("id", sess.ID),
 		zap.Int("entities left", sess.Status.EntitiesLeft),
 		zap.Int("posts collected", sess.Status.PostsCollected),
 		zap.Int("posts total", sess.Status.PostsTotal))
-	sess.Status.PostsCollected = 0
-	sess.dump(cr.config.RootDir)
-	err = st.Close()
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
-func (cr *Crawler) putEntities(sess *Session, st *storage.Storage) {
+func (cr *Crawler) putEntities(sess *Session) {
 	for _, id := range sess.Status.Entities {
-		cp, ok := cr.checkpoints[id]
-		if !ok {
-			sid := sess.ID
-			cp = st.Checkpoint(sid, id)
-		}
+		cp := sess.Params.Checkpoints[id]
 		cr.inCh <- entity{id: id, checkpoint: cp}
 	}
 }
@@ -312,12 +229,11 @@ func saveMedia(sessionID string, media []data.Media, dir string) {
 	}
 }
 
-func (cr *Crawler) sendPostsToDataStorage(posts []data.Post, sessionID, cityID string, st *storage.Storage) error {
+func (cr *Crawler) sendPostsToDataStorage(posts []data.Post, sessionID, cityID string) error {
 	if len(posts) == 0 {
 		unilog.Logger().Info("attempt to send an empty array of posts to data-storage")
 		return nil
 	}
-
 	var protoPosts []protodata.Post
 	for _, post := range posts {
 		protoPosts = append(protoPosts, convertToProtoPost(post))
@@ -328,8 +244,7 @@ func (cr *Crawler) sendPostsToDataStorage(posts []data.Post, sessionID, cityID s
 		return err
 	}
 	unilog.Logger().Info("uploaded posts", zap.Int("num", len(posts)), zap.String("sess", sessionID))
-	lastPost := posts[len(posts)-1].ID
-	return st.WriteLastSavedPost(sessionID, lastPost)
+	return nil
 }
 
 func convertToProtoPost(post data.Post) protodata.Post {

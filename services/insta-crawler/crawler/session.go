@@ -1,7 +1,6 @@
 package crawler
 
 import (
-	"encoding/gob"
 	"os"
 	"path"
 
@@ -11,8 +10,7 @@ import (
 )
 
 const (
-	gobSession  = "session.gob"
-	tomlSession = "session.toml"
+	sessPath = "session.toml"
 )
 
 type Session struct {
@@ -48,55 +46,16 @@ func newSession(id string, p Parameters, rootDir string) (Session, error) {
 }
 
 func readSession(id, rootDir string) (sess Session, err error) {
-	p := path.Join(rootDir, id, tomlSession)
-	_, err = os.Stat(p)
-	if !os.IsNotExist(err) {
-		_, err = toml.DecodeFile(p, &sess)
-		if err != nil {
-			unilog.Logger().Error("unable to read session file", zap.String("path", p), zap.Error(err))
-		}
-		return
-	}
-	p = path.Join(rootDir, id, gobSession)
-	var f *os.File
-	f, err = os.Open(p)
-	if err != nil {
-		unilog.Logger().Error("unable to open session file", zap.String("path", p), zap.Error(err))
-		return
-	}
-	err = gob.NewDecoder(f).Decode(&sess)
+	p := path.Join(rootDir, id, sessPath)
+	_, err = toml.DecodeFile(p, &sess)
 	if err != nil {
 		unilog.Logger().Error("unable to read session file", zap.String("path", p), zap.Error(err))
-		return
 	}
-	err = convertSession(sess, rootDir)
 	return
 }
 
-func convertSession(sess Session, rootDir string) error {
-	nPath := path.Join(rootDir, sess.ID)
-	err := os.MkdirAll(nPath, 0777)
-	if err != nil {
-		unilog.Logger().Error("unable to create directory for session", zap.Error(err))
-		return err
-	}
-	nPath = path.Join(nPath, tomlSession)
-	f, err := os.Create(nPath)
-	if err != nil {
-		unilog.Logger().Error("unable to create toml session file", zap.Error(err))
-		return err
-	}
-	defer f.Close()
-	err = toml.NewEncoder(f).Encode(sess)
-	if err != nil {
-		unilog.Logger().Error("unable to encode session", zap.Error(err))
-		return err
-	}
-	return nil
-}
-
 func (s Session) dump(rootDir string) error {
-	fpath := path.Join(rootDir, s.ID, tomlSession)
+	fpath := path.Join(rootDir, s.ID, sessPath)
 	f, err := os.Create(fpath)
 	if err != nil {
 		unilog.Logger().Error("unable to create session dump file", zap.String("path", fpath), zap.Error(err))

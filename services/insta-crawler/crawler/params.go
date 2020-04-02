@@ -2,7 +2,6 @@ package crawler
 
 import (
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
-	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/storage"
 )
 
 type Parameters struct {
@@ -13,6 +12,6 @@ type Parameters struct {
 	FinishTimestamp int64
 	DetailedPosts   bool
 	LoadMedia       bool
-	Reupload        bool
-	FixLocations    []storage.Location
+	FixLocations    []Location
+	Checkpoints     map[string]string
 }

@@ -12,7 +12,6 @@ import (
 
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/parser"
-	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/storage"
 	"github.com/corpix/uarand"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
@@ -27,7 +26,7 @@ type worker struct {
 	entitiesCh chan data.Entity
 	mediaCh    chan []data.Media
 	paramsCh   chan Parameters
-	fixer      storage.Fixer
+	fixer      Fixer
 	mu         sync.Mutex
 	params     Parameters
 	agent      string
@@ -64,7 +63,7 @@ func (w *worker) paramsEdit() {
 	for p := range w.paramsCh {
 		w.mu.Lock()
 		w.params = p
-		fixer, err := storage.NewFixer(p.FixLocations)
+		fixer, err := NewFixer(p.FixLocations)
 		if err == nil {
 			w.fixer = fixer
 		}
@@ -83,73 +82,45 @@ func (w *worker) proceedLocation(e entity) {
 	defer func() {
 		w.outCh <- e
 	}()
-	var cursor string
-	var hasNext bool
-	var timestamp int64
-	var zeroPosts bool
-	requestTemplatePt1 := "https://www.instagram.com/graphql/query/?query_hash=1b84447a4d8b6d6d0426fefb34514485&variables=%7B%22id%22%3A%22"
-	requestTemplatePt2 := "%22%2C%22first%22%3A50%2C%22after%22%3A%22"
-	requestTemplatePt3 := "%22%7D"
+	e.id = url.QueryEscape(e.id)
+	var req string
+	loadEntity := false
 	if e.checkpoint == "" {
-		initRequest := "https://www.instagram.com/graphql/query/?query_hash=1b84447a4d8b6d6d0426fefb34514485&variables=%7B%22id%22%3A%22" + e.id +
-			"%22%2C%22first%22%3A50%7D"
-		//referer := "https://www.instagram.com/explore/locations/" + e.id
-		rawData, err := w.makeRequest(initRequest, true)
-		if err != nil {
-			if rawData != nil {
-				e.finished = true
-			}
-			return
-		}
-		cursor, hasNext, timestamp, zeroPosts, err = w.proceedResponse(rawData, w.params.FinishTimestamp,
-			true, e.id)
-		if err != nil {
-			e.finished = true
-			return
-		}
-		if zeroPosts {
-			e.finished = true
-			return
-		}
-		e.checkpoint = cursor
-		if timestamp < w.params.FinishTimestamp {
-			e.finished = true
-		}
+		req = "https://www.instagram.com/graphql/query/?query_hash=1b84447a4d8b6d6d0426fefb34514485&variables=%7B%22id%22%3A%22" +
+			e.id + "%22%2C%22first%22%3A50%7D"
+		loadEntity = true
 	} else {
-		cursor = e.checkpoint
-		e.checkpoint = ""
-		hasNext = true
+		req = "https://www.instagram.com/graphql/query/?query_hash=1b84447a4d8b6d6d0426fefb34514485&variables=%7B%22id%22%3A%22" +
+			e.id + "%22%2C%22first%22%3A50%2C%22after%22%3A%22" + e.checkpoint + "%22%7D"
 	}
-	if hasNext {
-		var newRequest string
-		switch w.params.Type {
-		case data.LocationsType:
-			newRequest = requestTemplatePt1 + e.id + requestTemplatePt2 + cursor + requestTemplatePt3
-		}
-		rawData, err := w.makeRequest(newRequest, true)
-		if err != nil {
-			if rawData != nil {
-				e.finished = true
-			}
-			return
-		}
-		cursor, hasNext, timestamp, zeroPosts, err = w.proceedResponse(rawData, w.params.FinishTimestamp,
-			false, e.id)
-		if err != nil {
-			e.finished = true
-			return
-		}
-		if zeroPosts {
-			e.finished = true
-			return
-		}
-		e.checkpoint = cursor
-		if timestamp < w.params.FinishTimestamp {
-			e.finished = true
-		}
-	} else {
-		e.finished = true
+	f, cp := w.extractData(req, loadEntity, e.id)
+	e.finished = f
+	e.checkpoint = cp
+}
+
+func (w *worker) extractData(req string, loadEntity bool, entityID string) (bool, string) {
+	rawData, err := w.makeRequest(req, true)
+	if err != nil {
+		return false, ""
 	}
+	cursor, hasNext, timestamp, zeroPosts, err := w.proceedResponse(rawData, loadEntity, entityID)
+	if err != nil {
+		return true, ""
+	}
+	if zeroPosts {
+		unilog.Logger().Info("zero posts", zap.String("req", req))
+		return true, ""
+	}
+	cp := cursor
+	f := false
+	if timestamp < w.params.FinishTimestamp {
+		unilog.Logger().Info("before finish", zap.String("req", req))
+		f = true
+	}
+	if !hasNext {
+		f = true
+	}
+	return f, cp
 }
 
 func filterPosts(posts []data.Post, finish int64) []data.Post {
@@ -198,7 +169,7 @@ func (w *worker) makeRequest(request string, useTor bool) ([]byte, error) {
 	return body, nil
 }
 
-func (w *worker) proceedResponse(d []byte, finish int64, loadEntity bool, entityID string) (endCursor string, hasNext bool, timestamp int64,
+func (w *worker) proceedResponse(d []byte, loadEntity bool, entityID string) (endCursor string, hasNext bool, timestamp int64,
 	zeroPosts bool, err error) {
 	var posts []data.Post
 	switch w.params.Type {
@@ -252,7 +223,7 @@ func (w *worker) proceedResponse(d []byte, finish int64, loadEntity bool, entity
 	if w.fixer.Init {
 		posts = w.fixer.Fix(posts)
 	}
-	posts = filterPosts(posts, finish)
+	posts = filterPosts(posts, w.params.FinishTimestamp)
 	w.postsCh <- posts
 	zeroPosts = len(posts) == 0
 	return
