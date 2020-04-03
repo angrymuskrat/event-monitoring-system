@@ -17,7 +17,23 @@ func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints int, fi
 		return
 	}
 	splitGrid(candGrid, maxPoints)
-	newEvents, updatedEvents = treeEvents(candGrid, maxPoints, filterTags, start, finish, existingEvents)
+
+	existingEventsWithStatuses := make([]eventWithStatus, len(existingEvents))
+	for i, existingEvent := range existingEvents {
+		existingEventsWithStatuses[i] = eventWithStatus{
+			event:  existingEvent,
+			status: oldEventStatus,
+		}
+	}
+	treeEvents(candGrid, maxPoints, filterTags, start, finish, &existingEventsWithStatuses)
+	for _, existingEvent := range existingEventsWithStatuses {
+		if existingEvent.status == newEventStatus {
+			newEvents = append(newEvents, existingEvent.event)
+		}
+		if existingEvent.status == updatedEventStatus {
+			updatedEvents = append(updatedEvents, existingEvent.event)
+		}
+	}
 	if len(newEvents)+len(updatedEvents) != 0 {
 		found = true
 	}
@@ -37,128 +53,19 @@ func splitGrid(tree *convtree.ConvTree, maxPoints int) {
 	}
 }
 
-func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bool, start, finish int64, existingEvents []data.Event) (newEvents, updatedEvents []data.Event) {
+func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bool, start, finish int64, existingEvents *[]eventWithStatus) {
 	if tree.IsLeaf {
 		if len(tree.Points) >= maxPoints {
 			evHolders := eventHolders(tree.Points, filterTags)
 			for _, e := range evHolders {
-				event, isEvent, isNew := checkEvent(e, maxPoints, start, finish, existingEvents)
-				if isEvent {
-					if isNew {
-						newEvents = append(newEvents, event)
-					} else {
-						updatedEvents = append(updatedEvents, event)
-					}
-				}
-
+				checkEvent(e, maxPoints, start, finish, tree.TopLeft, tree.BottomRight, existingEvents)
 			}
 		}
-		return
 	} else {
-		var eventsBL []data.Event
-		var eventsBR []data.Event
-		var eventsTL []data.Event
-		var eventsTR []data.Event
-		del := tree.ChildBottomRight.TopLeft
-		for _, event := range existingEvents {
-			if event.Center.Lat > del.Y {
-				if event.Center.Lon > del.X {
-					eventsTR = append(eventsTR, event)
-				} else {
-					eventsTL = append(eventsTL, event)
-				}
-			} else {
-				if event.Center.Lon > del.X {
-					eventsBR = append(eventsBR, event)
-				} else {
-					eventsBL = append(eventsBL, event)
-				}
-			}
-		}
-
-		newEventsBL, updatedEventsBL := treeEvents(tree.ChildBottomLeft, maxPoints, filterTags, start, finish, eventsBL)
-		newEvents = append(newEvents, newEventsBL...)
-		updatedEvents = append(updatedEvents, updatedEventsBL...)
-
-		border := tree.ChildBottomRight.TopLeft.X - closeDistanse
-		for _, newEventBL := range newEventsBL {
-			if newEventBL.Center.Lon > border {
-				eventsBR = append(eventsBR, newEventBL)
-			}
-		}
-		for _, updatedEventBL := range updatedEventsBL {
-			if updatedEventBL.Center.Lon > border {
-				eventsBR = append(eventsBR, updatedEventBL)
-			}
-		}
-		newEventsBR, updatedEventsBR := treeEvents(tree.ChildBottomRight, maxPoints, filterTags, start, finish, eventsBR)
-		newEvents = append(newEvents, newEventsBR...)
-		updatedEvents = append(updatedEvents, updatedEventsBR...)
-
-		border = tree.ChildTopLeft.BottomRight.Y - closeDistanse
-		for _, newEventBL := range newEventsBL {
-			if newEventBL.Center.Lat > border {
-				eventsTL = append(eventsTL, newEventBL)
-			}
-		}
-		for _, updatedEventBL := range updatedEventsBL {
-			if updatedEventBL.Center.Lat > border {
-				eventsTL = append(eventsTL, updatedEventBL)
-			}
-		}
-
-		for _, newEventBR := range newEventsBR {
-			if newEventBR.Center.Lat > border {
-				eventsTL = append(eventsTL, newEventBR)
-			}
-		}
-		for _, updatedEventBR := range updatedEventsBR {
-			if updatedEventBR.Center.Lat > border {
-				eventsTL = append(eventsTL, updatedEventBR)
-			}
-		}
-		newEventsTL, updatedEventsTL := treeEvents(tree.ChildTopLeft, maxPoints, filterTags, start, finish, eventsTL)
-		newEvents = append(newEvents, newEventsTL...)
-		updatedEvents = append(updatedEvents, updatedEventsTL...)
-
-		border = tree.ChildTopRight.BottomRight.Y - closeDistanse
-		for _, newEventBL := range newEventsBL {
-			if newEventBL.Center.Lat > border {
-				eventsTR = append(eventsTR, newEventBL)
-			}
-		}
-		for _, updatedEventBL := range updatedEventsBL {
-			if updatedEventBL.Center.Lat > border {
-				eventsTR = append(eventsTR, updatedEventBL)
-			}
-		}
-
-		for _, newEventBR := range newEventsBR {
-			if newEventBR.Center.Lat > border {
-				eventsTR = append(eventsTR, newEventBR)
-			}
-		}
-		for _, updatedEventBR := range updatedEventsBR {
-			if updatedEventBR.Center.Lat > border {
-				eventsTR = append(eventsTR, updatedEventBR)
-			}
-		}
-
-		border = tree.ChildTopRight.TopLeft.X - closeDistanse
-		for _, newEventTL := range newEventsTL {
-			if newEventTL.Center.Lon > border {
-				eventsTR = append(eventsTR, newEventTL)
-			}
-		}
-		for _, updatedEventTL := range updatedEventsTL {
-			if updatedEventTL.Center.Lon > border {
-				eventsTR = append(eventsTR, updatedEventTL)
-			}
-		}
-		newEventsTR, updatedEventsTR := treeEvents(tree.ChildTopRight, maxPoints, filterTags, start, finish, eventsTR)
-		newEvents = append(newEvents, newEventsTR...)
-		updatedEvents = append(updatedEvents, updatedEventsTR...)
-		return
+		treeEvents(tree.ChildBottomLeft, maxPoints, filterTags, start, finish, existingEvents)
+		treeEvents(tree.ChildBottomRight, maxPoints, filterTags, start, finish, existingEvents)
+		treeEvents(tree.ChildTopLeft, maxPoints, filterTags, start, finish, existingEvents)
+		treeEvents(tree.ChildTopRight, maxPoints, filterTags, start, finish, existingEvents)
 	}
 }
 
@@ -311,7 +218,7 @@ func combineHolders(eh1, eh2 eventHolder) eventHolder {
 	return res
 }
 
-func checkEvent(e eventHolder, maxPoints int, start, finish int64, existingEvents []data.Event) (event data.Event, isEvent, isNew bool) {
+func checkEvent(e eventHolder, maxPoints int, start, finish int64, topLeft, bottomRight convtree.Point, existingEvents *[]eventWithStatus) {
 	if len(e.users) < 2 {
 		return
 	}
@@ -319,41 +226,70 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, existingEvent
 		return
 	}
 
-	resultStart := start
-	isNew = true
-	var id int64
-SEARCH:
-	for _, oldEvent := range existingEvents {
-		for _, oldTag := range oldEvent.Tags {
-			for newTag := range e.tags {
-				if oldTag == newTag {
-					for _, oldPostCode := range oldEvent.PostCodes {
-						if _, ok := e.posts[oldPostCode]; !ok {
-							for _, existingEventsPost := range oldEvent.Posts {
-								if existingEventsPost.Shortcode == oldPostCode {
-									e.posts[oldPostCode] = *existingEventsPost
-									break
+	for i, oldEvent := range *existingEvents {
+		if oldEvent.event.Center.Lat > bottomRight.Y-closeDistanse &&
+			oldEvent.event.Center.Lat < topLeft.Y+closeDistanse &&
+			oldEvent.event.Center.Lon > topLeft.X-closeDistanse &&
+			oldEvent.event.Center.Lon < bottomRight.X+closeDistanse {
+			for _, oldTag := range oldEvent.event.Tags {
+				for newTag := range e.tags {
+					if oldTag == newTag {
+						for _, oldPostCode := range oldEvent.event.PostCodes {
+							if _, ok := e.posts[oldPostCode]; !ok {
+								for _, existingEventsPost := range oldEvent.event.Posts {
+									if existingEventsPost.Shortcode == oldPostCode {
+										e.posts[oldPostCode] = *existingEventsPost
+										break
+									}
+								}
+							} else {
+								for _, oldPostTag := range e.postTags[oldPostCode] {
+									for _, oldEventTag := range oldEvent.event.Tags {
+										if oldEventTag == oldPostTag {
+											e.tags[oldPostTag]--
+											break
+										}
+									}
 								}
 							}
-						} else {
-							for _, oldPostTag := range e.postTags[oldPostCode] {
-								e.tags[oldPostTag]--
+						}
+
+						for i, ot := range oldEvent.event.Tags {
+							if _, ok := e.tags[ot]; ok {
+								e.tags[ot] += int(oldEvent.event.TagsCount[i])
+							} else {
+								e.tags[ot] = int(oldEvent.event.TagsCount[i])
 							}
 						}
-					}
 
-					for i, ot := range oldEvent.Tags {
-						if _, ok := e.tags[ot]; ok {
-							e.tags[ot] += int(oldEvent.TagsCount[i])
-						} else {
-							e.tags[ot] = int(oldEvent.TagsCount[i])
+						postCodes := []string{}
+						for k := range e.posts {
+							postCodes = append(postCodes, k)
 						}
-					}
+						tags, counts := sortTags(e.tags)
 
-					id = oldEvent.ID
-					resultStart = oldEvent.Start
-					isNew = false
-					break SEARCH
+						var status eventStatusType
+						if oldEvent.status == newEventStatus {
+							status = newEventStatus
+						} else {
+							status = updatedEventStatus
+						}
+						event := eventWithStatus{
+							event: data.Event{
+								ID:        oldEvent.event.ID,
+								Center:    eventCenter(e.posts),
+								PostCodes: postCodes,
+								Tags:      tags,
+								TagsCount: counts,
+								Title:     tags[0],
+								Start:     oldEvent.event.Start,
+								Finish:    finish,
+							},
+							status: status,
+						}
+						(*existingEvents)[i] = event
+						return
+					}
 				}
 			}
 		}
@@ -363,29 +299,33 @@ SEARCH:
 	for k := range e.posts {
 		postCodes = append(postCodes, k)
 	}
-	tags, counts := sortTags(e.tags, 5)
+	tags, counts := sortTags(e.tags)
 
-	event = data.Event{
-		ID:        id,
-		Center:    eventCenter(e.posts),
-		PostCodes: postCodes,
-		Tags:      tags,
-		TagsCount: counts,
-		Title:     tags[0],
-		Start:     resultStart,
-		Finish:    finish,
+	event := eventWithStatus{
+		event: data.Event{
+			Center:    eventCenter(e.posts),
+			PostCodes: postCodes,
+			Tags:      tags,
+			TagsCount: counts,
+			Title:     tags[0],
+			Start:     start,
+			Finish:    finish,
+		},
+		status: newEventStatus,
 	}
-	isEvent = true
-	return
+	*existingEvents = append(*existingEvents, event)
+
 }
 
-func sortTags(tags map[string]int, max int) ([]string, []int64) {
+func sortTags(tags map[string]int) ([]string, []int64) {
 	rev := map[int][]string{}
 	for t, c := range tags {
-		if _, ok := rev[c]; !ok {
-			rev[c] = []string{t}
-		} else {
-			rev[c] = append(rev[c], t)
+		if c != 1 {
+			if _, ok := rev[c]; !ok {
+				rev[c] = []string{t}
+			} else {
+				rev[c] = append(rev[c], t)
+			}
 		}
 	}
 	keys := make([]int, 0, len(rev))
@@ -398,19 +338,11 @@ func sortTags(tags map[string]int, max int) ([]string, []int64) {
 	res := []string{}
 	for _, k := range keys {
 		res = append(res, rev[k]...)
-		//if len(res) >= max {
-		//	break
-		//}
 	}
 	counts := make([]int64, len(res))
 	for ind, t := range res {
 		counts[ind] = int64(tags[t])
 	}
-	//l := max
-	//if l > (len(res) - 1) {
-	//	l = len(res)
-	//}
-	//res = res[0:l]
 	return res, counts
 }
 
