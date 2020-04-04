@@ -46,7 +46,7 @@ func newSession(id string, p Parameters, rootDir string) (Session, error) {
 }
 
 func readSession(id, rootDir string) (sess Session, err error) {
-	p := path.Join(rootDir, id, sessPath)
+	p := path.Join(rootDir, id)
 	_, err = toml.DecodeFile(p, &sess)
 	if err != nil {
 		unilog.Logger().Error("unable to read session file", zap.String("path", p), zap.Error(err))
@@ -55,7 +55,7 @@ func readSession(id, rootDir string) (sess Session, err error) {
 }
 
 func (s Session) dump(rootDir string) error {
-	fpath := path.Join(rootDir, s.ID, sessPath)
+	fpath := path.Join(rootDir, s.ID+".toml")
 	f, err := os.Create(fpath)
 	if err != nil {
 		unilog.Logger().Error("unable to create session dump file", zap.String("path", fpath), zap.Error(err))

@@ -32,6 +32,7 @@ type worker struct {
 	agent      string
 	http       http.Client
 	tor        http.Client
+	cl         *client
 }
 
 func (w *worker) init(port int) {
@@ -159,7 +160,10 @@ func (w *worker) makeRequest(request string, useTor bool) ([]byte, error) {
 		//time.Sleep(10 * time.Second)
 		return nil, err
 	}
-	if resp.StatusCode == 404 || resp.StatusCode == 500 {
+	if resp.StatusCode == 500 {
+		return w.cl.makeRequest(request)
+	}
+	if resp.StatusCode == 404 {
 		msg := "entity page was not found"
 		unilog.Logger().Error(msg, zap.String("URL", request))
 		err = errors.New(msg)

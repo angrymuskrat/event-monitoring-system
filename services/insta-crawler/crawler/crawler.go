@@ -30,6 +30,7 @@ type Crawler struct {
 	mediaCh     chan []data.Media
 	checkpoints map[string]string
 	dataStorage storagesvc.Service
+	cl          *client
 }
 
 func NewCrawler(confPath string) (*Crawler, error) {
@@ -46,6 +47,7 @@ func NewCrawler(confPath string) (*Crawler, error) {
 		entitiesCh:  make(chan data.Entity),
 		mediaCh:     make(chan []data.Media),
 		checkpoints: map[string]string{},
+		cl:          newClient(conf.Token, conf.SessionID),
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -65,6 +67,7 @@ func NewCrawler(confPath string) (*Crawler, error) {
 			entitiesCh: cr.entitiesCh,
 			mediaCh:    cr.mediaCh,
 			paramsCh:   make(chan Parameters),
+			cl:         cr.cl,
 		}
 		cr.workers[i].init(p)
 		go cr.workers[i].start()
@@ -185,6 +188,9 @@ func (cr *Crawler) proceedSession(sess *Session) {
 						}
 					}
 				}
+			case l := <-cr.entitiesCh:
+				cr.dataStorage.PushLocations(context.Background(), sess.Params.CityID,
+					[]protodata.Location{convertToProtoLocation(l.(*data.Location))})
 			case d := <-cr.mediaCh:
 				saveMedia(sess.ID, d, cr.config.RootDir)
 			default:
@@ -262,5 +268,14 @@ func convertToProtoPost(post data.Post) protodata.Post {
 		LocationID:    post.LocationID,
 		Lat:           post.Lat,
 		Lon:           post.Lon,
+	}
+}
+
+func convertToProtoLocation(l *data.Location) protodata.Location {
+	return protodata.Location{
+		ID:       l.ID,
+		Title:    l.Title,
+		Position: protodata.Point{Lat: l.Lat, Lon: l.Lon},
+		Slug:     l.Slug,
 	}
 }
