@@ -109,13 +109,13 @@ func (w *worker) extractData(req string, loadEntity bool, entityID string) (bool
 		return true, ""
 	}
 	if zeroPosts {
-		unilog.Logger().Info("zero posts", zap.String("req", req))
+		//unilog.Logger().Info("zero posts", zap.String("req", req))
 		return true, ""
 	}
 	cp := cursor
 	f := false
 	if timestamp < w.params.FinishTimestamp {
-		unilog.Logger().Info("before finish", zap.String("req", req))
+		//unilog.Logger().Info("before finish", zap.String("req", req))
 		f = true
 	}
 	if !hasNext {
