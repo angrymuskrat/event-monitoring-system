@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/storage"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/angrymuskrat/event-monitoring-system/services/coordinator/service/status"
@@ -46,7 +46,7 @@ type SessionParameters struct {
 	SkipCrawling    bool
 	SkipHistoric    bool
 	FilterTags      []string
-	FixLocations    []storage.Location
+	FixLocations    []crawler.Location
 }
 
 func NewSession(p SessionParameters, e ServiceEndpoints) (*Session, error) {
@@ -144,7 +144,7 @@ func (s *Session) historicCollect() error {
 	return nil
 }
 
-func (s *Session) startCollect(crawlingFinish int64, fixLocations []storage.Location) (string, error) {
+func (s *Session) startCollect(crawlingFinish int64, fixLocations []crawler.Location) (string, error) {
 	p := crawler.Parameters{
 		CityID:          s.Params.CityID,
 		Type:            crawlerdata.LocationsType,
@@ -361,7 +361,11 @@ func (s *Session) monitoring() error {
 			return err
 		}
 		start = finish
+		if reflect.TypeOf(s.Status) == reflect.TypeOf(status.Failed{}) {
+			break
+		}
 	}
+	return nil
 }
 
 func (s *Session) monitoringEvents(start, finish int64) error {
