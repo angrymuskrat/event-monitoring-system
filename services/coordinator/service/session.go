@@ -39,10 +39,11 @@ type SessionParameters struct {
 	BottomRight     data.Point
 	Locations       []string
 	CrawlerFinish   int64
+	CrawlerSession  string
 	HistoricStart   int64
 	HistoricFinish  int64
-	MonitoringStart int64
 	GridSize        float64
+	MonitoringStart int64
 	SkipCrawling    bool
 	SkipHistoric    bool
 	FilterTags      []string
@@ -68,17 +69,37 @@ func NewSession(p SessionParameters, e ServiceEndpoints) (*Session, error) {
 
 func (s *Session) Run() {
 	var err error
-	if !s.Params.SkipCrawling {
-		area := data.Area{TopLeft: &s.Params.TopLeft, BotRight: &s.Params.BottomRight}
-		city := data.City{Title: s.Params.CityName, Code: s.Params.CityID, Area: area}
-		err = Storage.InsertCity(context.Background(), city, true)
-		if err != nil {
-			unilog.Logger().Error("unable to insert city", zap.Any("city", city), zap.Error(err))
-			return
+	if s.Params.CrawlerSession != "" {
+		var ts int64
+		if !s.Params.SkipHistoric {
+			ts = s.Params.HistoricFinish
+		} else {
+			ts = s.Params.MonitoringStart
 		}
-		err = s.historicCollect()
-		if err != nil {
-			return
+		ct := int64(0)
+		for ct < ts {
+			ep, err := s.checkCollect(s.Params.CrawlerSession)
+			if err != nil {
+				st := status.Failed{Error: err}
+				s.Status = st
+				return
+			}
+			ct = ep.Status.FinishTimestamp
+			time.Sleep(5 * time.Minute)
+		}
+	} else {
+		if !s.Params.SkipCrawling {
+			area := data.Area{TopLeft: &s.Params.TopLeft, BotRight: &s.Params.BottomRight}
+			city := data.City{Title: s.Params.CityName, Code: s.Params.CityID, Area: area}
+			err = Storage.InsertCity(context.Background(), city, true)
+			if err != nil {
+				unilog.Logger().Error("unable to insert city", zap.Any("city", city), zap.Error(err))
+				return
+			}
+			err = s.historicCollect()
+			if err != nil {
+				return
+			}
 		}
 	}
 	if !s.Params.SkipHistoric {
@@ -91,15 +112,15 @@ func (s *Session) Run() {
 }
 
 func (s *Session) historicCollect() error {
-	sessionID, err := s.startCollect(s.Params.CrawlerFinish, s.Params.FixLocations)
+	sessionID, err := s.startCollect(s.Params.CrawlerFinish)
 	if err != nil {
 		s.Status = status.Failed{Error: err}
 		return err
 	}
+	s.Params.CrawlerSession = sessionID
 	s.Status = status.HistoricCollection{
 		SessionID:      sessionID,
 		PostsCollected: 0,
-		LocationsLeft:  len(s.Params.Locations),
 	}
 	unilog.Logger().Info("started data collecting", zap.String("session", s.ID),
 		zap.String("grid session", sessionID))
@@ -117,40 +138,30 @@ func (s *Session) historicCollect() error {
 			s.Status = st
 			return err
 		}
+		ts := time.Unix(ep.Status.FinishTimestamp, 0).String()
 		st := status.HistoricCollection{
 			SessionID:      cs.SessionID,
 			PostsCollected: ep.Status.PostsCollected,
-			LocationsLeft:  ep.Status.EntitiesLeft,
+			Timestamp:      ts,
 		}
 		unilog.Logger().Info("data collecting", zap.String("session", s.ID),
 			zap.String("crawler session", st.SessionID), zap.Int("collected", st.PostsCollected),
-			zap.Int("left", st.LocationsLeft))
+			zap.String("timestamp", ts))
 
 		s.Status = st
-		num := ep.Status.EntitiesLeft
-		run = num > 0
+		run = ep.Status.FinishTimestamp < s.Params.HistoricFinish
 		time.Sleep(5 * time.Minute)
-	}
-	cs, ok := s.Status.(status.HistoricCollection)
-	if !ok {
-		unilog.Logger().Error("incorrect session status", zap.String("status", s.Status.String()))
-		return errors.New("incorrect session status")
-	}
-	err = s.deleteCollect(cs.SessionID)
-	if err != nil {
-		s.Status = status.Failed{Error: err}
-		return err
 	}
 	return nil
 }
 
-func (s *Session) startCollect(crawlingFinish int64, fixLocations []crawler.Location) (string, error) {
+func (s *Session) startCollect(crawlingFinish int64) (string, error) {
 	p := crawler.Parameters{
 		CityID:          s.Params.CityID,
 		Type:            crawlerdata.LocationsType,
 		Entities:        s.Params.Locations,
 		FinishTimestamp: crawlingFinish,
-		FixLocations:    fixLocations,
+		FixLocations:    s.Params.FixLocations,
 	}
 	d, err := json.Marshal(p)
 	if err != nil {
@@ -220,53 +231,6 @@ func (s *Session) checkCollect(sessionID string) (*crservice.StatusEpResponse, e
 		return nil, errors.New(ep.Error)
 	}
 	return &ep, nil
-}
-
-func (s *Session) deleteCollect(sessionID string) error {
-	p := crservice.IDEpRequest{ID: sessionID}
-	d, err := json.Marshal(p)
-	if err != nil {
-		unilog.Logger().Error("unable to marshal crawler parameters", zap.Error(err))
-		return err
-	}
-	buf := bytes.NewBuffer(d)
-	url := fmt.Sprintf("http://%s/stop", s.Endpoints.Crawler.Address)
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", url, buf)
-	if err != nil {
-		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
-		return err
-	}
-	req.SetBasicAuth(s.Endpoints.Crawler.User, s.Endpoints.Crawler.Password)
-	resp, err := client.Do(req)
-	if err != nil {
-		unilog.Logger().Error("unable to make request to crawler", zap.Error(err))
-		return err
-	}
-	if resp.StatusCode != 200 {
-		unilog.Logger().Error("error status code", zap.Int("code", resp.StatusCode),
-			zap.String("status", resp.Status))
-		return err
-	}
-	defer resp.Body.Close()
-	var ep crservice.StopEpResponse
-	err = json.NewDecoder(resp.Body).Decode(&ep)
-	if err != nil {
-		unilog.Logger().Error("unable to read response", zap.Error(err))
-		return nil
-	}
-	if ep.Error != "" {
-		unilog.Logger().Error("error in crawler", zap.String("msg", ep.Error))
-		return errors.New(ep.Error)
-	}
-	if !ep.Ok {
-		msg := "unable to delete session in crawler"
-		unilog.Logger().Error(msg)
-		return errors.New(msg)
-	}
-	unilog.Logger().Info("stopped collecting", zap.String("session", s.ID), zap.String("crawler session",
-		sessionID))
-	return nil
 }
 
 func (s *Session) historicBuild() error {
@@ -350,10 +314,15 @@ func (s *Session) monitoring() error {
 	start := s.Params.MonitoringStart
 	for {
 		finish := time.Now().Unix()
-		_, err = s.monitoringCollect(start)
-		if err != nil {
-			s.Status = status.Failed{Error: err}
-			return err
+		ct := int64(0)
+		for ct < finish {
+			time.Sleep(5 * time.Minute)
+			ep, err := s.checkCollect(s.Params.CrawlerSession)
+			if err != nil {
+				s.Status = status.Failed{Error: err}
+				return err
+			}
+			ct = ep.Status.FinishTimestamp
 		}
 		err := s.monitoringEvents(start, finish)
 		if err != nil {
@@ -385,59 +354,6 @@ func (s *Session) monitoringEvents(start, finish int64) error {
 		time.Sleep(20 * time.Second)
 	}
 	return nil
-}
-
-func (s *Session) monitoringCollect(crawlingFinish int64) (int64, error) {
-	sessionID, err := s.startCollect(crawlingFinish, s.Params.FixLocations)
-	if err != nil {
-		return 0, err
-	}
-	s.Status = status.Monitoring{
-		SessionID:        sessionID,
-		CurrentTimestamp: crawlingFinish,
-		Status:           "start collect data",
-	}
-	unilog.Logger().Info("started data collecting in monitoring", zap.String("session", s.ID),
-		zap.String("grid session", sessionID))
-
-	var finishTime int64
-	for {
-		cs, ok := s.Status.(status.Monitoring)
-		if !ok {
-			unilog.Logger().Error("incorrect session status", zap.String("status", s.Status.String()))
-			return 0, errors.New("incorrect session status")
-		}
-		ep, err := s.checkCollect(cs.SessionID)
-		if err != nil {
-			return 0, err
-		}
-
-		st := status.Monitoring{
-			SessionID:        cs.SessionID,
-			CurrentTimestamp: crawlingFinish,
-			Status:           "crawler is collecting data",
-		}
-		unilog.Logger().Info("data collecting in monitoring", zap.String("session", s.ID),
-			zap.String("crawler session", st.SessionID), zap.Int64("current timestamp", st.CurrentTimestamp),
-			zap.Int("collected", ep.Status.PostsCollected), zap.Int("left", ep.Status.EntitiesLeft))
-
-		s.Status = st
-		if ep.Status.EntitiesLeft < 1 {
-			finishTime = time.Now().Unix()
-			break
-		}
-		time.Sleep(1 * time.Minute)
-	}
-	cs, ok := s.Status.(status.Monitoring)
-	if !ok {
-		unilog.Logger().Error("incorrect session status", zap.String("status", s.Status.String()))
-		return 0, errors.New("incorrect session status")
-	}
-	err = s.deleteCollect(cs.SessionID)
-	if err != nil {
-		return 0, err
-	}
-	return finishTime, nil
 }
 
 func (s *Session) eventsStart(start, finish int64) error {

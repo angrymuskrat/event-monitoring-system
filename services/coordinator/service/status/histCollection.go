@@ -3,7 +3,7 @@ package status
 type HistoricCollection struct {
 	SessionID      string
 	PostsCollected int
-	LocationsLeft  int
+	Timestamp      string
 }
 
 func (s HistoricCollection) Get() Status {
