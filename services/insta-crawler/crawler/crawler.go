@@ -106,6 +106,13 @@ func (cr *Crawler) NewSession(p Parameters) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	area := protodata.Area{TopLeft: &p.TopLeft, BotRight: &p.BottomRight}
+	city := protodata.City{Title: p.Description, Code: p.CityID, Area: area}
+	err = cr.dataStorage.InsertCity(context.Background(), city, true)
+	if err != nil {
+		unilog.Logger().Error("unable to insert city", zap.Any("city", city), zap.Error(err))
+		return "", err
+	}
 	cr.sessions = append(cr.sessions, &sess)
 	return id, nil
 }
@@ -200,6 +207,7 @@ func (cr *Crawler) proceedSession(sess *Session) {
 		sess.dump(cr.config.RootDir)
 		l = len(resEntities)
 	}
+	sess.Status.FinishTimestamp = s
 	sess.Params.FinishTimestamp = s
 	sess.Params.Checkpoints = map[string]string{}
 	sess.Status.PostsCollected = 0

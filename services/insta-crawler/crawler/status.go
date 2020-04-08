@@ -3,27 +3,28 @@ package crawler
 import "sync"
 
 type Status struct {
-	mu             sync.Mutex
-	Status         StatusType
-	Entities       []string
-	EntitiesLeft   int
-	PostsCollected int
-	PostsTotal     int
+	mu              sync.Mutex
+	Status          StatusType
+	Entities        []string
+	EntitiesLeft    int
+	PostsCollected  int
+	PostsTotal      int
+	FinishTimestamp int64
 }
 
 type OutStatus struct {
-	Status         string
-	EntitiesLeft   int
-	PostsCollected int
+	Status          string
+	PostsCollected  int
+	FinishTimestamp int64
 }
 
 func (s *Status) get() OutStatus {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return OutStatus{
-		Status:         s.Status.String(),
-		EntitiesLeft:   s.EntitiesLeft,
-		PostsCollected: s.PostsTotal,
+		Status:          s.Status.String(),
+		PostsCollected:  s.PostsTotal,
+		FinishTimestamp: s.FinishTimestamp,
 	}
 }
 
