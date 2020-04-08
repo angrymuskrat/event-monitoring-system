@@ -166,6 +166,7 @@ func (cr *Crawler) proceedSession(sess *Session) {
 	num := 0
 	s := time.Now().Unix()
 	l := len(resEntities)
+	sess.Status.FinishTimestamp = sess.Params.FinishTimestamp
 	for len(resEntities) > 0 {
 		c := 0
 		go cr.putEntities(sess)
