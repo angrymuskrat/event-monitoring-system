@@ -33,11 +33,7 @@ func newSession(id string, p Parameters, rootDir string) (Session, error) {
 			Status: RunningStatus,
 		},
 	}
-	sess.Status.Entities = make([]string, len(p.Entities))
-	for i := range p.Entities {
-		sess.Status.Entities[i] = p.Entities[i]
-	}
-	sess.Status.EntitiesLeft = len(sess.Status.Entities)
+	sess.Status.EntitiesLeft = len(p.Locations)
 	err = sess.dump(rootDir)
 	if err != nil {
 		return Session{}, err

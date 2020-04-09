@@ -9,9 +9,13 @@ import (
 type Configuration struct {
 	RootDir        string
 	DataStorageURL string
-	TorPorts       []int
-	Token          string
-	SessionID      string
+	Groups         []Group
+}
+
+type Group struct {
+	TorPorts  []int
+	Token     string
+	SessionID string
 }
 
 func readConfig(path string) (cfg Configuration, err error) {

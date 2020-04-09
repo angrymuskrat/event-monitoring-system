@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
@@ -40,13 +41,6 @@ func (cl *client) makeRequest(request string) ([]byte, error) {
 	}
 	cookie := fmt.Sprintf("csrftoken=%v; sessionid=%v;", cl.token, cl.sessionID)
 	req.Header.Set("cookie", cookie)
-	//if cl.cookies == nil {
-	//	req.Header.Set("cookie", cl.authCookie)
-	//} else {
-	//	for _, c := range cl.cookies {
-	//		req.AddCookie(c)
-	//	}
-	//}
 	resp, err := cl.cl.Do(req)
 	if err != nil {
 		unilog.Logger().Error("unable to make request", zap.String("URL", request), zap.Error(err))
@@ -65,7 +59,16 @@ func (cl *client) makeRequest(request string) ([]byte, error) {
 		err = errors.New(msg)
 		return nil, err
 	}
-	//cl.cookies = resp.Cookies()
+	for _, c := range resp.Cookies() {
+		if strings.ToLower(c.Name) == "csrftoken" {
+			cl.token = c.Value
+			unilog.Logger().Info("updated csrf token", zap.String("value", c.Value))
+		}
+		if strings.ToLower(c.Name) == "sessionid" {
+			cl.sessionID = c.Value
+			unilog.Logger().Info("updated session ID", zap.String("value", c.Value))
+		}
+	}
 	body, err := ioutil.ReadAll(resp.Body)
 	time.Sleep(100 * time.Millisecond)
 	return body, nil

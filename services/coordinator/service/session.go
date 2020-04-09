@@ -37,7 +37,7 @@ type SessionParameters struct {
 	Timezone        string
 	TopLeft         data.Point
 	BottomRight     data.Point
-	Locations       []string
+	Locations       []crawlerdata.Location
 	CrawlerFinish   int64
 	CrawlerSession  string
 	HistoricStart   int64
@@ -47,7 +47,6 @@ type SessionParameters struct {
 	SkipCrawling    bool
 	SkipHistoric    bool
 	FilterTags      []string
-	FixLocations    []crawler.Location
 }
 
 func NewSession(p SessionParameters, e ServiceEndpoints) (*Session, error) {
@@ -158,10 +157,8 @@ func (s *Session) historicCollect() error {
 func (s *Session) startCollect(crawlingFinish int64) (string, error) {
 	p := crawler.Parameters{
 		CityID:          s.Params.CityID,
-		Type:            crawlerdata.LocationsType,
-		Entities:        s.Params.Locations,
+		Locations:       s.Params.Locations,
 		FinishTimestamp: crawlingFinish,
-		FixLocations:    s.Params.FixLocations,
 	}
 	d, err := json.Marshal(p)
 	if err != nil {

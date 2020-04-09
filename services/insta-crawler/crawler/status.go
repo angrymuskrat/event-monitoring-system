@@ -5,7 +5,6 @@ import "sync"
 type Status struct {
 	mu              sync.Mutex
 	Status          StatusType
-	Entities        []string
 	EntitiesLeft    int
 	PostsCollected  int
 	PostsTotal      int
@@ -28,11 +27,10 @@ func (s *Status) get() OutStatus {
 	}
 }
 
-func (s *Status) updateEntities(ent []string) {
+func (s *Status) updateEntities(num int) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.Entities = ent
-	s.EntitiesLeft = len(ent)
+	s.EntitiesLeft = num
 }
 
 func (s *Status) updateEntitiesLeft(inc int) {

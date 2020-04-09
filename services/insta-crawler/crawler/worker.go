@@ -64,7 +64,7 @@ func (w *worker) paramsEdit() {
 	for p := range w.paramsCh {
 		w.mu.Lock()
 		w.params = p
-		fixer, err := NewFixer(p.FixLocations)
+		fixer, err := NewFixer(p.Locations)
 		if err == nil {
 			w.fixer = fixer
 		}
@@ -176,29 +176,15 @@ func (w *worker) makeRequest(request string, useTor bool) ([]byte, error) {
 func (w *worker) proceedResponse(d []byte, loadEntity bool, entityID string) (endCursor string, hasNext bool, timestamp int64,
 	zeroPosts bool, err error) {
 	var posts []data.Post
-	switch w.params.Type {
-	case data.ProfilesType:
-		var profile data.Profile
-		posts, profile, endCursor, hasNext, timestamp, err = parser.ParseFromProfileRequest(d)
-		if err != nil {
-			unilog.Logger().Error("error during parsing response",
-				zap.String("data", string(d)), zap.String("entity", entityID), zap.Error(err))
-			return
-		}
-		if loadEntity {
-			w.entitiesCh <- &profile
-		}
-	case data.LocationsType:
-		var location data.Location
-		posts, location, endCursor, hasNext, timestamp, err = parser.ParseFromLocationRequest(d)
-		if err != nil {
-			unilog.Logger().Error("error during parsing response",
-				zap.String("data", string(d)), zap.String("entity", entityID), zap.Error(err))
-			return
-		}
-		if loadEntity {
-			w.entitiesCh <- &location
-		}
+	var location data.Location
+	posts, location, endCursor, hasNext, timestamp, err = parser.ParseFromLocationRequest(d)
+	if err != nil {
+		unilog.Logger().Error("error during parsing response",
+			zap.String("data", string(d)), zap.String("entity", entityID), zap.Error(err))
+		return
+	}
+	if loadEntity {
+		w.entitiesCh <- &location
 	}
 	if w.params.DetailedPosts {
 		for i := 0; i < len(posts); i++ {

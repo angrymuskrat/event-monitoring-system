@@ -9,12 +9,10 @@ type Parameters struct {
 	CityID          string
 	TopLeft         protodata.Point
 	BottomRight     protodata.Point
-	Type            data.CrawlingType
 	Description     string
-	Entities        []string
+	Locations       []data.Location
 	FinishTimestamp int64
 	DetailedPosts   bool
 	LoadMedia       bool
-	FixLocations    []Location
 	Checkpoints     map[string]string
 }
