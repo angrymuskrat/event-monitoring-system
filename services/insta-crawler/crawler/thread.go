@@ -49,6 +49,7 @@ func (th *thread) NewSession(p Parameters, rootDir string) (string, error) {
 		}
 	}
 	th.sessions = append(th.sessions, &sess)
+	unilog.Logger().Info("created session", zap.String("id", sess.ID), zap.Int("thread", th.id))
 	return id, nil
 }
 
