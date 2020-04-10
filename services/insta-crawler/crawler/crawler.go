@@ -30,7 +30,7 @@ func NewCrawler(confPath string) (*Crawler, error) {
 		config:  conf,
 		threads: make([]*thread, len(conf.Groups)),
 	}
-	for _, g := range conf.Groups {
+	for gi, g := range conf.Groups {
 		t := thread{
 			sessions:    []*Session{},
 			inCh:        make(chan entity),
@@ -65,16 +65,17 @@ func NewCrawler(confPath string) (*Crawler, error) {
 			t.workers[i].init(p)
 			go t.workers[i].start()
 		}
+		cr.threads[gi] = &t
 	}
 	cr.restoreSessions()
-	go cr.start()
+	cr.start()
 	unilog.Logger().Info("crawler has started")
 	return cr, nil
 }
 
 func (cr *Crawler) start() {
 	for _, t := range cr.threads {
-		t.start()
+		go t.start()
 	}
 }
 
@@ -102,6 +103,7 @@ func (cr *Crawler) restoreSessions() {
 			c++
 		}
 	}
+	cr.cnt = c
 }
 
 func (cr *Crawler) NewSession(p Parameters) (string, error) {

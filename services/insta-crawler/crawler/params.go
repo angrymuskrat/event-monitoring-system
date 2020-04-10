@@ -7,6 +7,7 @@ import (
 
 type Parameters struct {
 	CityID          string
+	InitCity        bool
 	TopLeft         protodata.Point
 	BottomRight     protodata.Point
 	Description     string

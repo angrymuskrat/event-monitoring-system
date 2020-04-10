@@ -30,45 +30,47 @@ type thread struct {
 	rootDir     string
 }
 
-func (cr *thread) NewSession(p Parameters, rootDir string) (string, error) {
+func (th *thread) NewSession(p Parameters, rootDir string) (string, error) {
 	id := uuid.New().String()
-	cr.mu.Lock()
-	defer cr.mu.Unlock()
+	th.mu.Lock()
+	defer th.mu.Unlock()
 	sess, err := newSession(id, p, rootDir)
 	if err != nil {
 		return "", err
 	}
-	area := protodata.Area{TopLeft: &p.TopLeft, BotRight: &p.BottomRight}
-	city := protodata.City{Title: p.Description, Code: p.CityID, Area: area}
-	err = cr.dataStorage.InsertCity(context.Background(), city, true)
-	if err != nil {
-		unilog.Logger().Error("unable to insert city", zap.Any("city", city), zap.Error(err))
-		return "", err
+	if p.InitCity {
+		area := protodata.Area{TopLeft: &p.TopLeft, BotRight: &p.BottomRight}
+		city := protodata.City{Title: p.Description, Code: p.CityID, Area: area}
+		err = th.dataStorage.InsertCity(context.Background(), city, true)
+		if err != nil {
+			unilog.Logger().Error("unable to insert city", zap.Any("city", city), zap.Error(err))
+			return "", err
+		}
 	}
-	cr.sessions = append(cr.sessions, &sess)
+	th.sessions = append(th.sessions, &sess)
 	return id, nil
 }
 
-func (cr *thread) start() {
+func (th *thread) start() {
 	for {
-		if len(cr.sessions) == 0 {
+		if len(th.sessions) == 0 {
 			time.Sleep(10 * time.Second)
 		}
-		for i := range cr.sessions {
-			if cr.sessions[i].Status.Status == FinishedStatus {
+		for i := range th.sessions {
+			if th.sessions[i].Status.Status == FinishedStatus {
 				continue
 			}
-			cr.proceedSession(cr.sessions[i])
-			if i == (len(cr.sessions) - 1) {
+			th.proceedSession(th.sessions[i])
+			if i == (len(th.sessions) - 1) {
 				i = 0
 			}
 		}
 	}
 }
 
-func (cr *thread) proceedSession(sess *Session) {
-	for j := range cr.workers {
-		cr.workers[j].paramsCh <- sess.Params
+func (th *thread) proceedSession(sess *Session) {
+	for j := range th.workers {
+		th.workers[j].paramsCh <- sess.Params
 	}
 	resEntities := make([]string, len(sess.Params.Locations))
 	for i := range sess.Params.Locations {
@@ -80,11 +82,11 @@ func (cr *thread) proceedSession(sess *Session) {
 	sess.Status.FinishTimestamp = sess.Params.FinishTimestamp
 	for len(resEntities) > 0 {
 		c := 0
-		go cr.putEntities(sess, resEntities)
+		go th.putEntities(sess, resEntities)
 		resEntities = make([]string, 0, len(sess.Params.Locations))
 		for c < l {
 			select {
-			case e := <-cr.outCh:
+			case e := <-th.outCh:
 				if !e.finished {
 					resEntities = append(resEntities, e.id)
 					if e.checkpoint != "" {
@@ -97,26 +99,26 @@ func (cr *thread) proceedSession(sess *Session) {
 					sess.Status.updateEntitiesLeft(-1)
 				}
 				c++
-			case d := <-cr.postsCh:
+			case d := <-th.postsCh:
 				if len(d) > 0 {
 					num += len(d)
 					if len(d) > 0 {
 						sess.Status.updatePostsCollected(len(d))
-						if cr.dataStorage != nil {
-							cr.sendPostsToDataStorage(d, sess.ID, sess.Params.CityID)
+						if th.dataStorage != nil {
+							th.sendPostsToDataStorage(d, sess.ID, sess.Params.CityID)
 						}
 					}
 				}
-			case l := <-cr.entitiesCh:
-				cr.dataStorage.PushLocations(context.Background(), sess.Params.CityID,
+			case l := <-th.entitiesCh:
+				th.dataStorage.PushLocations(context.Background(), sess.Params.CityID,
 					[]protodata.Location{convertToProtoLocation(l.(*data.Location))})
-			case d := <-cr.mediaCh:
-				saveMedia(sess.ID, d, cr.rootDir)
+			case d := <-th.mediaCh:
+				saveMedia(sess.ID, d, th.rootDir)
 			default:
 				time.Sleep(5 * time.Second)
 			}
 		}
-		sess.dump(cr.rootDir)
+		sess.dump(th.rootDir)
 		l = len(resEntities)
 		unilog.Logger().Info("session processed", zap.String("id", sess.ID),
 			zap.Int("entities left", sess.Status.EntitiesLeft),
@@ -127,13 +129,13 @@ func (cr *thread) proceedSession(sess *Session) {
 	sess.Params.FinishTimestamp = s
 	sess.Params.Checkpoints = map[string]string{}
 	sess.Status.PostsCollected = 0
-	sess.dump(cr.rootDir)
+	sess.dump(th.rootDir)
 }
 
-func (cr *thread) putEntities(sess *Session, cur []string) {
+func (th *thread) putEntities(sess *Session, cur []string) {
 	for _, id := range cur {
 		cp := sess.Params.Checkpoints[id]
-		cr.inCh <- entity{id: id, checkpoint: cp}
+		th.inCh <- entity{id: id, checkpoint: cp}
 	}
 }
 
@@ -155,7 +157,7 @@ func saveMedia(sessionID string, media []data.Media, dir string) {
 	}
 }
 
-func (cr *thread) sendPostsToDataStorage(posts []data.Post, sessionID, cityID string) error {
+func (th *thread) sendPostsToDataStorage(posts []data.Post, sessionID, cityID string) error {
 	if len(posts) == 0 {
 		unilog.Logger().Info("attempt to send an empty array of posts to data-storage")
 		return nil
@@ -164,7 +166,7 @@ func (cr *thread) sendPostsToDataStorage(posts []data.Post, sessionID, cityID st
 	for _, post := range posts {
 		protoPosts = append(protoPosts, convertToProtoPost(post))
 	}
-	err := cr.dataStorage.PushPosts(context.Background(), cityID, protoPosts)
+	err := th.dataStorage.PushPosts(context.Background(), cityID, protoPosts)
 	if err != nil {
 		unilog.Logger().Error("error while sending to data storage", zap.Error(err))
 		return err
