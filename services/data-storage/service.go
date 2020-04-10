@@ -101,6 +101,11 @@ type Service interface {
 	//		which have time between startTime and finishTime, their posts and nil error, otherwise, empty array and some error
 	PullEventsWithIDs(ctx context.Context, cityId string, startTime, finishTime int64) ([]data.Event, error)
 
+	// input: context, id of the city, array of ids of events
+	// output: error
+	// result: if events deleted successfully, will return nil error
+	DeleteEvents(ctx context.Context, cityId string, ids []int64) error
+
 	// input: context, id of the city, array of locations - Instagram's locations for this city
 	// output: error
 	// if all locations were successfully added to the city's db, will return nil error, otherwise statuses and some error
@@ -171,6 +176,10 @@ func (s basicService) PullEventsTags(ctx context.Context, cityId string, tags []
 
 func (s basicService) PullEventsWithIDs(ctx context.Context, cityId string, startTime, finishTime int64) ([]data.Event, error) {
 	return s.db.PullEventsWithIDs(ctx, cityId, startTime, finishTime)
+}
+
+func (s basicService) DeleteEvents(ctx context.Context, cityId string, ids []int64) error {
+	return s.db.DeleteEvents(ctx, cityId, ids)
 }
 
 func (s basicService) PushLocations(ctx context.Context, cityId string, locations []data.Location) error {

@@ -179,6 +179,18 @@ func (mw loggingMiddleware) PullEventsWithIDs(ctx context.Context, cityId string
 	return
 }
 
+func (mw loggingMiddleware) DeleteEvents(ctx context.Context, cityId string, ids []int64) (err error) {
+	defer func(begin time.Time) {
+		mw.logger.Info("delete events",
+			zap.Any("ids", ids),
+			zap.String("city id", cityId),
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	err = mw.next.DeleteEvents(ctx, cityId, ids)
+	return
+}
+
 func (mw loggingMiddleware) PushLocations(ctx context.Context, cityId string, locations []data.Location) (err error) {
 	defer func(begin time.Time) {
 		mw.logger.Info("push locations",

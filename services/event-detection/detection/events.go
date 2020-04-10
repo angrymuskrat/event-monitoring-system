@@ -11,7 +11,7 @@ import (
 
 const closeDistanse = 0.005
 
-func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints int, filterTags map[string]bool, start, finish int64, existingEvents []data.Event) (newEvents, updatedEvents []data.Event, found bool) {
+func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints int, filterTags map[string]bool, start, finish int64, existingEvents []data.Event) (newEvents, updatedEvents, deletedEvents []data.Event, found bool) {
 	candGrid, wasFound := findCandidates(&histGrid, posts, maxPoints)
 	if !wasFound {
 		return
@@ -32,6 +32,9 @@ func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints int, fi
 		}
 		if existingEvent.status == updatedEventStatus {
 			updatedEvents = append(updatedEvents, existingEvent.event)
+		}
+		if existingEvent.status == deletedEventStatus {
+			deletedEvents = append(deletedEvents, existingEvent.event)
 		}
 	}
 	if len(newEvents)+len(updatedEvents) != 0 {
@@ -226,95 +229,200 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, topLeft, bott
 		return
 	}
 
+	updatedEventIndex := -1
 	for i, oldEvent := range *existingEvents {
 		if oldEvent.event.Center.Lat > bottomRight.Y-closeDistanse &&
 			oldEvent.event.Center.Lat < topLeft.Y+closeDistanse &&
 			oldEvent.event.Center.Lon > topLeft.X-closeDistanse &&
-			oldEvent.event.Center.Lon < bottomRight.X+closeDistanse {
+			oldEvent.event.Center.Lon < bottomRight.X+closeDistanse &&
+			oldEvent.status != deletedEventStatus &&
+			oldEvent.status != ignoredEventStatus {
+		NEXTEVENT:
 			for _, oldTag := range oldEvent.event.Tags {
 				for newTag := range e.tags {
 					if oldTag == newTag {
-						for _, oldPostCode := range oldEvent.event.PostCodes {
-							if _, ok := e.posts[oldPostCode]; !ok {
-								for _, existingEventsPost := range oldEvent.event.Posts {
-									if existingEventsPost.Shortcode == oldPostCode {
-										e.posts[oldPostCode] = *existingEventsPost
-										break
-									}
-								}
-							} else {
-								for _, oldPostTag := range e.postTags[oldPostCode] {
-									for _, oldEventTag := range oldEvent.event.Tags {
-										if oldEventTag == oldPostTag {
-											e.tags[oldPostTag]--
-											break
-										}
-									}
-								}
-							}
-						}
-
-						for i, ot := range oldEvent.event.Tags {
-							if _, ok := e.tags[ot]; ok {
-								e.tags[ot] += int(oldEvent.event.TagsCount[i])
-							} else {
-								e.tags[ot] = int(oldEvent.event.TagsCount[i])
-							}
-						}
-
-						postCodes := []string{}
-						for k := range e.posts {
-							postCodes = append(postCodes, k)
-						}
-						tags, counts := sortTags(e.tags)
-
-						var status eventStatusType
-						if oldEvent.status == newEventStatus {
-							status = newEventStatus
+						if updatedEventIndex == -1 {
+							event := combineHolderAndEvent(e, oldEvent, finish)
+							(*existingEvents)[i] = event
+							updatedEventIndex = i
 						} else {
-							status = updatedEventStatus
+							event := combineTwoEvents((*existingEvents)[updatedEventIndex], oldEvent)
+
+							if oldEvent.status == newEventStatus {
+								(*existingEvents)[i].status = ignoredEventStatus
+								(*existingEvents)[updatedEventIndex] = event
+							} else {
+								if oldEvent.event.Start < (*existingEvents)[updatedEventIndex].event.Start {
+									(*existingEvents)[updatedEventIndex].status = deletedEventStatus
+									(*existingEvents)[i] = event
+									updatedEventIndex = i
+								} else {
+									(*existingEvents)[i].status = deletedEventStatus
+									(*existingEvents)[updatedEventIndex] = event
+								}
+							}
 						}
-						event := eventWithStatus{
-							event: data.Event{
-								ID:        oldEvent.event.ID,
-								Center:    eventCenter(e.posts),
-								PostCodes: postCodes,
-								Tags:      tags,
-								TagsCount: counts,
-								Title:     tags[0],
-								Start:     oldEvent.event.Start,
-								Finish:    finish,
-							},
-							status: status,
-						}
-						(*existingEvents)[i] = event
-						return
+						break NEXTEVENT
 					}
 				}
 			}
 		}
 	}
 
+	if updatedEventIndex == -1 {
+		postCodes := []string{}
+		posts := []*data.Post{}
+		for k, v := range e.posts {
+			postCodes = append(postCodes, k)
+			posts = append(posts, &v)
+		}
+		tags, counts := sortTags(e.tags)
+
+		event := eventWithStatus{
+			event: data.Event{
+				Center:    eventCenter(e.posts),
+				PostCodes: postCodes,
+				Posts:     posts,
+				Tags:      tags,
+				TagsCount: counts,
+				Title:     tags[0],
+				Start:     start,
+				Finish:    finish,
+			},
+			status: newEventStatus,
+		}
+		*existingEvents = append(*existingEvents, event)
+	}
+
+}
+
+func combineHolderAndEvent(e eventHolder, oldEvent eventWithStatus, finish int64) eventWithStatus {
+	for _, oldPostCode := range oldEvent.event.PostCodes {
+		if _, ok := e.posts[oldPostCode]; !ok {
+			for _, existingEventsPost := range oldEvent.event.Posts {
+				if existingEventsPost.Shortcode == oldPostCode {
+					e.posts[oldPostCode] = *existingEventsPost
+					break
+				}
+			}
+		} else {
+			for _, oldPostTag := range e.postTags[oldPostCode] {
+				for _, oldEventTag := range oldEvent.event.Tags {
+					if oldEventTag == oldPostTag {
+						e.tags[oldPostTag]--
+						break
+					}
+				}
+			}
+		}
+	}
+
+	for i, ot := range oldEvent.event.Tags {
+		if _, ok := e.tags[ot]; ok {
+			e.tags[ot] += int(oldEvent.event.TagsCount[i])
+		} else {
+			e.tags[ot] = int(oldEvent.event.TagsCount[i])
+		}
+	}
+
 	postCodes := []string{}
-	for k := range e.posts {
+	posts := []*data.Post{}
+	for k, v := range e.posts {
 		postCodes = append(postCodes, k)
+		post := v
+		posts = append(posts, &post)
 	}
 	tags, counts := sortTags(e.tags)
 
-	event := eventWithStatus{
+	var status eventStatusType
+	if oldEvent.status == newEventStatus {
+		status = newEventStatus
+	} else {
+		status = updatedEventStatus
+	}
+	return eventWithStatus{
 		event: data.Event{
+			ID:        oldEvent.event.ID,
 			Center:    eventCenter(e.posts),
 			PostCodes: postCodes,
+			Posts:     posts,
 			Tags:      tags,
 			TagsCount: counts,
 			Title:     tags[0],
-			Start:     start,
+			Start:     oldEvent.event.Start,
 			Finish:    finish,
 		},
-		status: newEventStatus,
+		status: status,
 	}
-	*existingEvents = append(*existingEvents, event)
+}
 
+func combineTwoEvents(event1, event2 eventWithStatus) eventWithStatus {
+	var resultEvent eventWithStatus
+	if event1.status == newEventStatus && event2.status == newEventStatus {
+		resultEvent.status = newEventStatus
+	} else {
+		resultEvent.status = updatedEventStatus
+	}
+
+	if event2.event.Start < event1.event.Start {
+		resultEvent.event.ID = event2.event.ID
+		resultEvent.event.Start = event2.event.Start
+	} else {
+		resultEvent.event.ID = event1.event.ID
+		resultEvent.event.Start = event1.event.Start
+	}
+
+	if event2.event.Finish > event1.event.Finish {
+		resultEvent.event.Finish = event2.event.Finish
+	} else {
+		resultEvent.event.Finish = event1.event.Finish
+	}
+
+	mapPosts := make(map[string]data.Post)
+	var postcodes []string
+	var posts []*data.Post
+	for _, postcode := range event1.event.PostCodes {
+		postcodes = append(postcodes, postcode)
+		for _, post := range event1.event.Posts {
+			if post.Shortcode == postcode {
+				posts = append(posts, post)
+				mapPosts[postcode] = *post
+				break
+			}
+		}
+	}
+	for _, postcode := range event2.event.PostCodes {
+		if _, ok := mapPosts[postcode]; !ok {
+			postcodes = append(postcodes, postcode)
+			for _, post := range event2.event.Posts {
+				if post.Shortcode == postcode {
+					posts = append(posts, post)
+					mapPosts[postcode] = *post
+					break
+				}
+			}
+		}
+	}
+	resultEvent.event.PostCodes = postcodes
+	resultEvent.event.Posts = posts
+	resultEvent.event.Center = eventCenter(mapPosts)
+
+	tagsMap := make(map[string]int)
+	for i, tag := range event1.event.Tags {
+		tagsMap[tag] = int(event1.event.TagsCount[i])
+	}
+	for i, tag := range event2.event.Tags {
+		if _, ok := tagsMap[tag]; ok {
+			tagsMap[tag] += int(event2.event.TagsCount[i])
+		} else {
+			tagsMap[tag] = int(event2.event.TagsCount[i])
+		}
+	}
+	tags, counts := sortTags(tagsMap)
+	resultEvent.event.Tags = tags
+	resultEvent.event.TagsCount = counts
+	resultEvent.event.Title = tags[0]
+	return resultEvent
 }
 
 func sortTags(tags map[string]int) ([]string, []int64) {

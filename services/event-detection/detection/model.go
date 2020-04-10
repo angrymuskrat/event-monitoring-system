@@ -8,6 +8,8 @@ const (
 	oldEventStatus eventStatusType = iota
 	newEventStatus
 	updatedEventStatus
+	deletedEventStatus
+	ignoredEventStatus
 )
 
 type eventWithStatus struct {

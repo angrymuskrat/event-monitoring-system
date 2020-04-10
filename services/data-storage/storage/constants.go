@@ -2,6 +2,7 @@ package storage
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
@@ -212,6 +213,27 @@ func MakeSelectEventPosts(posts []string) string {
 	}
 
 	return fmt.Sprintf(SelectEventPosts, postsStr)
+}
+
+const DeleteEvents = `
+	DELETE FROM events
+	WHERE id IN %v;
+`
+
+func MakeDeleteEvents(ids []int64) string {
+	idsStr := "("
+	if len(ids) > 0 {
+		for i, id := range ids {
+			idStr := strconv.FormatInt(id, 10)
+			if i != len(ids)-1 {
+				idsStr += "'" + idStr + "', "
+			} else {
+				idsStr += "'" + idStr + "')"
+			}
+		}
+	}
+
+	return fmt.Sprintf(DeleteEvents, idsStr)
 }
 
 const CreatePostsTimelineView = `

@@ -25,6 +25,7 @@ service DataStorage {
     rpc PullEvents (PullEventsRequest) returns (PullEventsReply) {}
     rpc PullEventsTags (PullEventsTagsRequest) returns (PullEventsTagsReply) {}
     rpc PullEventsWithIDs (PullEventsWithIDsRequest) returns (PullEventsWithIDsReply) {}
+    rpc DeleteEvents (DeleteEventsRequest) returns (DeleteEventsReply) {}
 
     rpc PushLocations (PushLocationsRequest) returns (PushLocationsReply) {}
     rpc PullLocations (PullLocationsRequest) returns (PullLocationsReply) {}
@@ -172,6 +173,15 @@ message PullEventsWithIDsRequest{
 message PullEventsWithIDsReply {
     repeated data.Event events = 1 [(gogoproto.nullable) = false];
     string err = 2;
+}
+
+message DeleteEventsRequest {
+    repeated int64 ids = 1 [(gogoproto.nullable) = false];
+    string cityId = 2;
+}
+
+message DeleteEventsReply {
+    string err = 1;
 }
 
 // messages for pull and push locations

@@ -22,6 +22,7 @@ type grpcServer struct {
 	pullEvents        grpctransport.Handler
 	pullEventsTags    grpctransport.Handler
 	pullEventsWithIDs grpctransport.Handler
+	deleteEvents      grpctransport.Handler
 	pushLocations     grpctransport.Handler
 	pullLocations     grpctransport.Handler
 }
@@ -97,6 +98,11 @@ func NewGRPCServer(svc Service) proto.DataStorageServer {
 			makePullEventsWithIDsEndpoint(svc),
 			decodeGRPCPullEventsWithIDsRequest,
 			encodeGRPCPullEventsWithIDsResponse,
+		),
+		deleteEvents: grpctransport.NewServer(
+			makeDeleteEventsEndpoint(svc),
+			decodeGRPCDeleteEventsRequest,
+			encodeGRPCDeleteEventsResponse,
 		),
 		pushLocations: grpctransport.NewServer(
 			makePushLocationsEndpoint(svc),
@@ -226,6 +232,14 @@ func (s *grpcServer) PullEventsWithIDs(ctx context.Context, req *proto.PullEvent
 		return nil, err
 	}
 	return rep.(*proto.PullEventsWithIDsReply), nil
+}
+
+func (s *grpcServer) DeleteEvents(ctx context.Context, req *proto.DeleteEventsRequest) (*proto.DeleteEventsReply, error) {
+	_, rep, err := s.deleteEvents.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*proto.DeleteEventsReply), nil
 }
 
 func (s *grpcServer) PushLocations(ctx context.Context, req *proto.PushLocationsRequest) (*proto.PushLocationsReply, error) {

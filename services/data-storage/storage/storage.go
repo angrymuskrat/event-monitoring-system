@@ -24,13 +24,14 @@ type Storage struct {
 var (
 	ErrDBTransaction   = errors.New("error with transaction")
 	ErrPushPosts       = errors.New("one or more posts wasn't pushed")
-	ErrSelectPosts     = errors.New("don't be able to return posts")
-	ErrPullGrid        = errors.New("don't be able to return grid")
-	ErrDuplicatedKey   = errors.New("duplicated id, object hadn't saved to db")
-	ErrPushEvents      = errors.New("do not be able to insert events")
-	ErrSelectEvents    = errors.New("don't be able to return events")
-	ErrPushLocations   = errors.New("do not be able to insert locations")
-	ErrSelectLocations = errors.New("don't be able to return locations")
+	ErrSelectPosts     = errors.New("can't return posts")
+	ErrPullGrid        = errors.New("can't return grid")
+	ErrDuplicatedKey   = errors.New("duplicated id, object wasn't saved to db")
+	ErrPushEvents      = errors.New("can't insert events")
+	ErrSelectEvents    = errors.New("can't return events")
+	ErrDeleteEvents    = errors.New("can't delete events")
+	ErrPushLocations   = errors.New("can't insert locations")
+	ErrSelectLocations = errors.New("can't return locations")
 )
 
 func New(ctx context.Context, confPath string) (*Storage, error) {
@@ -669,6 +670,21 @@ func (s *Storage) PullEventsWithIDs(ctx context.Context, cityId string, startTim
 		postsRows.Close()
 	}
 	return
+}
+
+func (s *Storage) DeleteEvents(ctx context.Context, cityId string, ids []int64) error {
+	conn, err := s.getCityConn(ctx, cityId)
+	if err != nil {
+		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
+		return err
+	}
+	statement := MakeDeleteEvents(ids)
+	_, err = conn.Exec(ctx, statement)
+	if err != nil {
+		unilog.Logger().Error("error in deleting events", zap.Error(err))
+		return ErrDeleteEvents
+	}
+	return nil
 }
 
 func (s *Storage) PushLocations(ctx context.Context, cityId string, locations []data.Location) (err error) {

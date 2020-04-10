@@ -28,6 +28,7 @@ type GrpcService struct {
 	pullEvents        endpoint.Endpoint
 	pullEventsTags    endpoint.Endpoint
 	pullEventsWithIDs endpoint.Endpoint
+	deleteEvents      endpoint.Endpoint
 	pushLocations     endpoint.Endpoint
 	pullLocations     endpoint.Endpoint
 }
@@ -198,6 +199,18 @@ func (svc GrpcService) PullEventsWithIDs(ctx context.Context, cityId string, sta
 		return nil, errors.New(response.Err)
 	}
 	return response.Events, nil
+}
+
+func (svc GrpcService) DeleteEvents(ctx context.Context, cityId string, ids []int64) error {
+	resp, err := svc.deleteEvents(ctx, proto.DeleteEventsRequest{CityId: cityId, Ids: ids})
+	if err != nil {
+		return err
+	}
+	response := resp.(proto.DeleteEventsReply)
+	if response.Err != "" {
+		return errors.New(response.Err)
+	}
+	return nil
 }
 
 func (svc GrpcService) PushLocations(ctx context.Context, cityId string, locations []data.Location) error {
@@ -379,6 +392,17 @@ func NewGRPCClient(conn *grpc.ClientConn) GrpcService {
 		Name:    "PullEventsWithIDs",
 		Timeout: TimeWaitingClient,
 	}))(pullEventsWithIDsEndpoint)
+
+	deleteEventsEndpoint := grpctransport.NewClient(
+		conn, "proto.DataStorage", "DeleteEvents",
+		encodeGRPCDeleteEventsRequest,
+		decodeGRPCDeleteEventsResponse,
+		proto.DeleteEventsReply{},
+	).Endpoint()
+	svc.deleteEvents = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+		Name:    "DeleteEvents",
+		Timeout: TimeWaitingClient,
+	}))(deleteEventsEndpoint)
 
 	pushLocationsEndpoint := grpctransport.NewClient(
 		conn, "proto.DataStorage", "PushLocations",

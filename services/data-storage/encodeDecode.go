@@ -286,6 +286,26 @@ func decodeGRPCPullEventsWithIDsResponse(_ context.Context, grpcReply interface{
 	return *reply, nil
 }
 
+func encodeGRPCDeleteEventsRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(proto.DeleteEventsRequest)
+	return &req, nil
+}
+
+func decodeGRPCDeleteEventsRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.DeleteEventsRequest)
+	return *req, nil
+}
+
+func encodeGRPCDeleteEventsResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.DeleteEventsReply)
+	return &resp, nil
+}
+
+func decodeGRPCDeleteEventsResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.DeleteEventsReply)
+	return *reply, nil
+}
+
 func encodeGRPCPushLocationsRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(proto.PushLocationsRequest)
 	return &req, nil

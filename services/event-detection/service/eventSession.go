@@ -96,23 +96,38 @@ func (es *eventSession) detectEvents() {
 		}
 
 		filterTags := filterTags(es.eventReq.FilterTags)
-		newEvents, updatedEvents, found := detection.FindEvents(grid, posts, es.cfg.MaxPoints, filterTags, startTime, finishTime, oldEvents)
+		newEvents, updatedEvents, deletedEvents, found := detection.FindEvents(grid, posts, es.cfg.MaxPoints, filterTags, startTime, finishTime, oldEvents)
 		if found {
-			unilog.Logger().Info("found new events", zap.String("session", es.id),
-				zap.Int("num", len(newEvents)), zap.String("timestamp", t[0].String()))
-			unilog.Logger().Info("updated events", zap.String("session", es.id),
-				zap.Int("num", len(updatedEvents)), zap.String("timestamp", t[0].String()))
+			unilog.Logger().Info("found changed events", zap.String("session", es.id),
+				zap.Int("num of new events", len(newEvents)), zap.Int("num of updated events", len(updatedEvents)),
+				zap.Int("num of deleted events", len(deletedEvents)), zap.String("timestamp", t[0].String()))
 
-			err = cl.PushEvents(context.Background(), es.eventReq.CityId, newEvents)
-			if err != nil {
-				unilog.Logger().Error("unable to push events to data storage", zap.Error(err))
-				return
+			if len(newEvents) > 0 {
+				err = cl.PushEvents(context.Background(), es.eventReq.CityId, newEvents)
+				if err != nil {
+					unilog.Logger().Error("unable to push events to data storage", zap.Error(err))
+					return
+				}
 			}
 
-			err = cl.UpdateEvents(context.Background(), es.eventReq.CityId, updatedEvents)
-			if err != nil {
-				unilog.Logger().Error("unable to update events in data storage", zap.Error(err))
-				return
+			if len(updatedEvents) > 0 {
+				err = cl.UpdateEvents(context.Background(), es.eventReq.CityId, updatedEvents)
+				if err != nil {
+					unilog.Logger().Error("unable to update events in data storage", zap.Error(err))
+					return
+				}
+			}
+
+			if len(deletedEvents) > 0 {
+				ids := make([]int64, len(deletedEvents))
+				for i, deletedEvent := range deletedEvents {
+					ids[i] = deletedEvent.ID
+				}
+				err = cl.DeleteEvents(context.Background(), es.eventReq.CityId, ids)
+				if err != nil {
+					unilog.Logger().Error("unable to delete events in data storage", zap.Error(err))
+					return
+				}
 			}
 		} else {
 			unilog.Logger().Info("no events found", zap.String("session", es.id), zap.String("timestamp", t[0].String()), zap.Error(err))

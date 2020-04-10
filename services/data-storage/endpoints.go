@@ -174,6 +174,18 @@ func makePullEventsWithIDsEndpoint(s Service) endpoint.Endpoint {
 	}
 }
 
+func makeDeleteEventsEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(proto.DeleteEventsRequest)
+		err = s.DeleteEvents(ctx, req.CityId, req.Ids)
+		var msg string
+		if err != nil {
+			msg = err.Error()
+		}
+		return proto.DeleteEventsReply{Err: msg}, nil
+	}
+}
+
 func makePushLocationsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(proto.PushLocationsRequest)
