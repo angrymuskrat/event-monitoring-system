@@ -20,6 +20,7 @@ import (
 
 type worker struct {
 	id         int
+	tid        int
 	inCh       chan entity
 	outCh      chan entity
 	postsCh    chan []data.Post
@@ -161,7 +162,7 @@ func (w *worker) makeRequest(request string, useTor bool) ([]byte, error) {
 		return nil, err
 	}
 	if resp.StatusCode == 500 {
-		return w.cl.makeRequest(request)
+		return w.cl.makeRequest(request, w.tid)
 	}
 	if resp.StatusCode == 404 {
 		msg := "entity page was not found"

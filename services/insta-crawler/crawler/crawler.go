@@ -32,6 +32,7 @@ func NewCrawler(confPath string) (*Crawler, error) {
 	}
 	for gi, g := range conf.Groups {
 		t := thread{
+			id:          gi,
 			sessions:    []*Session{},
 			inCh:        make(chan entity),
 			outCh:       make(chan entity),
@@ -54,6 +55,7 @@ func NewCrawler(confPath string) (*Crawler, error) {
 		for i, p := range g.TorPorts {
 			t.workers[i] = &worker{
 				id:         i,
+				tid:        gi,
 				inCh:       t.inCh,
 				outCh:      t.outCh,
 				postsCh:    t.postsCh,

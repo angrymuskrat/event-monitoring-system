@@ -31,7 +31,7 @@ func newClient(token string, sessionID string) *client {
 	}
 }
 
-func (cl *client) makeRequest(request string) ([]byte, error) {
+func (cl *client) makeRequest(request string, tid int) ([]byte, error) {
 	cl.mu.Lock()
 	defer cl.mu.Unlock()
 	req, err := http.NewRequest("GET", request, nil)
@@ -62,11 +62,13 @@ func (cl *client) makeRequest(request string) ([]byte, error) {
 	for _, c := range resp.Cookies() {
 		if strings.ToLower(c.Name) == "csrftoken" {
 			cl.token = c.Value
-			unilog.Logger().Info("updated csrf token", zap.String("value", c.Value))
+			unilog.Logger().Info("updated csrf token", zap.String("value", c.Value),
+				zap.Int("thread", tid))
 		}
 		if strings.ToLower(c.Name) == "sessionid" {
 			cl.sessionID = c.Value
-			unilog.Logger().Info("updated session ID", zap.String("value", c.Value))
+			unilog.Logger().Info("updated session ID", zap.String("value", c.Value),
+				zap.Int("thread", tid))
 		}
 	}
 	body, err := ioutil.ReadAll(resp.Body)

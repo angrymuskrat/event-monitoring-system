@@ -16,6 +16,7 @@ import (
 )
 
 type thread struct {
+	id          int
 	mu          sync.Mutex
 	sessions    []*Session
 	workers     []*worker
