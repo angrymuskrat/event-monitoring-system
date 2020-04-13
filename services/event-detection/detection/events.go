@@ -229,6 +229,18 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, topLeft, bott
 		return
 	}
 
+	same := true
+	n := len(e.posts)
+	for _, v := range e.tags {
+		if v != n {
+			same = false
+			break
+		}
+	}
+	if same {
+		return
+	}
+
 	updatedEventIndex := -1
 	for i, oldEvent := range *existingEvents {
 		if oldEvent.event.Center.Lat > bottomRight.Y-closeDistanse &&
