@@ -111,10 +111,27 @@ func eventHolders(d []convtree.Point, filterTags map[string]bool) []eventHolder 
 	evHolders := []eventHolder{}
 	for _, p := range d {
 		post := p.Content.(data.Post)
+
 		tags := extractTags(post, filterTags)
 		if len(tags) == 0 {
 			continue
 		}
+		var duplicate bool
+		for _, evHolder := range evHolders {
+			for _, ehp := range evHolder.posts {
+				if post.Caption == ehp.Caption && tags[0] != post.Caption {
+					duplicate = true
+					break
+				}
+			}
+			if duplicate {
+				break
+			}
+		}
+		if duplicate {
+			continue
+		}
+
 		h := eventHolder{
 			users:    map[string]bool{},
 			posts:    map[string]data.Post{},
@@ -226,18 +243,6 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, topLeft, bott
 		return
 	}
 	if len(e.users) < maxPoints/2 {
-		return
-	}
-
-	same := true
-	n := len(e.posts)
-	for _, v := range e.tags {
-		if v != n {
-			same = false
-			break
-		}
-	}
-	if same {
 		return
 	}
 
