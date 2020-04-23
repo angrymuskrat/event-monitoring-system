@@ -58,6 +58,9 @@ func splitGrid(tree *convtree.ConvTree, maxPoints int) {
 
 func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bool, start, finish int64, existingEvents *[]eventWithStatus) {
 	if tree.IsLeaf {
+		for _, baselineTag := range tree.BaselineTags {
+			filterTags[baselineTag] = true
+		}
 		if len(tree.Points) >= maxPoints {
 			evHolders := eventHolders(tree.Points, filterTags)
 			for _, e := range evHolders {

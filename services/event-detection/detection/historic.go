@@ -1,7 +1,9 @@
 package detection
 
 import (
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
@@ -20,18 +22,19 @@ const (
 )
 
 func HistoricGrid(data []data.Post, topLeft, bottomRight data.Point, maxPoints int, tz string, gridSize float64) (convtree.ConvTree, error) {
-	posts, numDays, err := splitPosts(data, tz, topLeft, gridSize)
+	posts, tags, numDays, err := splitPosts(data, tz, topLeft, gridSize)
 	if err != nil {
 		unilog.Logger().Error("unable to split posts", zap.Error(err))
 		return convtree.ConvTree{}, err
 	}
 	averagedPosts := map[convtree.Point]float64{}
+	averagedTags := map[convtree.Point][]string{}
 	for coord, data := range posts {
 		if len(data) > 0 {
-			averagedPosts[coord] = filterPosts(data, numDays)
+			averagedPosts[coord], averagedTags[coord] = filterPosts(data, tags[coord], numDays)
 		}
 	}
-	tree, err := buildGrid(averagedPosts, topLeft, bottomRight, maxPoints)
+	tree, err := buildGrid(averagedPosts, averagedTags, topLeft, bottomRight, maxPoints)
 	if err != nil {
 		unilog.Logger().Error("unable to build historic grid", zap.Error(err))
 		return convtree.ConvTree{}, err
@@ -40,7 +43,7 @@ func HistoricGrid(data []data.Post, topLeft, bottomRight data.Point, maxPoints i
 	return tree, nil
 }
 
-func buildGrid(postData map[convtree.Point]float64, topLeft, bottomRight data.Point, maxPoints int) (convtree.ConvTree, error) {
+func buildGrid(postData map[convtree.Point]float64, tags map[convtree.Point][]string, topLeft, bottomRight data.Point, maxPoints int) (convtree.ConvTree, error) {
 	points := []convtree.Point{}
 	for coord, data := range postData {
 		numToAdd := int(data)
@@ -48,9 +51,10 @@ func buildGrid(postData map[convtree.Point]float64, topLeft, bottomRight data.Po
 			continue
 		}
 		point := convtree.Point{
-			X:      coord.X,
-			Y:      coord.Y,
-			Weight: numToAdd,
+			X:       coord.X,
+			Y:       coord.Y,
+			Weight:  numToAdd,
+			Content: tags[coord],
 		}
 		points = append(points, point)
 	}
@@ -71,7 +75,7 @@ func buildGrid(postData map[convtree.Point]float64, topLeft, bottomRight data.Po
 	return tree, err
 }
 
-func filterPosts(posts map[string]int, numDays int) float64 {
+func filterPosts(posts map[string]int, tags map[string][]string, numDays int) (float64, []string) {
 	data := []float64{}
 	for _, v := range posts {
 		data = append(data, float64(v))
@@ -85,29 +89,32 @@ func filterPosts(posts map[string]int, numDays int) float64 {
 		std := stat.StdDev(data, nil)
 		maxValue := avg + 2*std
 		res := []float64{}
-		for _, v := range posts {
+		resultTags := []string{}
+		for k, v := range posts {
 			val := float64(v)
 			if val <= maxValue {
 				res = append(res, val)
+				resultTags = append(resultTags, tags[k]...)
 			}
 		}
 		mean := 0.0
 		if len(res) > 0 {
 			mean = stat.Mean(res, nil)
 		}
-		return mean
+		return mean, resultTags
 	} else {
-		return data[0]
+		return data[0], nil
 	}
 }
 
-func splitPosts(data []data.Post, tz string, topLeft data.Point, gridSize float64) (map[convtree.Point]map[string]int, int, error) {
+func splitPosts(data []data.Post, tz string, topLeft data.Point, gridSize float64) (map[convtree.Point]map[string]int, map[convtree.Point]map[string][]string, int, error) {
 	posts := map[convtree.Point]map[string]int{}
+	tags := map[convtree.Point]map[string][]string{}
 	uniqueDays := map[string]string{}
 	loc, err := time.LoadLocation(tz)
 	if err != nil {
 		unilog.Logger().Error("unable to load timezone", zap.Error(err))
-		return nil, 0, err
+		return nil, nil, 0, err
 	}
 	for _, post := range data {
 		postGridLat := topLeft.Lat + float64(int((post.Lat-topLeft.Lat)/gridSize))*gridSize
@@ -115,6 +122,9 @@ func splitPosts(data []data.Post, tz string, topLeft data.Point, gridSize float6
 		postGridPos := convtree.Point{X: postGridLon, Y: postGridLat}
 		if _, ok := posts[postGridPos]; !ok {
 			posts[postGridPos] = map[string]int{}
+		}
+		if _, ok := tags[postGridPos]; !ok {
+			tags[postGridPos] = map[string][]string{}
 		}
 		postTime := time.Unix(post.Timestamp, 0)
 		postTime = postTime.In(loc)
@@ -124,9 +134,22 @@ func splitPosts(data []data.Post, tz string, topLeft data.Point, gridSize float6
 			posts[postGridPos][postDate] = 0
 		}
 		posts[postGridPos][postDate]++
+		if _, ok := tags[postGridPos][postDate]; !ok {
+			tags[postGridPos][postDate] = []string{}
+		}
+		r, _ := regexp.Compile("#[a-zA-Z0-9а-яА-Я_]+")
+		hashtags := r.FindAllString(post.Caption, -1)
+		for i := range hashtags {
+			hashtags[i] = strings.ToLower(hashtags[i])
+		}
+		r, _ = regexp.Compile("@[a-zA-Z0-9а-яА-Я_]+")
+		usernames := r.FindAllString(post.Caption, -1)
+		userTags := append(hashtags, usernames...)
+		tags[postGridPos][postDate] = append(tags[postGridPos][postDate], userTags...)
+
 		if _, ok := uniqueDays[postDate]; !ok {
 			uniqueDays[postDate] = ""
 		}
 	}
-	return posts, len(uniqueDays), nil
+	return posts, tags, len(uniqueDays), nil
 }
