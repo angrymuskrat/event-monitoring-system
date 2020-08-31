@@ -266,7 +266,7 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, topLeft, bott
 							(*existingEvents)[i] = event
 							updatedEventIndex = i
 						} else {
-							event := combineTwoEvents((*existingEvents)[updatedEventIndex], oldEvent)
+							event := combineTwoEvents((*existingEvents)[updatedEventIndex], oldEvent, e.posts)
 
 							if oldEvent.status == newEventStatus {
 								(*existingEvents)[i].status = ignoredEventStatus
@@ -291,10 +291,8 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, topLeft, bott
 
 	if updatedEventIndex == -1 {
 		postCodes := []string{}
-		posts := []*data.Post{}
-		for k, v := range e.posts {
+		for k := range e.posts {
 			postCodes = append(postCodes, k)
-			posts = append(posts, &v)
 		}
 		tags, counts := sortTags(e.tags)
 
@@ -302,7 +300,6 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, topLeft, bott
 			event: data.Event{
 				Center:    eventCenter(e.posts),
 				PostCodes: postCodes,
-				Posts:     posts,
 				Tags:      tags,
 				TagsCount: counts,
 				Title:     tags[0],
@@ -317,15 +314,22 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, topLeft, bott
 }
 
 func combineHolderAndEvent(e eventHolder, oldEvent eventWithStatus, finish int64) eventWithStatus {
-	for _, oldPostCode := range oldEvent.event.PostCodes {
-		if _, ok := e.posts[oldPostCode]; !ok {
-			for _, existingEventsPost := range oldEvent.event.Posts {
-				if existingEventsPost.Shortcode == oldPostCode {
-					e.posts[oldPostCode] = *existingEventsPost
-					break
-				}
-			}
+
+	for i, ot := range oldEvent.event.Tags {
+		if _, ok := e.tags[ot]; ok {
+			e.tags[ot] += int(oldEvent.event.TagsCount[i])
 		} else {
+			e.tags[ot] = int(oldEvent.event.TagsCount[i])
+		}
+	}
+
+	postCodes := []string{}
+	mapPosts := make(map[string]bool)
+
+	for _, oldPostCode := range oldEvent.event.PostCodes {
+		postCodes = append(postCodes, oldPostCode)
+		mapPosts[oldPostCode] = true
+		if _, ok := e.posts[oldPostCode]; ok {
 			for _, oldPostTag := range e.postTags[oldPostCode] {
 				for _, oldEventTag := range oldEvent.event.Tags {
 					if oldEventTag == oldPostTag {
@@ -337,21 +341,15 @@ func combineHolderAndEvent(e eventHolder, oldEvent eventWithStatus, finish int64
 		}
 	}
 
-	for i, ot := range oldEvent.event.Tags {
-		if _, ok := e.tags[ot]; ok {
-			e.tags[ot] += int(oldEvent.event.TagsCount[i])
-		} else {
-			e.tags[ot] = int(oldEvent.event.TagsCount[i])
+	newPosts := make(map[string]data.Post)
+	for k, v := range e.posts {
+		if _, ok := mapPosts[k]; !ok {
+			postCodes = append(postCodes, k)
+			newPosts[k] = v
 		}
 	}
 
-	postCodes := []string{}
-	posts := []*data.Post{}
-	for k, v := range e.posts {
-		postCodes = append(postCodes, k)
-		post := v
-		posts = append(posts, &post)
-	}
+	newPostsCenter := eventCenter(newPosts)
 	tags, counts := sortTags(e.tags)
 
 	var status eventStatusType
@@ -363,9 +361,8 @@ func combineHolderAndEvent(e eventHolder, oldEvent eventWithStatus, finish int64
 	return eventWithStatus{
 		event: data.Event{
 			ID:        oldEvent.event.ID,
-			Center:    eventCenter(e.posts),
+			Center:    combineCenters(oldEvent.event.Center, newPostsCenter, len(oldEvent.event.PostCodes), len(newPosts)),
 			PostCodes: postCodes,
-			Posts:     posts,
 			Tags:      tags,
 			TagsCount: counts,
 			Title:     tags[0],
@@ -376,7 +373,7 @@ func combineHolderAndEvent(e eventHolder, oldEvent eventWithStatus, finish int64
 	}
 }
 
-func combineTwoEvents(event1, event2 eventWithStatus) eventWithStatus {
+func combineTwoEvents(event1, event2 eventWithStatus, posts map[string]data.Post) eventWithStatus {
 	var resultEvent eventWithStatus
 	if event1.status == newEventStatus && event2.status == newEventStatus {
 		resultEvent.status = newEventStatus
@@ -398,34 +395,28 @@ func combineTwoEvents(event1, event2 eventWithStatus) eventWithStatus {
 		resultEvent.event.Finish = event1.event.Finish
 	}
 
-	mapPosts := make(map[string]data.Post)
+	mapPosts := make(map[string]bool)
 	var postcodes []string
-	var posts []*data.Post
 	for _, postcode := range event1.event.PostCodes {
 		postcodes = append(postcodes, postcode)
-		for _, post := range event1.event.Posts {
-			if post.Shortcode == postcode {
-				posts = append(posts, post)
-				mapPosts[postcode] = *post
-				break
-			}
-		}
+		mapPosts[postcode] = true
 	}
+
+	center2 := event2.event.Center
 	for _, postcode := range event2.event.PostCodes {
 		if _, ok := mapPosts[postcode]; !ok {
 			postcodes = append(postcodes, postcode)
-			for _, post := range event2.event.Posts {
-				if post.Shortcode == postcode {
-					posts = append(posts, post)
-					mapPosts[postcode] = *post
-					break
+		} else {
+			if _, ok := posts[postcode]; ok {
+				center2 = data.Point{
+					Lat: (event2.event.Center.Lat*float64(len(event2.event.PostCodes)) - posts[postcode].Lat) / (float64(len(event2.event.PostCodes)) - 1),
+					Lon: (event2.event.Center.Lon*float64(len(event2.event.PostCodes)) - posts[postcode].Lon) / (float64(len(event2.event.PostCodes)) - 1),
 				}
 			}
 		}
 	}
 	resultEvent.event.PostCodes = postcodes
-	resultEvent.event.Posts = posts
-	resultEvent.event.Center = eventCenter(mapPosts)
+	resultEvent.event.Center = combineCenters(event1.event.Center, center2, len(event1.event.PostCodes), len(event2.event.PostCodes))
 
 	tagsMap := make(map[string]int)
 	for i, tag := range event1.event.Tags {
@@ -495,6 +486,13 @@ func eventCenter(posts map[string]data.Post) data.Point {
 	return data.Point{
 		Lat: lat,
 		Lon: lon,
+	}
+}
+
+func combineCenters(center1, center2 data.Point, num1, num2 int) data.Point {
+	return data.Point{
+		Lat: (center1.Lat*float64(num1) + center2.Lat*float64(num2)) / float64((num1 + num2)),
+		Lon: (center1.Lon*float64(num1) + center2.Lon*float64(num2)) / float64((num1 + num2)),
 	}
 }
 

@@ -18,8 +18,10 @@ require (
 	github.com/gonum/lapack v0.0.0-20181123203213-e4cdc5a0bff9 // indirect
 	github.com/gonum/matrix v0.0.0-20181209220409-c518dec07be9 // indirect
 	github.com/gonum/stat v0.0.0-20181125101827-41a0da705a5b
+	github.com/google/pprof v0.0.0-20200630070148-6609db78bf68 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.3
+	github.com/ianlancetaylor/demangle v0.0.0-20200705045648-b855e248e31b // indirect
 	github.com/jackc/pgx/v4 v4.3.0
 	github.com/lib/pq v1.2.0
 	github.com/oklog/oklog v0.3.2
@@ -33,6 +35,6 @@ require (
 	go.uber.org/zap v1.13.0
 	gocloud.dev v0.18.0
 	golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7
-	golang.org/x/sys v0.0.0-20191020212454-3e7259c5e7c2 // indirect
+	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
 	google.golang.org/grpc v1.24.0
 )

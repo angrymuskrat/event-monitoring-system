@@ -191,29 +191,6 @@ const SelectEventsWithIDs = `
 	WHERE
 		%v <= Finish AND %v >= Start;
 `
-const SelectEventPosts = `
-	SELECT 
-		ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, 
-		ST_X(Location) as Lat, 
-		ST_Y(Location) as Lon
-	FROM posts
-	WHERE ShortCode IN %v;
-`
-
-func MakeSelectEventPosts(posts []string) string {
-	postsStr := "("
-	if len(posts) > 0 {
-		for i, post := range posts {
-			if i != len(posts)-1 {
-				postsStr += "'" + post + "', "
-			} else {
-				postsStr += "'" + post + "')"
-			}
-		}
-	}
-
-	return fmt.Sprintf(SelectEventPosts, postsStr)
-}
 
 const DeleteEvents = `
 	DELETE FROM events
