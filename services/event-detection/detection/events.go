@@ -1,6 +1,7 @@
 package detection
 
 import (
+	"math"
 	"regexp"
 	"sort"
 	"strings"
@@ -249,12 +250,10 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, topLeft, bott
 		return
 	}
 
+	center := eventCenter(e.posts)
 	updatedEventIndex := -1
 	for i, oldEvent := range *existingEvents {
-		if oldEvent.event.Center.Lat > bottomRight.Y-closeDistanse &&
-			oldEvent.event.Center.Lat < topLeft.Y+closeDistanse &&
-			oldEvent.event.Center.Lon > topLeft.X-closeDistanse &&
-			oldEvent.event.Center.Lon < bottomRight.X+closeDistanse &&
+		if checkDistance(center, oldEvent.event.Locations, topLeft, bottomRight) &&
 			oldEvent.status != deletedEventStatus &&
 			oldEvent.status != ignoredEventStatus {
 		NEXTEVENT:
@@ -298,13 +297,14 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, topLeft, bott
 
 		event := eventWithStatus{
 			event: data.Event{
-				Center:    eventCenter(e.posts),
+				Center:    center,
 				PostCodes: postCodes,
 				Tags:      tags,
 				TagsCount: counts,
 				Title:     tags[0],
 				Start:     start,
 				Finish:    finish,
+				Locations: []data.Point{center},
 			},
 			status: newEventStatus,
 		}
@@ -352,6 +352,19 @@ func combineHolderAndEvent(e eventHolder, oldEvent eventWithStatus, finish int64
 	newPostsCenter := eventCenter(newPosts)
 	tags, counts := sortTags(e.tags)
 
+	newLocation := eventCenter(e.posts)
+	duplicate := false
+	for _, location := range oldEvent.event.Locations {
+		if math.Round(location.Lat*10000) == math.Round(newLocation.Lat*10000) && math.Round(location.Lon*10000) == math.Round(newLocation.Lon*10000) {
+			duplicate = true
+			break
+		}
+	}
+	locations := oldEvent.event.Locations
+	if !duplicate {
+		locations = append(locations, newLocation)
+	}
+
 	var status eventStatusType
 	if oldEvent.status == newEventStatus {
 		status = newEventStatus
@@ -368,6 +381,7 @@ func combineHolderAndEvent(e eventHolder, oldEvent eventWithStatus, finish int64
 			Title:     tags[0],
 			Start:     oldEvent.event.Start,
 			Finish:    finish,
+			Locations: locations,
 		},
 		status: status,
 	}
@@ -415,6 +429,20 @@ func combineTwoEvents(event1, event2 eventWithStatus, posts map[string]data.Post
 			}
 		}
 	}
+	resultEvent.event.Locations = event1.event.Locations
+	for _, location2 := range event2.event.Locations {
+		duplicate := false
+		for _, location1 := range event1.event.Locations {
+			if math.Round(location1.Lat*10000) == math.Round(location2.Lat*10000) && math.Round(location1.Lon*10000) == math.Round(location2.Lon*10000) {
+				duplicate = true
+				break
+			}
+		}
+		if !duplicate {
+			resultEvent.event.Locations = append(resultEvent.event.Locations, location2)
+		}
+	}
+
 	resultEvent.event.PostCodes = postcodes
 	resultEvent.event.Center = combineCenters(event1.event.Center, center2, len(event1.event.PostCodes), len(event2.event.PostCodes))
 
@@ -499,4 +527,16 @@ func combineCenters(center1, center2 data.Point, num1, num2 int) data.Point {
 func filterTag(tag string, filterTags map[string]bool) bool {
 	_, ok := filterTags[tag]
 	return ok
+}
+
+func checkDistance(newCenter data.Point, oldCenters []data.Point, topLeft, bottomRight convtree.Point) bool {
+	for _, oldCenter := range oldCenters {
+		if oldCenter.Lat > bottomRight.Y-closeDistanse &&
+			oldCenter.Lat < topLeft.Y+closeDistanse &&
+			oldCenter.Lon > topLeft.X-closeDistanse/math.Cos(oldCenter.Lat*math.Pi/180) &&
+			oldCenter.Lon < bottomRight.X+closeDistanse/math.Cos(oldCenter.Lat*math.Pi/180) {
+			return true
+		}
+	}
+	return false
 }

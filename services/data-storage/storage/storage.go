@@ -11,6 +11,9 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/lib/pq"
+	"github.com/twpayne/go-geom"
+	"github.com/twpayne/go-geom/encoding/ewkb"
+	"github.com/twpayne/go-geom/encoding/ewkbhex"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
 )
@@ -501,7 +504,22 @@ func (s *Storage) PushEvents(ctx context.Context, cityId string, events []data.E
 	defer tx.Rollback(ctx)
 
 	for _, event := range events {
-		_, err = tx.Exec(ctx, InsertEvent, event.Title, event.Start, event.Finish, event.Center.Lat, event.Center.Lon, pq.Array(event.PostCodes), pq.Array(event.Tags), pq.Array(event.TagsCount))
+		points := geom.NewMultiPoint(geom.XY)
+		for _, location := range event.Locations {
+			point := geom.NewPointFlat(geom.XY, []float64{location.Lat, location.Lon}).SetSRID(4326)
+			err := points.Push(point)
+			if err != nil {
+				unilog.Logger().Error("can not create locations", zap.Error(err))
+				return ErrDBTransaction
+			}
+		}
+		points.SetSRID(4326)
+		pointsHex, err := ewkbhex.Encode(points, ewkbhex.NDR)
+		if err != nil {
+			unilog.Logger().Error("can not create locations", zap.Error(err))
+			return ErrDBTransaction
+		}
+		_, err = tx.Exec(ctx, InsertEvent, event.Title, event.Start, event.Finish, event.Center.Lat, event.Center.Lon, pq.Array(event.PostCodes), pq.Array(event.Tags), pq.Array(event.TagsCount), pointsHex)
 		if err != nil {
 			unilog.Logger().Error("is not able to exec event", zap.Error(err))
 			return ErrPushEvents
@@ -528,7 +546,22 @@ func (s *Storage) UpdateEvents(ctx context.Context, cityId string, events []data
 	defer tx.Rollback(ctx)
 
 	for _, event := range events {
-		_, err = tx.Exec(ctx, UpdateEvent, event.Title, event.Start, event.Finish, event.Center.Lat, event.Center.Lon, pq.Array(event.PostCodes), pq.Array(event.Tags), pq.Array(event.TagsCount), event.ID)
+		points := geom.NewMultiPoint(geom.XY)
+		for _, location := range event.Locations {
+			point := geom.NewPointFlat(geom.XY, []float64{location.Lat, location.Lon}).SetSRID(4326)
+			err := points.Push(point)
+			if err != nil {
+				unilog.Logger().Error("can not create locations", zap.Error(err))
+				return ErrDBTransaction
+			}
+		}
+		points.SetSRID(4326)
+		pointsHex, err := ewkbhex.Encode(points, ewkbhex.NDR)
+		if err != nil {
+			unilog.Logger().Error("can not create locations", zap.Error(err))
+			return ErrDBTransaction
+		}
+		_, err = tx.Exec(ctx, UpdateEvent, event.Title, event.Start, event.Finish, event.Center.Lat, event.Center.Lon, pq.Array(event.PostCodes), pq.Array(event.Tags), pq.Array(event.TagsCount), pointsHex, event.ID)
 		if err != nil {
 			unilog.Logger().Error("is not able to exec event", zap.Error(err))
 			return ErrPushEvents
@@ -636,12 +669,18 @@ func (s *Storage) PullEventsWithIDs(ctx context.Context, cityId string, startTim
 	for rows.Next() {
 		e := new(data.Event)
 		p := new(data.Point)
-		err = rows.Scan(&e.ID, &e.Title, &e.Start, &e.Finish, pq.Array(&e.PostCodes), pq.Array(&e.Tags), pq.Array(&e.TagsCount), &p.Lat, &p.Lon)
+		var locations ewkb.MultiPoint
+		err = rows.Scan(&e.ID, &e.Title, &e.Start, &e.Finish, pq.Array(&e.PostCodes), pq.Array(&e.Tags), pq.Array(&e.TagsCount), &p.Lat, &p.Lon, &locations)
 		if err != nil {
 			unilog.Logger().Error("error in select events", zap.Error(err))
 			return nil, ErrSelectEvents
 		}
 		e.Center = *p
+		coords := locations.Coords()
+		for _, coord := range coords {
+			point := data.Point{Lat: coord[0], Lon: coord[1]}
+			e.Locations = append(e.Locations, point)
+		}
 		events = append(events, *e)
 	}
 

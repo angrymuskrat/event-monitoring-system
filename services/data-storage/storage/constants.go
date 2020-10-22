@@ -131,14 +131,15 @@ const CreateEventsTable = `
 		PostCodes VARCHAR(15)[],
 		Tags TEXT[],
 		TagsCount INTEGER[],
+		Locations geometry(MultiPoint, 4326),
 		PRIMARY KEY (Id, Start)
 	);
 `
 const InsertEvent = `
 	INSERT INTO events
-		(Title, Start, Finish, Center, PostCodes, Tags, TagsCount)
+		(Title, Start, Finish, Center, PostCodes, Tags, TagsCount, Locations)
 	VALUES
-		($1, $2, $3, ST_SetSRID( ST_Point($4, $5), 4326), $6, $7, $8)
+		($1, $2, $3, ST_SetSRID( ST_Point($4, $5), 4326), $6, $7, $8, $9)
 `
 const UpdateEvent = `
 	UPDATE events
@@ -149,8 +150,9 @@ const UpdateEvent = `
 		Center = ST_SetSRID( ST_Point($4, $5), 4326),
 		PostCodes = $6,
 		Tags = $7,
-		TagsCount = $8
-	WHERE id = $9
+		TagsCount = $8,
+		Locations = $9
+	WHERE id = $10
 `
 const SelectEvents = `
 	SELECT 
@@ -186,7 +188,8 @@ const SelectEventsWithIDs = `
 	SELECT
 		ID, Title, Start, Finish, PostCodes, Tags, TagsCount,
 		ST_X(Center) as Lat, 
-		ST_Y(Center) as Lon
+		ST_Y(Center) as Lon,
+		ST_AsEWKB(Locations)
 	FROM events
 	WHERE
 		%v <= Finish AND %v >= Start;

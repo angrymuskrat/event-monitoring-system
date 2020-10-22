@@ -50,6 +50,7 @@ message Event {
     string Title = 6;
     int64 Start = 7;
     int64 Finish = 8;
+    repeated Point Locations = 9 [(gogoproto.nullable) = false]; 
 }
 
 message AggregatedPost {
