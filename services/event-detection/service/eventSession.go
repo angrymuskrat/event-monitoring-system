@@ -15,6 +15,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+const closeTime = 25
+
 type eventSession struct {
 	id       string
 	status   StatusType
@@ -88,7 +90,7 @@ func (es *eventSession) detectEvents() {
 			continue
 		}
 
-		expireTime := t[0].Add(-25 * time.Hour).Unix()
+		expireTime := t[0].Add(-closeTime * time.Hour).Unix()
 		oldEvents, err := cl.PullEventsWithIDs(context.Background(), es.eventReq.CityId, expireTime, startTime)
 		if err != nil {
 			unilog.Logger().Error("unable to get events from data storage", zap.Error(err))

@@ -1,6 +1,7 @@
 package detection
 
 import (
+	"math"
 	"regexp"
 	"sort"
 	"strings"
@@ -9,7 +10,7 @@ import (
 	convtree "github.com/visheratin/conv-tree"
 )
 
-const closeDistanse = 0.005
+const closeDistanse = 0.0045
 
 func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints int, filterTags map[string]bool, start, finish int64, existingEvents []data.Event) (newEvents, updatedEvents, deletedEvents []data.Event, found bool) {
 	candGrid, wasFound := findCandidates(&histGrid, posts, maxPoints)
@@ -253,8 +254,8 @@ func checkEvent(e eventHolder, maxPoints int, start, finish int64, topLeft, bott
 	for i, oldEvent := range *existingEvents {
 		if oldEvent.event.Center.Lat > bottomRight.Y-closeDistanse &&
 			oldEvent.event.Center.Lat < topLeft.Y+closeDistanse &&
-			oldEvent.event.Center.Lon > topLeft.X-closeDistanse &&
-			oldEvent.event.Center.Lon < bottomRight.X+closeDistanse &&
+			oldEvent.event.Center.Lon > topLeft.X-closeDistanse/math.Cos(oldEvent.event.Center.Lat*math.Pi/180) &&
+			oldEvent.event.Center.Lon < bottomRight.X+closeDistanse/math.Cos(oldEvent.event.Center.Lat*math.Pi/180) &&
 			oldEvent.status != deletedEventStatus &&
 			oldEvent.status != ignoredEventStatus {
 		NEXTEVENT:
