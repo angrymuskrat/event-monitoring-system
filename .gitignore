@@ -15,3 +15,6 @@ log.txt
 .idea
 test
 tests
+
+# npm packages
+front/node_modules
