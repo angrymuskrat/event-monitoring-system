@@ -99,8 +99,8 @@ const SelectPosts = `
 `
 
 const CreateAggrPostsView = `
-	CREATE VIEW aggr_posts
-	WITH (timescaledb.continuous, timescaledb.refresh_lag = '-86400', timescaledb.refresh_interval = '%v')
+	CREATE MATERIALIZED VIEW aggr_posts
+	WITH (timescaledb.continuous)
 	AS
 	SELECT
  		time_bucket('3600', timestamp) as hour,
@@ -169,8 +169,8 @@ func MakeSelectEventsTags(tags []string, start, finish int64) string {
 }
 
 const CreatePostsTimelineView = `
-	CREATE VIEW posts_timeline
-	WITH (timescaledb.continuous, timescaledb.refresh_lag = '-86400', timescaledb.refresh_interval = '%v')
+	CREATE MATERIALIZED VIEW posts_timeline
+	WITH (timescaledb.continuous)
 	AS
 	SELECT
 	time_bucket('3600', timestamp) as time,
@@ -179,8 +179,8 @@ const CreatePostsTimelineView = `
 	GROUP BY time;
 `
 const CreateEventsTimelineView = `
-	CREATE VIEW events_timeline
-	WITH (timescaledb.continuous, timescaledb.refresh_lag = '-86400', timescaledb.refresh_interval = '%v')
+	CREATE MATERIALIZED VIEW events_timeline
+	WITH (timescaledb.continuous)
 	AS
 	SELECT
 	time_bucket('3600', start) as time,

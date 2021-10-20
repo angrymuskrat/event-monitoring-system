@@ -192,7 +192,7 @@ func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err er
 		return
 	}
 
-	createAggrPostsView := fmt.Sprintf(CreateAggrPostsView, s.config.RefreshInterval, s.config.GRIDSize, s.config.GRIDSize) // set grid size
+	createAggrPostsView := fmt.Sprintf(CreateAggrPostsView, s.config.GRIDSize, s.config.GRIDSize) // set grid size
 	_, err = conn.Exec(ctx, createAggrPostsView)
 	if err != nil && IsNotAlreadyExistsError(err) {
 		return
@@ -213,13 +213,13 @@ func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err er
 		return
 	}
 
-	createPostsTimelineView := fmt.Sprintf(CreatePostsTimelineView, s.config.RefreshInterval)
+	createPostsTimelineView := fmt.Sprintf(CreatePostsTimelineView)
 	_, err = conn.Exec(ctx, createPostsTimelineView)
 	if err != nil && IsNotAlreadyExistsError(err) {
 		return
 	}
 
-	createEventsTimelineView := fmt.Sprintf(CreateEventsTimelineView, s.config.RefreshInterval)
+	createEventsTimelineView := fmt.Sprintf(CreateEventsTimelineView)
 	_, err = conn.Exec(ctx, createEventsTimelineView)
 	if err != nil && IsNotAlreadyExistsError(err) {
 		return
