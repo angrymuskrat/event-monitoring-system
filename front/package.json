@@ -10,7 +10,7 @@
     "@testing-library/user-event": "^7.2.1",
     "@turf/distance": "^6.0.1",
     "@turf/helpers": "^6.1.4",
-    "axios": "^0.19.1",
+    "axios": "^0.23.0",
     "connected-react-router": "^6.6.1",
     "leaflet": "^1.6.0",
     "leaflet.markercluster": "^1.4.1",
