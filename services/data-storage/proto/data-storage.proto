@@ -171,3 +171,13 @@ message PullLocationsReply {
     string err = 2;
 }
 
+message PullShortPostInIntervalRequest {
+    int64 startTimestamp = 1;
+    int64 endTimestamp = 2;
+    repeated string shortcodes = 3;
+}
+
+message PullShortPostInIntervalReply {
+    repeated data.ShortPost posts = 1 [(gogoproto.nullable) = false];
+    string err = 2;
+}
