@@ -2,17 +2,18 @@ package crawler
 
 import (
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
-	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/storage"
+	protodata "github.com/angrymuskrat/event-monitoring-system/services/proto"
 )
 
 type Parameters struct {
 	CityID          string
-	Type            data.CrawlingType
+	InitCity        bool
+	TopLeft         protodata.Point
+	BottomRight     protodata.Point
 	Description     string
-	Entities        []string
+	Locations       []data.Location
 	FinishTimestamp int64
 	DetailedPosts   bool
 	LoadMedia       bool
-	Reupload        bool
-	FixLocations    []storage.Location
+	Checkpoints     map[string]string
 }

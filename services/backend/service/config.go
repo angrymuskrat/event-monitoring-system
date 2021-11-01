@@ -9,10 +9,14 @@ import (
 type Config struct {
 	Address         string
 	LogPath         string
+	AuthLogPath     string
+	SessionKey      string
+	TimerLogPath    string
 	User            string
 	Password        string
 	Connector       string
 	ConnectorParams map[string]string `toml:"conn-params"`
+	CORSOrigin      string            `toml:"cors-origin"`
 }
 
 func readConfig(path string) (cfg Config, err error) {

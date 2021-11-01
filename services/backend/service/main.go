@@ -1,30 +1,24 @@
 package service
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
-	"github.com/go-kit/kit/auth/basic"
-	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 )
+
+var svc *backendService
 
 func Start(confPath string) {
 	conf, err := readConfig(confPath)
 	if err != nil {
 		return
 	}
-	logger := setupLog(conf.LogPath)
-	var svc BackendService
 	conn, err := setConnector(conf.Connector, conf.ConnectorParams)
 	if err != nil {
 		unilog.Logger().Error("unable to create storage connector", zap.Error(err))
@@ -33,44 +27,37 @@ func Start(confPath string) {
 	svc = &backendService{
 		storageConn: conn,
 	}
-	svc = &loggingMiddleware{logger, svc}
+	sm, err := newAuthManager(conf.SessionKey, conf.AuthLogPath)
+	if err != nil {
+		panic(err)
+	}
+	tm, err := newTimerManager(conf.TimerLogPath)
+	if err != nil {
+		panic(err)
+	}
 	r := mux.NewRouter()
-	r.Methods("GET").Path("/heatmap/{city}/{topLeft}/{botRight}/{hour}").Handler(httptransport.NewServer(
-		basic.AuthMiddleware(conf.User, conf.Password, "realm")(makeHeatmapEndpoint(svc)),
-		decodeHeatmapRequest,
-		encodeResponse,
-		httptransport.ServerBefore(httptransport.PopulateRequestContext),
-	))
-	r.Methods("GET").Path("/timeline/{city}/{start}/{finish}").Handler(httptransport.NewServer(
-		basic.AuthMiddleware(conf.User, conf.Password, "realm")(makeTimelineEndpoint(svc)),
-		decodeTimelineRequest,
-		encodeResponse,
-		httptransport.ServerBefore(httptransport.PopulateRequestContext),
-	))
-	r.Methods("GET").Path("/events/{city}/{topLeft}/{botRight}/{hour}").Handler(httptransport.NewServer(
-		basic.AuthMiddleware(conf.User, conf.Password, "realm")(makeEventsEndpoint(svc)),
-		decodeEventsRequest,
-		encodeResponse,
-		httptransport.ServerBefore(httptransport.PopulateRequestContext),
-	))
-	r.Methods("GET").Path("/search/{city}/{tags}/{start}/{finish}").Handler(httptransport.NewServer(
-		basic.AuthMiddleware(conf.User, conf.Password, "realm")(makeEventsSearchEndpoint(svc)),
-		decodeSearchRequest,
-		encodeResponse,
-		httptransport.ServerBefore(httptransport.PopulateRequestContext),
-	))
-	http.Handle("/", accessControl(r))
+	r.HandleFunc("/heatmap/{city}/{topLeft}/{botRight}/{hour}", heatmap).Methods("GET")
+	r.HandleFunc("/timeline/{city}/{start}/{finish}", timeline).Methods("GET")
+	r.HandleFunc("/events/{city}/{topLeft}/{botRight}/{hour}", events).Methods("GET")
+	r.HandleFunc("/search/{city}/{tags}/{start}/{finish}", search).Methods("GET")
+	r.HandleFunc("/login", sm.login).Methods("POST")
+	r.Use(sm.Handler)
+	r.Use(tm.Handler)
+
+	http.Handle("/", accessControl(r, conf.CORSOrigin))
 	err = http.ListenAndServe(conf.Address, nil)
 	if err != nil {
 		unilog.Logger().Error("error in service handler", zap.Error(err))
 	}
 }
 
-func accessControl(h http.Handler) http.Handler {
+func accessControl(h http.Handler, origin string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		w.Header().Set("Access-Control-Expose-Headers", "Access-Token, Uid, Authorization, Set-Cookie")
 		if r.Method == "OPTIONS" {
 			return
 		}
@@ -78,29 +65,113 @@ func accessControl(h http.Handler) http.Handler {
 	})
 }
 
-func decodeHeatmapRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func heatmap(w http.ResponseWriter, r *http.Request) {
+	req, err := decodeHeatmapRequest(r)
+	if err != nil {
+		unilog.Logger().Error("unable to decode request", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	d, err := svc.HeatmapPosts(req)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(d)
+	if err != nil {
+		unilog.Logger().Error("unable to encode result to JSON", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func timeline(w http.ResponseWriter, r *http.Request) {
+	req, err := decodeTimelineRequest(r)
+	if err != nil {
+		unilog.Logger().Error("unable to decode request", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	d, err := svc.Timeline(req)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(d)
+	if err != nil {
+		unilog.Logger().Error("unable to encode result to JSON", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func events(w http.ResponseWriter, r *http.Request) {
+	req, err := decodeEventsRequest(r)
+	if err != nil {
+		unilog.Logger().Error("unable to decode request", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	d, err := svc.Events(req)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(d)
+	if err != nil {
+		unilog.Logger().Error("unable to encode result to JSON", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func search(w http.ResponseWriter, r *http.Request) {
+	req, err := decodeSearchRequest(r)
+	if err != nil {
+		unilog.Logger().Error("unable to decode request", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	d, err := svc.SearchEvents(req)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(d)
+	if err != nil {
+		unilog.Logger().Error("unable to encode result to JSON", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func decodeHeatmapRequest(r *http.Request) (HeatmapRequest, error) {
 	vars := mux.Vars(r)
 	req := HeatmapRequest{}
 	city, ok := vars["city"]
 	if !ok {
-		return nil, errors.New("unable to get city name")
+		return HeatmapRequest{}, errors.New("unable to get city name")
 	}
 	req.City = city
 	topLeftRaw, ok := vars["topLeft"]
 	if !ok {
-		return nil, errors.New("unable to get top left coordinates")
+		return HeatmapRequest{}, errors.New("unable to get top left coordinates")
 	}
 	coords := strings.Split(topLeftRaw, ",")
 	if len(coords) != 2 {
-		return nil, errors.New("incorrect format of top left coordinates")
+		return HeatmapRequest{}, errors.New("incorrect format of top left coordinates")
 	}
 	lat, err := strconv.ParseFloat(coords[0], 64)
 	if err != nil {
-		return nil, errors.New("unable to parse latitude of top left")
+		return HeatmapRequest{}, errors.New("unable to parse latitude of top left")
 	}
 	lon, err := strconv.ParseFloat(coords[1], 64)
 	if err != nil {
-		return nil, errors.New("unable to parse longitude of top left")
+		return HeatmapRequest{}, errors.New("unable to parse longitude of top left")
 	}
 	req.TopLeft = data.Point{
 		Lat: lat,
@@ -108,19 +179,19 @@ func decodeHeatmapRequest(_ context.Context, r *http.Request) (interface{}, erro
 	}
 	botRightRaw, ok := vars["botRight"]
 	if !ok {
-		return nil, errors.New("unable to get bottom right coordinates")
+		return HeatmapRequest{}, errors.New("unable to get bottom right coordinates")
 	}
 	coords = strings.Split(botRightRaw, ",")
 	if len(coords) != 2 {
-		return nil, errors.New("incorrect format of bottom right coordinates")
+		return HeatmapRequest{}, errors.New("incorrect format of bottom right coordinates")
 	}
 	lat, err = strconv.ParseFloat(coords[0], 64)
 	if err != nil {
-		return nil, errors.New("unable to parse latitude of bottom right")
+		return HeatmapRequest{}, errors.New("unable to parse latitude of bottom right")
 	}
 	lon, err = strconv.ParseFloat(coords[1], 64)
 	if err != nil {
-		return nil, errors.New("unable to parse longitude of bottom right")
+		return HeatmapRequest{}, errors.New("unable to parse longitude of bottom right")
 	}
 	req.BottomRight = data.Point{
 		Lat: lat,
@@ -128,68 +199,68 @@ func decodeHeatmapRequest(_ context.Context, r *http.Request) (interface{}, erro
 	}
 	hourRaw, ok := vars["hour"]
 	if !ok {
-		return nil, errors.New("unable to get hour")
+		return HeatmapRequest{}, errors.New("unable to get hour")
 	}
 	hour, err := strconv.ParseInt(hourRaw, 10, 64)
 	if err != nil {
-		return nil, errors.New("incorrect format of hour")
+		return HeatmapRequest{}, errors.New("incorrect format of hour")
 	}
 	req.Hour = hour
 	return req, nil
 }
 
-func decodeTimelineRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeTimelineRequest(r *http.Request) (TimelineRequest, error) {
 	vars := mux.Vars(r)
 	req := TimelineRequest{}
 	city, ok := vars["city"]
 	if !ok {
-		return nil, errors.New("unable to get city name")
+		return TimelineRequest{}, errors.New("unable to get city name")
 	}
 	req.City = city
 	startRaw, ok := vars["start"]
 	if !ok {
-		return nil, errors.New("unable to get start")
+		return TimelineRequest{}, errors.New("unable to get start")
 	}
 	start, err := strconv.ParseInt(startRaw, 10, 64)
 	if err != nil {
-		return nil, errors.New("incorrect format of start")
+		return TimelineRequest{}, errors.New("incorrect format of start")
 	}
 	req.Start = start
 	finishRaw, ok := vars["finish"]
 	if !ok {
-		return nil, errors.New("unable to get finish")
+		return TimelineRequest{}, errors.New("unable to get finish")
 	}
 	finish, err := strconv.ParseInt(finishRaw, 10, 64)
 	if err != nil {
-		return nil, errors.New("incorrect format of finish")
+		return TimelineRequest{}, errors.New("incorrect format of finish")
 	}
 	req.Finish = finish
 	return req, nil
 }
 
-func decodeEventsRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeEventsRequest(r *http.Request) (EventsRequest, error) {
 	vars := mux.Vars(r)
 	req := EventsRequest{}
 	city, ok := vars["city"]
 	if !ok {
-		return nil, errors.New("unable to get city name")
+		return EventsRequest{}, errors.New("unable to get city name")
 	}
 	req.City = city
 	topLeftRaw, ok := vars["topLeft"]
 	if !ok {
-		return nil, errors.New("unable to get top left coordinates")
+		return EventsRequest{}, errors.New("unable to get top left coordinates")
 	}
 	coords := strings.Split(topLeftRaw, ",")
 	if len(coords) != 2 {
-		return nil, errors.New("incorrect format of top left coordinates")
+		return EventsRequest{}, errors.New("incorrect format of top left coordinates")
 	}
 	lat, err := strconv.ParseFloat(coords[0], 64)
 	if err != nil {
-		return nil, errors.New("unable to parse latitude of top left")
+		return EventsRequest{}, errors.New("unable to parse latitude of top left")
 	}
 	lon, err := strconv.ParseFloat(coords[1], 64)
 	if err != nil {
-		return nil, errors.New("unable to parse longitude of top left")
+		return EventsRequest{}, errors.New("unable to parse longitude of top left")
 	}
 	req.TopLeft = data.Point{
 		Lat: lat,
@@ -197,19 +268,19 @@ func decodeEventsRequest(_ context.Context, r *http.Request) (interface{}, error
 	}
 	botRightRaw, ok := vars["botRight"]
 	if !ok {
-		return nil, errors.New("unable to get bottom right coordinates")
+		return EventsRequest{}, errors.New("unable to get bottom right coordinates")
 	}
 	coords = strings.Split(botRightRaw, ",")
 	if len(coords) != 2 {
-		return nil, errors.New("incorrect format of bottom right coordinates")
+		return EventsRequest{}, errors.New("incorrect format of bottom right coordinates")
 	}
 	lat, err = strconv.ParseFloat(coords[0], 64)
 	if err != nil {
-		return nil, errors.New("unable to parse latitude of bottom right")
+		return EventsRequest{}, errors.New("unable to parse latitude of bottom right")
 	}
 	lon, err = strconv.ParseFloat(coords[1], 64)
 	if err != nil {
-		return nil, errors.New("unable to parse longitude of bottom right")
+		return EventsRequest{}, errors.New("unable to parse longitude of bottom right")
 	}
 	req.BottomRight = data.Point{
 		Lat: lat,
@@ -217,90 +288,44 @@ func decodeEventsRequest(_ context.Context, r *http.Request) (interface{}, error
 	}
 	hourRaw, ok := vars["hour"]
 	if !ok {
-		return nil, errors.New("unable to get hour")
+		return EventsRequest{}, errors.New("unable to get hour")
 	}
 	hour, err := strconv.ParseInt(hourRaw, 10, 64)
 	if err != nil {
-		return nil, errors.New("incorrect format of hour")
+		return EventsRequest{}, errors.New("incorrect format of hour")
 	}
 	req.Hour = hour
 	return req, nil
 }
 
-func decodeSearchRequest(_ context.Context, r *http.Request) (interface{}, error) {
+func decodeSearchRequest(r *http.Request) (SearchRequest, error) {
 	vars := mux.Vars(r)
 	req := SearchRequest{}
 	city, ok := vars["city"]
 	if !ok {
-		return nil, errors.New("unable to get city name")
+		return SearchRequest{}, errors.New("unable to get city name")
 	}
 	req.City = city
 	startRaw, ok := vars["start"]
 	if !ok {
-		return nil, errors.New("unable to get start")
+		return SearchRequest{}, errors.New("unable to get start")
 	}
 	start, err := strconv.ParseInt(startRaw, 10, 64)
 	if err != nil {
-		return nil, errors.New("incorrect format of start")
+		return SearchRequest{}, errors.New("incorrect format of start")
 	}
 	req.Start = start
 	finishRaw, ok := vars["finish"]
 	if !ok {
-		return nil, errors.New("unable to get finish")
+		return SearchRequest{}, errors.New("unable to get finish")
 	}
 	finish, err := strconv.ParseInt(finishRaw, 10, 64)
 	if err != nil {
-		return nil, errors.New("incorrect format of finish")
+		return SearchRequest{}, errors.New("incorrect format of finish")
 	}
 	req.Finish = finish
 	tagsRaw, ok := vars["tags"]
 	tags := strings.Split(tagsRaw, ",")
 	req.Keytags = tags
 	return req, nil
-}
-
-func encodeResponse(_ context.Context, w http.ResponseWriter, response interface{}) error {
-	return json.NewEncoder(w).Encode(response)
-}
-
-func setupLog(path string) *zap.Logger {
-	conf := zap.Config{
-		Encoding:         "console",
-		Level:            zap.NewAtomicLevelAt(zapcore.InfoLevel),
-		OutputPaths:      []string{"stdout"},
-		ErrorOutputPaths: []string{"stderr"},
-		EncoderConfig: zapcore.EncoderConfig{
-			MessageKey: "message",
-			TimeKey:    "time",
-			EncodeTime: zapcore.ISO8601TimeEncoder,
-		},
-	}
-	if len(path) > 0 {
-		conf.OutputPaths = []string{path}
-		conf.ErrorOutputPaths = []string{path}
-	}
-	log, err := conf.Build()
-	if err != nil {
-		fmt.Println("unable to initialize log")
-		fmt.Println(err)
-		log = defaultLog()
-	}
-	return log
-}
-
-func defaultLog() *zap.Logger {
-	highPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl >= zapcore.ErrorLevel
-	})
-	lowPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl < zapcore.ErrorLevel
-	})
-	consoleEncoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
-	consoleDebugging := zapcore.Lock(os.Stdout)
-	consoleErrors := zapcore.Lock(os.Stderr)
-	core := zapcore.NewTee(
-		zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
-		zapcore.NewCore(consoleEncoder, consoleDebugging, lowPriority),
-	)
-	return zap.New(core)
 }

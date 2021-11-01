@@ -1,22 +1,16 @@
-package storage
+package crawler
 
 import (
 	"github.com/angrymuskrat/event-monitoring-system/services/insta-crawler/crawler/data"
 )
 
-type Location struct {
-	ID  string
-	Lat float64
-	Lon float64
-}
-
 type Fixer struct {
 	Init bool
-	loc  map[string]Location
+	loc  map[string]data.Location
 }
 
-func NewFixer(ls []Location) (Fixer, error) {
-	loc := map[string]Location{}
+func NewFixer(ls []data.Location) (Fixer, error) {
+	loc := map[string]data.Location{}
 	for _, l := range ls {
 		loc[l.ID] = l
 	}
