@@ -20,6 +20,15 @@ message Post {
     double Lon = 13;
 }
 
+message ShortPost {
+    string Shortcode = 1;
+    string Caption = 2;
+    int64 CommentsCount = 3;
+    int64 LikesCount = 4;
+    double Lat = 12;
+    double Lon = 13;
+}
+
 message Area {
     Point TopLeft = 1;
     Point BotRight = 2;
