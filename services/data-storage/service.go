@@ -98,6 +98,10 @@ type Service interface {
 	// output: array of locations
 	// result: if request was successfully finished, return all locations of this city and nil error, otherwise return some error
 	PullLocations(ctx context.Context, cityId string) ([]data.Location, error)
+
+	// input: contex, id of the city, shortcodes of needed posts, start and end timestamps of the timeinterval (for increaseing time of request)
+	// output: array of short posts, error
+	PullShortPostInInterval(ctx context.Context, cityId string, shortCodes []string, startTimestamp int64, endTimestamp int64) ([]data.ShortPost, error)
 }
 
 type basicService struct {
@@ -158,4 +162,8 @@ func (s basicService) PushLocations(ctx context.Context, cityId string, location
 
 func (s basicService) PullLocations(ctx context.Context, cityId string) ([]data.Location, error) {
 	return s.db.PullLocations(ctx, cityId)
+}
+
+func (s basicService) PullShortPostInInterval(ctx context.Context, cityId string, shortCodes []string, startTimestamp int64, endTimestamp int64) ([]data.ShortPost, error){
+	return s.db.PullShortPostInInterval(ctx, cityId, shortCodes, startTimestamp, endTimestamp)
 }

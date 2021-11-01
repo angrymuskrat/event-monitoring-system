@@ -178,3 +178,18 @@ func (mw loggingMiddleware) PullLocations(ctx context.Context, cityId string) (l
 	locations, err = mw.next.PullLocations(ctx, cityId)
 	return
 }
+
+func (mw loggingMiddleware) PullShortPostInInterval(ctx context.Context, cityId string, shortCodes []string,
+	startTimestamp int64, endTimestamp int64) (posts []data.ShortPost, err error) {
+	defer func(begin time.Time) {
+		mw.logger.Info("pull short posts in interval",
+			zap.String("city id", cityId),
+			zap.Int("len of codes", len(shortCodes)),
+			zap.Int64("start of interval", startTimestamp),
+			zap.Int64("end of interval", endTimestamp),
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	posts, err = mw.next.PullShortPostInInterval(ctx, cityId, shortCodes, startTimestamp, endTimestamp)
+	return
+}

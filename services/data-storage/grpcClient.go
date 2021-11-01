@@ -14,20 +14,21 @@ import (
 )
 
 type GrpcService struct {
-	insertCity      endpoint.Endpoint
-	getAllCities    endpoint.Endpoint
-	getCity         endpoint.Endpoint
-	pushPosts       endpoint.Endpoint
-	selectPosts     endpoint.Endpoint
-	selectAggrPosts endpoint.Endpoint
-	pullTimeline    endpoint.Endpoint
-	pushGrid        endpoint.Endpoint
-	pullGrid        endpoint.Endpoint
-	pushEvents      endpoint.Endpoint
-	pullEvents      endpoint.Endpoint
-	pullEventsTags  endpoint.Endpoint
-	pushLocations   endpoint.Endpoint
-	pullLocations   endpoint.Endpoint
+	insertCity              endpoint.Endpoint
+	getAllCities            endpoint.Endpoint
+	getCity                 endpoint.Endpoint
+	pushPosts               endpoint.Endpoint
+	selectPosts             endpoint.Endpoint
+	selectAggrPosts         endpoint.Endpoint
+	pullTimeline            endpoint.Endpoint
+	pushGrid                endpoint.Endpoint
+	pullGrid                endpoint.Endpoint
+	pushEvents              endpoint.Endpoint
+	pullEvents              endpoint.Endpoint
+	pullEventsTags          endpoint.Endpoint
+	pushLocations           endpoint.Endpoint
+	pullLocations           endpoint.Endpoint
+	pullShortPostInInterval endpoint.Endpoint
 }
 
 func (svc GrpcService) InsertCity(ctx context.Context, city data.City, updateIfExists bool) error {
@@ -198,6 +199,20 @@ func (svc GrpcService) PullLocations(ctx context.Context, cityId string) ([]data
 	return response.Locations, nil
 }
 
+func (svc GrpcService) PullShortPostInInterval(ctx context.Context, cityId string, shortCodes []string,
+	startTimestamp int64, endTimestamp int64) ([]data.ShortPost, error) {
+	resp, err := svc.pullShortPostInInterval(ctx, proto.PullShortPostInIntervalRequest{CityId: cityId,
+		Shortcodes: shortCodes, StartTimestamp: startTimestamp, EndTimestamp: endTimestamp})
+	if err != nil {
+		return nil, err
+	}
+	response := resp.(proto.PullShortPostInIntervalReply)
+	if response.Err != "" {
+		return nil, errors.New(response.Err)
+	}
+	return response.Posts, nil
+}
+
 func NewGRPCClient(conn *grpc.ClientConn) GrpcService {
 	svc := GrpcService{}
 	insertCityEndpoint := grpctransport.NewClient(
@@ -354,5 +369,15 @@ func NewGRPCClient(conn *grpc.ClientConn) GrpcService {
 		Timeout: TimeWaitingClient,
 	}))(pullLocationsEndpoint)
 
+	pullShortPostInInterval := grpctransport.NewClient(
+		conn, "proto.DataStorage", "PullShortPostInInterval",
+		encodeGRPCPullShortPostInIntervalRequest,
+		decodeGRPCPullShortPostInIntervalResponse,
+		proto.PullShortPostInIntervalReply{},
+	).Endpoint()
+	svc.pullShortPostInInterval = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+		Name:    "PullShortPostInInterval",
+		Timeout: TimeWaitingClient,
+	}))(pullShortPostInInterval)
 	return svc
 }

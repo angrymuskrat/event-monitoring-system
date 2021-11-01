@@ -172,3 +172,15 @@ func makePullLocationsEndpoint(s Service) endpoint.Endpoint {
 		return proto.PullLocationsReply{Locations: locations, Err: msg}, nil
 	}
 }
+
+func makePullShortPostInIntervalEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(proto.PullShortPostInIntervalRequest)
+		posts, err := s.PullShortPostInInterval(ctx, req.CityId, req.Shortcodes, req.StartTimestamp, req.EndTimestamp)
+		var msg string
+		if err != nil {
+			msg = err.Error()
+		}
+		return proto.PullShortPostInIntervalReply{ Posts: posts, Err: msg }, nil
+	}
+}

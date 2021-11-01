@@ -647,6 +647,10 @@ func (s *Storage) PullLocations(ctx context.Context, cityId string) (locations [
 	return
 }
 
+func (s *Storage) PullShortPostInInterval(ctx context.Context, cityId string, shortCodes []string, startTimestamp int64, endTimestamp int64) (posts []data.ShortPost, err error) {
+	return posts, err
+}
+
 func (s *Storage) Close(ctx context.Context) {
 	if s.general == nil {
 		return

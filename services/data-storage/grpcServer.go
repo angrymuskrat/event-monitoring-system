@@ -7,20 +7,21 @@ import (
 )
 
 type grpcServer struct {
-	insertCity      grpctransport.Handler
-	getAllCities    grpctransport.Handler
-	getCity         grpctransport.Handler
-	pushPosts       grpctransport.Handler
-	selectPosts     grpctransport.Handler
-	selectAggrPosts grpctransport.Handler
-	pullTimeline    grpctransport.Handler
-	pushGrid        grpctransport.Handler
-	pullGrid        grpctransport.Handler
-	pushEvents      grpctransport.Handler
-	pullEvents      grpctransport.Handler
-	pullEventsTags  grpctransport.Handler
-	pushLocations   grpctransport.Handler
-	pullLocations   grpctransport.Handler
+	insertCity              grpctransport.Handler
+	getAllCities            grpctransport.Handler
+	getCity                 grpctransport.Handler
+	pushPosts               grpctransport.Handler
+	selectPosts             grpctransport.Handler
+	selectAggrPosts         grpctransport.Handler
+	pullTimeline            grpctransport.Handler
+	pushGrid                grpctransport.Handler
+	pullGrid                grpctransport.Handler
+	pushEvents              grpctransport.Handler
+	pullEvents              grpctransport.Handler
+	pullEventsTags          grpctransport.Handler
+	pushLocations           grpctransport.Handler
+	pullLocations           grpctransport.Handler
+	pullShortPostInInterval grpctransport.Handler
 }
 
 func NewGRPCServer(svc Service) proto.DataStorageServer {
@@ -94,6 +95,11 @@ func NewGRPCServer(svc Service) proto.DataStorageServer {
 			makePullLocationsEndpoint(svc),
 			decodeGRPCPullLocationsRequest,
 			encodeGRPCPullLocationsResponse,
+		),
+		pullShortPostInInterval: grpctransport.NewServer(
+			makePullShortPostInIntervalEndpoint(svc),
+			decodeGRPCPullShortPostInIntervalRequest,
+			encodeGRPCPullShortPostInIntervalResponse,
 		),
 	}
 }
@@ -213,4 +219,13 @@ func (s *grpcServer) PullLocations(ctx context.Context, req *proto.PullLocations
 		return nil, err
 	}
 	return rep.(*proto.PullLocationsReply), nil
+}
+
+func (s *grpcServer) PullShortPostInInterval(ctx context.Context,
+	req *proto.PullShortPostInIntervalRequest) (*proto.PullShortPostInIntervalReply, error) {
+	_, rep, err := s.pullShortPostInInterval.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*proto.PullShortPostInIntervalReply), nil
 }
