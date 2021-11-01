@@ -172,9 +172,10 @@ message PullLocationsReply {
 }
 
 message PullShortPostInIntervalRequest {
-    int64 startTimestamp = 1;
-    int64 endTimestamp = 2;
-    repeated string shortcodes = 3;
+    string cityId = 1;
+    int64 startTimestamp = 2;
+    int64 endTimestamp = 3;
+    repeated string shortcodes = 4;
 }
 
 message PullShortPostInIntervalReply {
