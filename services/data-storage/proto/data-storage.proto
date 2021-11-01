@@ -26,6 +26,8 @@ service DataStorage {
 
     rpc PushLocations (PushLocationsRequest) returns (PushLocationsReply) {}
     rpc PullLocations (PullLocationsRequest) returns (PullLocationsReply) {}
+
+    rpc PullShortPostInInterval (PullShortPostInIntervalRequest) returns (PullShortPostInIntervalReply) {}
 }
 
 message InsertCityRequest {
