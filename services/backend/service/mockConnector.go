@@ -2,6 +2,7 @@ package service
 
 import (
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
+	urand "github.com/angrymuskrat/event-monitoring-system/utils/rand"
 	"math/rand"
 	"strconv"
 )
@@ -88,6 +89,21 @@ func (c MockConnector) EventsByTags(city string, keytags []string, start, finish
 			Finish:    t + 3600,
 		}
 		res = append(res, e)
+	}
+	return res, nil
+}
+
+func (c MockConnector) ShortPostsInInterval(city string, shortcodes []string, start, end int64) ([]data.ShortPost, error) {
+	var res []data.ShortPost
+	if start > end {
+		return res, nil
+	}
+	genConfig := urand.MakeGenConfigByCorner(topLeft, botRight, start, end)
+	generator := urand.New()
+	for _, code := range shortcodes {
+		post := generator.ShortPost(genConfig)
+		post.Shortcode = code
+		res = append(res, *post)
 	}
 	return res, nil
 }

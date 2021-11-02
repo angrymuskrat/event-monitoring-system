@@ -33,3 +33,10 @@ type SearchRequest struct {
 	Start   int64    `json:"start"`
 	Finish  int64    `json:"finish"`
 }
+
+type ShortPostsRequests struct {
+	City       string   `json:"city"`
+	Shortcodes []string `json:"codes"`
+	Start      int64    `json:"start"`
+	End        int64    `json:"end"`
+}

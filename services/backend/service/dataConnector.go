@@ -77,6 +77,15 @@ func (c DataConnector) EventsByTags(city string, keytags []string, start, finish
 	return evs, nil
 }
 
+func (c DataConnector) ShortPostsInInterval(city string, shortcodes []string, start, finish int64) ([]data.ShortPost, error) {
+	evs, err := c.dsClient.PullShortPostInInterval(context.Background(), city, shortcodes, start, finish)
+	if err != nil {
+		unilog.Logger().Error("unable to extract short posts in interval", zap.Error(err))
+		return nil, err
+	}
+	return evs, nil
+}
+
 func filterTags(tags []string, max int) []string {
 	l := max
 	if l > (len(tags) - 1) {

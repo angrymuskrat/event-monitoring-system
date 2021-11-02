@@ -10,6 +10,7 @@ type StorageConnector interface {
 	Timeline(city string, start, finish int64) (Timeline, error)
 	Events(city string, topLeft, botRight data.Point, hour int64) ([]data.Event, error)
 	EventsByTags(city string, keytags []string, start, finish int64) ([]data.Event, error)
+	ShortPostsInInterval(city string, shortcodes []string, start, end int64) ([]data.ShortPost, error)
 }
 
 func setConnector(cType string, params map[string]string) (StorageConnector, error) {
