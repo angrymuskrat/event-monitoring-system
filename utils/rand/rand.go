@@ -1,6 +1,7 @@
 package rand
 
 import (
+	"math"
 	"math/rand"
 	"time"
 
@@ -119,4 +120,24 @@ func (r *Rand) Events(length int, conf GenConfig) []data.Event {
 		events[i] = *r.Event(conf)
 	}
 	return events
+}
+
+func (r *Rand) ShortPost(conf GenConfig) *data.ShortPost {
+	p := r.Point(conf.Center, conf.DeltaPoint)
+	return &data.ShortPost{
+		Shortcode:     r.FixString(10),
+		Caption:       r.String(0, 500),
+		CommentsCount: r.Uint64(0, 1000),
+		Timestamp:     r.Uint64(conf.StartTime, conf.FinishTime),
+		LikesCount:    r.Uint64(0, 10000),
+		Lat:           p.Lat,
+		Lon:           p.Lon,
+	}
+}
+
+func MakeGenConfigByCorner(topLeft data.Point, botRight data.Point, start, finish int64) GenConfig {
+	center := data.Point{ Lat: (topLeft.Lat + botRight.Lat) / 2, Lon: (topLeft.Lon + botRight.Lon) / 2}
+	delta := data.Point{ Lat: math.Abs(center.Lat - botRight.Lat), Lon: math.Abs(center.Lon - botRight.Lon) }
+	genConfig := GenConfig{Center: center, DeltaPoint: delta, StartTime: start, FinishTime: finish}
+	return genConfig
 }
