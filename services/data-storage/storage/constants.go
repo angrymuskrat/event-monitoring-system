@@ -245,6 +245,27 @@ const SelectGrid = `
 	WHERE id BETWEEN %v AND %v;
 `
 
+const SelectShortPostsInIntervalSQLTemplate = `
+	SELECT 
+		Shortcode, Caption, CommentsCount, Timestamp, LikesCount, 
+		ST_X(Location) as Lat, 
+		ST_Y(Location) as Lon
+	FROM posts
+	WHERE Timestamp BETWEEN %v and %v
+		AND Shortcode IN %v;
+`
+
+func makeSelectShortPostsInIntervalSQL(shortcodes []string, startTimestamp int64, endTimestamp int64) string {
+	shortcodesSQL := "('"
+	for _, code := range shortcodes {
+		shortcodesSQL += code + "', '"
+	}
+	shortcodesSQL += "')"
+
+	sqlRequest := fmt.Sprintf(SelectShortPostsInIntervalSQLTemplate, startTimestamp, endTimestamp, shortcodesSQL)
+	return sqlRequest
+}
+
 func MakePoly(area data.Area) string {
 	return fmt.Sprintf("ST_Polygon('LINESTRING(%v %v, %v %v, %v %v, %v %v, %v %v)'::geometry, 4326)",
 		area.TopLeft.Lat, area.TopLeft.Lon,

@@ -647,8 +647,32 @@ func (s *Storage) PullLocations(ctx context.Context, cityId string) (locations [
 	return
 }
 
-func (s *Storage) PullShortPostInInterval(ctx context.Context, cityId string, shortCodes []string, startTimestamp int64, endTimestamp int64) (posts []data.ShortPost, err error) {
-	return posts, err
+func (s *Storage) PullShortPostInInterval(ctx context.Context, cityId string, shortCodes []string,
+	startTimestamp int64, endTimestamp int64) (posts []data.ShortPost, err error) {
+	conn, err := s.getCityConn(ctx, cityId)
+	if err != nil {
+		unilog.Logger().Error("PullShortPostInInterval: unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
+		return nil, err
+	}
+	request := makeSelectShortPostsInIntervalSQL(shortCodes, startTimestamp, endTimestamp)
+	rows, err := conn.Query(ctx, request)
+
+	if err != nil {
+		unilog.Logger().Error("PullShortPostInInterval: not be able to execute query", zap.Error(err))
+		return nil, ErrSelectLocations
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		sp := new(data.ShortPost)
+		err = rows.Scan(&sp.Shortcode, &sp.Caption, &sp.CommentsCount, &sp.LikesCount, &sp.Timestamp, &sp.Lat, &sp.Lon)
+		if err != nil {
+			unilog.Logger().Error("PullShortPostInInterval: not be able to scan row", zap.Error(err))
+			return nil, ErrSelectLocations
+		}
+		posts = append(posts, *sp)
+	}
+	return posts, nil
 }
 
 func (s *Storage) Close(ctx context.Context) {
