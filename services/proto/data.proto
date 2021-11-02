@@ -25,8 +25,9 @@ message ShortPost {
     string Caption = 2;
     int64 CommentsCount = 3;
     int64 LikesCount = 4;
-    double Lat = 12;
-    double Lon = 13;
+    int64 Timestamp = 5;
+    double Lat = 6;
+    double Lon = 7;
 }
 
 message Area {
