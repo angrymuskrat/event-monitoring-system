@@ -45,20 +45,20 @@ const SelectCities = `
 	SELECT 
 		Title,
 		Code,
-		ST_X(TopLeft) as tlLat,
-		ST_Y(TopLeft) as tlLon,
-		ST_X(BotRight) as brLat,
-		ST_Y(BotRight) as brLon
+		ST_X(TopLeft) as tlLon,
+		ST_Y(TopLeft) as tlLat,
+		ST_X(BotRight) as brLon,
+		ST_Y(BotRight) as brLat
 	FROM cities;
 `
 const SelectCity = `
 	SELECT 
 		Title,
 		Code,
-		ST_X(TopLeft) as tlLat,
-		ST_Y(TopLeft) as tlLon,
-		ST_X(BotRight) as brLat,
-		ST_Y(BotRight) as brLon
+		ST_X(TopLeft) as tlLon,
+		ST_Y(TopLeft) as tlLat,
+		ST_X(BotRight) as brLon,
+		ST_Y(BotRight) as brLat
 	FROM cities
 	WHERE Code = '%v';
 `
@@ -92,8 +92,8 @@ const InsertPost = `
 const SelectPosts = `
 	SELECT 
 		ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, 
-		ST_X(Location) as Lat, 
-		ST_Y(Location) as Lon
+		ST_X(Location) as Lon, 
+		ST_Y(Location) as Lat
 	FROM posts
 	WHERE Timestamp BETWEEN %v AND %v
 `
@@ -112,8 +112,8 @@ const CreateAggrPostsView = `
 const SelectAggrPosts = `
 	SELECT
 		count,
-		ST_X(center) as lat,
-		ST_Y(center) as lon
+		ST_X(center) as Lon,
+		ST_Y(center) as Lat
 	FROM aggr_posts
 	WHERE hour = %v AND ST_Contains(%v, center); 
 `
@@ -141,8 +141,8 @@ const InsertEvent = `
 const SelectEvents = `
 	SELECT 
 		Title, Start, Finish, PostCodes, Tags,  
-		ST_X(Center) as Lat, 
-		ST_Y(Center) as Lon
+		ST_X(Center) as Lon, 
+		ST_Y(Center) as Lat
 	FROM events
 	WHERE 
 		ST_Covers(%v, Center) 
@@ -151,8 +151,8 @@ const SelectEvents = `
 const SelectEventsTags = `
 	SELECT
 		Title, Start, Finish, PostCodes, Tags,
-		ST_X(Center) as Lat, 
-		ST_Y(Center) as Lon
+		ST_X(Center) as Lon, 
+		ST_Y(Center) as Lat
 	FROM events
 	WHERE
 		(%v <= Finish AND %v >= Start) %v;
@@ -223,8 +223,8 @@ const InsertLocation = `
 const SelectLocations = `
 	SELECT 
 		ID, Title, Slug,
-		ST_X(Position) as Lat,
-		ST_Y(Position) as Lon
+		ST_X(Position) as Lon,
+		ST_Y(Position) as Lat
 	FROM locations;
 `
 
@@ -248,8 +248,8 @@ const SelectGrid = `
 const SelectShortPostsInIntervalSQLTemplate = `
 	SELECT 
 		Shortcode, Caption, CommentsCount, Timestamp, LikesCount, 
-		ST_X(Location) as Lat, 
-		ST_Y(Location) as Lon
+		ST_X(Location) as Lon, 
+		ST_Y(Location) as Lat
 	FROM posts
 	WHERE Timestamp BETWEEN %v and %v
 		AND Shortcode IN %v;
@@ -268,11 +268,11 @@ func makeSelectShortPostsInIntervalSQL(shortcodes []string, startTimestamp int64
 
 func MakePoly(area data.Area) string {
 	return fmt.Sprintf("ST_Polygon('LINESTRING(%v %v, %v %v, %v %v, %v %v, %v %v)'::geometry, 4326)",
-		area.TopLeft.Lat, area.TopLeft.Lon,
-		area.TopLeft.Lat, area.BotRight.Lon,
-		area.BotRight.Lat, area.BotRight.Lon,
-		area.BotRight.Lat, area.TopLeft.Lon,
-		area.TopLeft.Lat, area.TopLeft.Lon)
+		area.TopLeft.Lon, area.TopLeft.Lat,
+		area.TopLeft.Lon, area.BotRight.Lat,
+		area.BotRight.Lon, area.BotRight.Lat,
+		area.BotRight.Lon, area.TopLeft.Lat,
+		area.TopLeft.Lon, area.TopLeft.Lat)
 }
 
 func MakeCreateDB(name string) string {

@@ -248,7 +248,7 @@ func (s *Storage) InsertCity(ctx context.Context, city data.City, updateIfExist 
 	} else {
 		statement = InsertCity
 	}
-	_, err = s.general.Exec(ctx, statement, city.Title, city.Code, tl.Lat, tl.Lon, br.Lat, br.Lon)
+	_, err = s.general.Exec(ctx, statement, city.Title, city.Code, tl.Lon, tl.Lat, br.Lon, br.Lat)
 	if err != nil {
 		unilog.Logger().Error("error in InsertCity", zap.Error(err))
 		return
@@ -262,7 +262,7 @@ func (s *Storage) SelectCity(ctx context.Context, cityId string) (city *data.Cit
 	var tl, br data.Point
 	city = &data.City{}
 
-	err = row.Scan(&city.Title, &city.Code, &tl.Lat, &tl.Lon, &br.Lat, &br.Lon)
+	err = row.Scan(&city.Title, &city.Code, &tl.Lon, &tl.Lat, &br.Lon, &br.Lat)
 	if err != nil {
 		unilog.Logger().Error("error in selectCity", zap.Error(err))
 		return nil, err
@@ -282,7 +282,7 @@ func (s *Storage) GetCities(ctx context.Context) (cities []data.City, err error)
 			city   data.City
 			tl, br data.Point
 		)
-		err = rows.Scan(&city.Title, &city.Code, &tl.Lat, &tl.Lon, &br.Lat, &br.Lon)
+		err = rows.Scan(&city.Title, &city.Code, &tl.Lon, &tl.Lat, &br.Lon, &br.Lat)
 		if err != nil {
 			unilog.Logger().Error("error in GetCities - Scan", zap.Error(err))
 			return nil, err
@@ -308,7 +308,7 @@ func (s *Storage) PushPosts(ctx context.Context, cityId string, posts []data.Pos
 	defer tx.Rollback(ctx)
 
 	for _, v := range posts {
-		_, err = tx.Exec(ctx, InsertPost, v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp, v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lat, v.Lon)
+		_, err = tx.Exec(ctx, InsertPost, v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp, v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lon, v.Lat)
 		if err != nil {
 			unilog.Logger().Error("is not able to exec event", zap.Error(err))
 			return ErrPushPosts
@@ -339,7 +339,7 @@ func (s Storage) SelectPosts(ctx context.Context, cityId string, startTime, fini
 	for rows.Next() {
 		p := new(data.Post)
 		err = rows.Scan(&p.ID, &p.Shortcode, &p.ImageURL, &p.IsVideo, &p.Caption, &p.CommentsCount, &p.Timestamp,
-			&p.LikesCount, &p.IsAd, &p.AuthorID, &p.LocationID, &p.Lat, &p.Lon)
+			&p.LikesCount, &p.IsAd, &p.AuthorID, &p.LocationID, &p.Lon, &p.Lat)
 		if err != nil {
 			unilog.Logger().Error("error in select posts", zap.Error(err))
 			return nil, nil, ErrSelectPosts
@@ -377,7 +377,7 @@ func (s Storage) SelectAggrPosts(ctx context.Context, cityId string, interval da
 		ap := new(data.AggregatedPost)
 
 		//(ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, Location)
-		err = rows.Scan(&ap.Count, &p.Lat, &p.Lon)
+		err = rows.Scan(&ap.Count, &p.Lon, &p.Lat)
 		if err != nil {
 			unilog.Logger().Error("error in select aggr_posts", zap.Error(err))
 			return nil, ErrSelectPosts
@@ -500,7 +500,7 @@ func (s *Storage) PushEvents(ctx context.Context, cityId string, events []data.E
 	defer tx.Rollback(ctx)
 
 	for _, event := range events {
-		_, err = tx.Exec(ctx, InsertEvent, event.Title, event.Start, event.Finish, event.Center.Lat, event.Center.Lon, pq.Array(event.PostCodes), pq.Array(event.Tags))
+		_, err = tx.Exec(ctx, InsertEvent, event.Title, event.Start, event.Finish, event.Center.Lon, event.Center.Lat, pq.Array(event.PostCodes), pq.Array(event.Tags))
 		if err != nil {
 			unilog.Logger().Error("is not able to exec event", zap.Error(err))
 			return ErrPushEvents
@@ -533,7 +533,7 @@ func (s *Storage) PullEvents(ctx context.Context, cityId string, interval data.S
 	for rows.Next() {
 		e := new(data.Event)
 		p := new(data.Point)
-		err = rows.Scan(&e.Title, &e.Start, &e.Finish, pq.Array(&e.PostCodes), pq.Array(&e.Tags), &p.Lat, &p.Lon)
+		err = rows.Scan(&e.Title, &e.Start, &e.Finish, pq.Array(&e.PostCodes), pq.Array(&e.Tags), &p.Lon, &p.Lat)
 		if err != nil {
 			unilog.Logger().Error("error in select events", zap.Error(err))
 			return nil, ErrSelectEvents
@@ -563,7 +563,7 @@ func (s *Storage) PullEventsTags(ctx context.Context, cityId string, tags []stri
 	for rows.Next() {
 		e := new(data.Event)
 		p := new(data.Point)
-		err = rows.Scan(&e.Title, &e.Start, &e.Finish, pq.Array(&e.PostCodes), pq.Array(&e.Tags), &p.Lat, &p.Lon)
+		err = rows.Scan(&e.Title, &e.Start, &e.Finish, pq.Array(&e.PostCodes), pq.Array(&e.Tags), &p.Lon, &p.Lat)
 		if err != nil {
 			unilog.Logger().Error("error in select events", zap.Error(err))
 			return nil, ErrSelectEvents
@@ -606,7 +606,7 @@ func (s *Storage) PushLocations(ctx context.Context, cityId string, locations []
 	defer tx.Rollback(ctx)
 
 	for _, l := range locations {
-		_, err = tx.Exec(ctx, InsertLocation, l.ID, l.Position.Lat, l.Position.Lon, l.Title, l.Slug)
+		_, err = tx.Exec(ctx, InsertLocation, l.ID, l.Position.Lon, l.Position.Lat, l.Title, l.Slug)
 		if err != nil {
 			unilog.Logger().Error("is not able to exec location", zap.Error(err))
 			return ErrPushLocations
@@ -636,7 +636,7 @@ func (s *Storage) PullLocations(ctx context.Context, cityId string) (locations [
 	for rows.Next() {
 		l := new(data.Location)
 		p := new(data.Point)
-		err = rows.Scan(&l.ID, &l.Title, &l.Slug, &p.Lat, &p.Lon)
+		err = rows.Scan(&l.ID, &l.Title, &l.Slug, &p.Lon, &p.Lat)
 		if err != nil {
 			unilog.Logger().Error("error in select events", zap.Error(err))
 			return nil, ErrSelectLocations
@@ -665,7 +665,7 @@ func (s *Storage) PullShortPostInInterval(ctx context.Context, cityId string, sh
 
 	for rows.Next() {
 		sp := new(data.ShortPost)
-		err = rows.Scan(&sp.Shortcode, &sp.Caption, &sp.CommentsCount, &sp.LikesCount, &sp.Timestamp, &sp.Lat, &sp.Lon)
+		err = rows.Scan(&sp.Shortcode, &sp.Caption, &sp.CommentsCount, &sp.LikesCount, &sp.Timestamp, &sp.Lon, &sp.Lat)
 		if err != nil {
 			unilog.Logger().Error("PullShortPostInInterval: not be able to scan row", zap.Error(err))
 			return nil, ErrSelectLocations
