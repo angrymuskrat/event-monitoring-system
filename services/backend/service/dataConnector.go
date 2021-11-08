@@ -86,6 +86,15 @@ func (c DataConnector) ShortPostsInInterval(city string, shortcodes []string, st
 	return evs, nil
 }
 
+func (c DataConnector) SingleShortPost(city, shortcode string) (*data.ShortPost, error) {
+	evs, err := c.dsClient.PullSingleShortPost(context.Background(), city, shortcode)
+	if err != nil {
+		unilog.Logger().Error("unable to extract single post", zap.Error(err))
+		return nil, err
+	}
+	return evs, nil
+}
+
 func filterTags(tags []string, max int) []string {
 	l := max
 	if l > (len(tags) - 1) {

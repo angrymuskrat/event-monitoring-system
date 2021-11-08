@@ -22,6 +22,10 @@ func (s *backendService) SearchEvents(req SearchRequest) ([]data.Event, error) {
 	return s.storageConn.EventsByTags(req.City, req.Keytags, req.Start, req.Finish)
 }
 
-func (s *backendService) ShortPostsInInterval(req ShortPostsRequests) ([]data.ShortPost, error) {
+func (s *backendService) ShortPostsInInterval(req ShortPostsRequest) ([]data.ShortPost, error) {
 	return s.storageConn.ShortPostsInInterval(req.City, req.Shortcodes, req.Start, req.End)
+}
+
+func (s *backendService) SingleShortPost(req SingleShortPostRequest) (*data.ShortPost, error) {
+	return s.storageConn.SingleShortPost(req.City, req.Shortcode)
 }

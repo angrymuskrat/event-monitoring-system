@@ -41,6 +41,7 @@ func Start(confPath string) {
 	r.HandleFunc("/events/{city}/{topLeft}/{botRight}/{hour}", events).Methods("GET")
 	r.HandleFunc("/search/{city}/{tags}/{start}/{finish}", search).Methods("GET")
 	r.HandleFunc("/shortPosts/{city}/{start}/{end}/{codes}", shortPosts).Methods("GET")
+	r.HandleFunc("/singleShortPost/{city}/{code}", singleShortPost).Methods("GET")
 	r.HandleFunc("/login", sm.login).Methods("POST")
 	r.Use(sm.Handler)
 	r.Use(tm.Handler)
@@ -159,6 +160,27 @@ func shortPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d, err := svc.ShortPostsInInterval(req)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = json.NewEncoder(w).Encode(d)
+	if err != nil {
+		unilog.Logger().Error("unable to encode result to JSON", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func singleShortPost(w http.ResponseWriter, r *http.Request) {
+	req, err := decodeSingleShortPostRequest(r)
+	if err != nil {
+		unilog.Logger().Error("unable to decode request", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	d, err := svc.SingleShortPost(req)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -352,34 +374,50 @@ func decodeSearchRequest(r *http.Request) (SearchRequest, error) {
 	return req, nil
 }
 
-func decodeShortPostsRequest(r *http.Request) (ShortPostsRequests, error) {
+func decodeShortPostsRequest(r *http.Request) (ShortPostsRequest, error) {
 	vars := mux.Vars(r)
-	req := ShortPostsRequests{}
+	req := ShortPostsRequest{}
 	city, ok := vars["city"]
 	if !ok {
-		return ShortPostsRequests{}, errors.New("unable to get city name")
+		return ShortPostsRequest{}, errors.New("unable to get city name")
 	}
 	req.City = city
 	startRaw, ok := vars["start"]
 	if !ok {
-		return ShortPostsRequests{}, errors.New("unable to get start")
+		return ShortPostsRequest{}, errors.New("unable to get start")
 	}
 	start, err := strconv.ParseInt(startRaw, 10, 64)
 	if err != nil {
-		return ShortPostsRequests{}, errors.New("incorrect format of start")
+		return ShortPostsRequest{}, errors.New("incorrect format of start")
 	}
 	req.Start = start
 	endRaw, ok := vars["end"]
 	if !ok {
-		return ShortPostsRequests{}, errors.New("unable to get end")
+		return ShortPostsRequest{}, errors.New("unable to get end")
 	}
 	end, err := strconv.ParseInt(endRaw, 10, 64)
 	if err != nil {
-		return ShortPostsRequests{}, errors.New("incorrect format of end")
+		return ShortPostsRequest{}, errors.New("incorrect format of end")
 	}
 	req.End = end
 	codesRaw, ok := vars["codes"]
 	shortcodes := strings.Split(codesRaw, ",")
 	req.Shortcodes = shortcodes
+	return req, nil
+}
+
+func decodeSingleShortPostRequest(r *http.Request) (SingleShortPostRequest, error) {
+	vars := mux.Vars(r)
+	req := SingleShortPostRequest{}
+	city, ok := vars["city"]
+	if !ok {
+		return SingleShortPostRequest{}, errors.New("unable to get city name")
+	}
+	req.City = city
+	shortcode, ok := vars["code"]
+	if !ok {
+		return SingleShortPostRequest{}, errors.New("unable to get city name")
+	}
+	req.Shortcode = shortcode
 	return req, nil
 }

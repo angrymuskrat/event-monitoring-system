@@ -107,3 +107,14 @@ func (c MockConnector) ShortPostsInInterval(city string, shortcodes []string, st
 	}
 	return res, nil
 }
+
+const startTimestamp, endTimestamp = 1546300800, 1577836800
+
+func (c MockConnector) SingleShortPost(city, shortcode string) (*data.ShortPost, error) {
+
+	genConfig := urand.MakeGenConfigByCorner(topLeft, botRight, startTimestamp, endTimestamp)
+	generator := urand.New()
+	post := generator.ShortPost(genConfig)
+	post.Shortcode = shortcode
+	return post, nil
+}
