@@ -181,6 +181,18 @@ func makePullShortPostInIntervalEndpoint(s Service) endpoint.Endpoint {
 		if err != nil {
 			msg = err.Error()
 		}
-		return proto.PullShortPostInIntervalReply{ Posts: posts, Err: msg }, nil
+		return proto.PullShortPostInIntervalReply{Posts: posts, Err: msg}, nil
+	}
+}
+
+func makePullSingleShortPost(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(proto.PullSingleShortPostRequest)
+		post, err := s.PullSingleShortPost(ctx, req.CityId, req.Shortcode)
+		var msg string
+		if err != nil {
+			msg = err.Error()
+		}
+		return proto.PullSingleShortPostReply{Post: post, Err: msg}, nil
 	}
 }

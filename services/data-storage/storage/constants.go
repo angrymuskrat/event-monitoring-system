@@ -82,6 +82,9 @@ const CreatePostsTable = `
 		PRIMARY KEY (Shortcode, Timestamp)
 	);
 `
+
+const CreatePostsIndexByShortcode = "CREATE INDEX IF NOT EXISTS shortcode_to_post ON posts (shortcode);"
+
 const InsertPost = `
 	INSERT INTO posts
 		(ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, Location)
@@ -133,7 +136,7 @@ const CreateEventsTable = `
 	);
 `
 const InsertEvent = `
-	INSERT INTO events
+	INSERT INTO events 
 		(Title, Start, Finish, Center, PostCodes, Tags)
 	VALUES
 		($1, $2, $3, ST_SetSRID( ST_Point($4, $5), 4326), $6, $7)
@@ -143,7 +146,7 @@ const SelectEvents = `
 		Title, Start, Finish, PostCodes, Tags,  
 		ST_X(Center) as Lon, 
 		ST_Y(Center) as Lat
-	FROM events
+	FROM events 
 	WHERE 
 		ST_Covers(%v, Center) 
 		AND (Start BETWEEN %v AND (%v - 1))
@@ -153,7 +156,7 @@ const SelectEventsTags = `
 		Title, Start, Finish, PostCodes, Tags,
 		ST_X(Center) as Lon, 
 		ST_Y(Center) as Lat
-	FROM events
+	FROM events 
 	WHERE
 		(%v <= Finish AND %v >= Start) %v;
 `
@@ -263,6 +266,20 @@ func makeSelectShortPostsInIntervalSQL(shortcodes []string, startTimestamp int64
 	shortcodesSQL += "')"
 
 	sqlRequest := fmt.Sprintf(SelectShortPostsInIntervalSQLTemplate, startTimestamp, endTimestamp, shortcodesSQL)
+	return sqlRequest
+}
+
+const makeSelectSinglePostSQLTemplate = `
+	SELECT 
+		Shortcode, Caption, CommentsCount, Timestamp, LikesCount, 
+		ST_X(Location) as Lon, 
+		ST_Y(Location) as Lat
+	FROM posts 
+	WHERE shortcode = '%v';
+`
+
+func makeSelectSinglePostSQL(shortcode string) string {
+	sqlRequest := fmt.Sprintf(makeSelectSinglePostSQLTemplate, shortcode)
 	return sqlRequest
 }
 

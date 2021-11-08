@@ -183,6 +183,10 @@ func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err er
 	if err != nil {
 		return
 	}
+	_, err = conn.Exec(ctx, CreatePostsIndexByShortcode)
+	if err != nil {
+		return
+	}
 	_, err = conn.Exec(ctx, CreateHyperTablePosts)
 	if err != nil {
 		return
@@ -673,6 +677,26 @@ func (s *Storage) PullShortPostInInterval(ctx context.Context, cityId string, sh
 		posts = append(posts, *sp)
 	}
 	return posts, nil
+}
+
+func (s *Storage) PullSingleShortPost(ctx context.Context, cityId, shortcode string) (post *data.ShortPost, err error) {
+	conn, err := s.getCityConn(ctx, cityId)
+	if err != nil {
+		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
+		return nil, err
+	}
+	statement := makeSelectSinglePostSQL(shortcode)
+	row := conn.QueryRow(ctx, statement)
+
+	post = &data.ShortPost{}
+
+	err = row.Scan(&post.Shortcode, &post.Caption, &post.CommentsCount, &post.LikesCount, &post.Timestamp,
+		&post.Lon, &post.Lat)
+	if err != nil {
+		unilog.Logger().Error("error in pullSingleShortPost", zap.Error(err))
+		return nil, err
+	}
+	return post, nil
 }
 
 func (s *Storage) Close(ctx context.Context) {

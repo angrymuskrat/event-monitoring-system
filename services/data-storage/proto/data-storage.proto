@@ -28,6 +28,8 @@ service DataStorage {
     rpc PullLocations (PullLocationsRequest) returns (PullLocationsReply) {}
 
     rpc PullShortPostInInterval (PullShortPostInIntervalRequest) returns (PullShortPostInIntervalReply) {}
+
+    rpc PullSingleShortPost (PullSingleShortPostRequest) returns (PullSingleShortPostReply) {}
 }
 
 message InsertCityRequest {
@@ -182,5 +184,15 @@ message PullShortPostInIntervalRequest {
 
 message PullShortPostInIntervalReply {
     repeated data.ShortPost posts = 1 [(gogoproto.nullable) = false];
+    string err = 2;
+}
+
+message PullSingleShortPostRequest {
+    string cityId = 1;
+    string shortcode = 2;
+}
+
+message PullSingleShortPostReply {
+    data.ShortPost post = 1;
     string err = 2;
 }

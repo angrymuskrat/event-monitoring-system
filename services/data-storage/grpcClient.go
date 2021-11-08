@@ -29,6 +29,7 @@ type GrpcService struct {
 	pushLocations           endpoint.Endpoint
 	pullLocations           endpoint.Endpoint
 	pullShortPostInInterval endpoint.Endpoint
+	pullSingleShortPost     endpoint.Endpoint
 }
 
 func (svc GrpcService) InsertCity(ctx context.Context, city data.City, updateIfExists bool) error {
@@ -213,6 +214,19 @@ func (svc GrpcService) PullShortPostInInterval(ctx context.Context, cityId strin
 	return response.Posts, nil
 }
 
+func (svc GrpcService) PullSingleShortPost(ctx context.Context, cityId, shortcode string) (*data.ShortPost, error) {
+	resp, err := svc.pullSingleShortPost(ctx, proto.PullSingleShortPostRequest{CityId: cityId,
+		Shortcode: shortcode})
+	if err != nil {
+		return nil, err
+	}
+	response := resp.(proto.PullSingleShortPostReply)
+	if response.Err != "" {
+		return nil, errors.New(response.Err)
+	}
+	return response.Post, nil
+}
+
 func NewGRPCClient(conn *grpc.ClientConn) GrpcService {
 	svc := GrpcService{}
 	insertCityEndpoint := grpctransport.NewClient(
@@ -379,5 +393,16 @@ func NewGRPCClient(conn *grpc.ClientConn) GrpcService {
 		Name:    "PullShortPostInInterval",
 		Timeout: TimeWaitingClient,
 	}))(pullShortPostInInterval)
+
+	pullSingleShortPost := grpctransport.NewClient(
+		conn, "proto.DataStorage", "PullSingleShortPost",
+		encodeGRPCPullSingleShortPostRequest,
+		decodeGRPCPullSingleShortPostResponse,
+		proto.PullSingleShortPostReply{},
+	).Endpoint()
+	svc.pullSingleShortPost = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{
+		Name:    "PullSingleShortPost",
+		Timeout: TimeWaitingClient,
+	}))(pullSingleShortPost)
 	return svc
 }

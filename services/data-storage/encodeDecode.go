@@ -305,3 +305,23 @@ func decodeGRPCPullShortPostInIntervalResponse(_ context.Context, grpcReply inte
 	reply := grpcReply.(*proto.PullShortPostInIntervalReply)
 	return *reply, nil
 }
+
+func encodeGRPCPullSingleShortPostRequest(_ context.Context, request interface{}) (interface{}, error) {
+	req := request.(proto.PullSingleShortPostRequest)
+	return &req, nil
+}
+
+func decodeGRPCPullSingleShortPostRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*proto.PullSingleShortPostRequest)
+	return *req, nil
+}
+
+func encodeGRPCPullSingleShortPostResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(proto.PullSingleShortPostReply)
+	return &resp, nil
+}
+
+func decodeGRPCPullSingleShortPostResponse(_ context.Context, grpcReply interface{}) (interface{}, error) {
+	reply := grpcReply.(*proto.PullSingleShortPostReply)
+	return *reply, nil
+}

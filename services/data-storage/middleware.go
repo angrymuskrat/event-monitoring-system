@@ -193,3 +193,15 @@ func (mw loggingMiddleware) PullShortPostInInterval(ctx context.Context, cityId 
 	posts, err = mw.next.PullShortPostInInterval(ctx, cityId, shortCodes, startTimestamp, endTimestamp)
 	return
 }
+
+func (mw loggingMiddleware) PullSingleShortPost(ctx context.Context, cityId, shortcode string) (post *data.ShortPost, err error) {
+	defer func(begin time.Time) {
+		mw.logger.Info("pull short posts in interval",
+			zap.String("city id", cityId),
+			zap.String("shortcode", shortcode),
+			zap.Error(err),
+			zap.String("took", time.Since(begin).String()))
+	}(time.Now())
+	post, err = mw.next.PullSingleShortPost(ctx, cityId, shortcode)
+	return
+}

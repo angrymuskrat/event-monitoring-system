@@ -102,6 +102,8 @@ type Service interface {
 	// input: contex, id of the city, shortcodes of needed posts, start and end timestamps of the timeinterval (for increaseing time of request)
 	// output: array of short posts, error
 	PullShortPostInInterval(ctx context.Context, cityId string, shortCodes []string, startTimestamp int64, endTimestamp int64) ([]data.ShortPost, error)
+
+	PullSingleShortPost(ctx context.Context, cityId, shortcode string) (*data.ShortPost, error)
 }
 
 type basicService struct {
@@ -164,6 +166,10 @@ func (s basicService) PullLocations(ctx context.Context, cityId string) ([]data.
 	return s.db.PullLocations(ctx, cityId)
 }
 
-func (s basicService) PullShortPostInInterval(ctx context.Context, cityId string, shortCodes []string, startTimestamp int64, endTimestamp int64) ([]data.ShortPost, error){
+func (s basicService) PullShortPostInInterval(ctx context.Context, cityId string, shortCodes []string, startTimestamp int64, endTimestamp int64) ([]data.ShortPost, error) {
 	return s.db.PullShortPostInInterval(ctx, cityId, shortCodes, startTimestamp, endTimestamp)
+}
+
+func (s basicService) PullSingleShortPost(ctx context.Context, cityId, shortcode string) (*data.ShortPost, error) {
+	return s.db.PullSingleShortPost(ctx, cityId, shortcode)
 }

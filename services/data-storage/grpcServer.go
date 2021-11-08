@@ -22,6 +22,7 @@ type grpcServer struct {
 	pushLocations           grpctransport.Handler
 	pullLocations           grpctransport.Handler
 	pullShortPostInInterval grpctransport.Handler
+	pullSingleShortPost     grpctransport.Handler
 }
 
 func NewGRPCServer(svc Service) proto.DataStorageServer {
@@ -100,6 +101,11 @@ func NewGRPCServer(svc Service) proto.DataStorageServer {
 			makePullShortPostInIntervalEndpoint(svc),
 			decodeGRPCPullShortPostInIntervalRequest,
 			encodeGRPCPullShortPostInIntervalResponse,
+		),
+		pullSingleShortPost: grpctransport.NewServer(
+			makePullSingleShortPost(svc),
+			decodeGRPCPullSingleShortPostRequest,
+			encodeGRPCPullSingleShortPostResponse,
 		),
 	}
 }
@@ -228,4 +234,13 @@ func (s *grpcServer) PullShortPostInInterval(ctx context.Context,
 		return nil, err
 	}
 	return rep.(*proto.PullShortPostInIntervalReply), nil
+}
+
+func (s *grpcServer) PullSingleShortPost(ctx context.Context,
+	req *proto.PullSingleShortPostRequest) (*proto.PullSingleShortPostReply, error) {
+	_, rep, err := s.pullSingleShortPost.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*proto.PullSingleShortPostReply), nil
 }
