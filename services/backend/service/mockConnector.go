@@ -2,7 +2,7 @@ package service
 
 import (
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
-	urand "github.com/angrymuskrat/event-monitoring-system/utils/rand"
+	postrand "github.com/angrymuskrat/event-monitoring-system/utils/rand/positional"
 	"math/rand"
 	"strconv"
 )
@@ -98,23 +98,20 @@ func (c MockConnector) ShortPostsInInterval(city string, shortcodes []string, st
 	if start > end {
 		return res, nil
 	}
-	genConfig := urand.MakeGenConfigByCorner(topLeft, botRight, start, end)
-	generator := urand.New()
+	generator := postrand.New(topLeft, botRight)
 	for _, code := range shortcodes {
-		post := generator.ShortPost(genConfig)
+		post := generator.ShortPost(start, end)
 		post.Shortcode = code
 		res = append(res, *post)
 	}
 	return res, nil
 }
 
-const startTimestamp, endTimestamp = 1546300800, 1577836800
+const StartTimestamp, EndTimestamp = 1546300800, 1577836800
 
 func (c MockConnector) SingleShortPost(city, shortcode string) (*data.ShortPost, error) {
-
-	genConfig := urand.MakeGenConfigByCorner(topLeft, botRight, startTimestamp, endTimestamp)
-	generator := urand.New()
-	post := generator.ShortPost(genConfig)
+	generator := postrand.New(topLeft, botRight)
+	post := generator.ShortPost(StartTimestamp, EndTimestamp)
 	post.Shortcode = shortcode
 	return post, nil
 }
