@@ -45,3 +45,7 @@ type SingleShortPostRequest struct {
 	City      string `json:"city"`
 	Shortcode string `json:"code"`
 }
+
+type InstaImageRequest struct {
+	Shortcode string `json:"code"`
+}

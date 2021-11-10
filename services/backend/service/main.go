@@ -3,10 +3,12 @@ package service
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"github.com/gorilla/mux"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -42,6 +44,7 @@ func Start(confPath string) {
 	r.HandleFunc("/search/{city}/{tags}/{start}/{finish}", search).Methods("GET")
 	r.HandleFunc("/shortPosts/{city}/{start}/{end}/{codes}", shortPosts).Methods("GET")
 	r.HandleFunc("/singleShortPost/{city}/{code}", singleShortPost).Methods("GET")
+	r.HandleFunc("/image/{code}", instaImage).Methods("GET")
 	r.HandleFunc("/login", sm.login).Methods("POST")
 	r.Use(sm.Handler)
 	r.Use(tm.Handler)
@@ -189,6 +192,38 @@ func singleShortPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		unilog.Logger().Error("unable to encode result to JSON", zap.Error(err))
 		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func instaImage(w http.ResponseWriter, r *http.Request) {
+	req, err := decodeInstaImageRequest(r)
+	if err != nil {
+		unilog.Logger().Error("unable to decode request", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	urlTemplate := "https://www.instagram.com/p/%v/media/?size=m"
+	url := fmt.Sprintf(urlTemplate, req.Shortcode)
+	resp, err := http.Get(url)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		unilog.Logger().Error("unable to get image from Instagram", zap.Error(err))
+		return
+	}
+	//copyHeader(w.Header(), resp.Header)
+	var image []byte
+	_, err = resp.Body.Read(image)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		unilog.Logger().Error("unable to read image from response", zap.Error(err))
+		return
+	}
+	_, err = io.Copy(w, resp.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		unilog.Logger().Error("unable to write response", zap.Error(err))
 		return
 	}
 }
@@ -420,4 +455,23 @@ func decodeSingleShortPostRequest(r *http.Request) (SingleShortPostRequest, erro
 	}
 	req.Shortcode = shortcode
 	return req, nil
+}
+
+func decodeInstaImageRequest(r *http.Request) (InstaImageRequest, error) {
+	vars := mux.Vars(r)
+	req := InstaImageRequest{}
+	shortcode, ok := vars["code"]
+	if !ok {
+		return InstaImageRequest{}, errors.New("unable to get city name")
+	}
+	req.Shortcode = shortcode
+	return req, nil
+}
+
+func copyHeader(dst, src http.Header) {
+	for k, vv := range src {
+		for _, v := range vv {
+			dst.Add(k, v)
+		}
+	}
 }
