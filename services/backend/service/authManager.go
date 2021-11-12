@@ -17,11 +17,12 @@ const (
 )
 
 type AuthManager struct {
-	store  *sessions.CookieStore
-	logger *zap.Logger
+	store     *sessions.CookieStore
+	logger    *zap.Logger
+	isTestMod bool
 }
 
-func newAuthManager(key string, logPath string) (*AuthManager, error) {
+func newAuthManager(key string, logPath string, isTestMod bool) (*AuthManager, error) {
 	m := AuthManager{}
 	if len(key) < 32 {
 		return nil, errors.New("key must be at least 32 symbols long")
@@ -48,6 +49,7 @@ func newAuthManager(key string, logPath string) (*AuthManager, error) {
 		return nil, err
 	}
 	m.logger = log
+	m.isTestMod = isTestMod
 	return &m, nil
 }
 
@@ -61,6 +63,10 @@ func (m *AuthManager) Handler(next http.Handler) http.Handler {
 		if err != nil {
 			m.logger.Error("unable to get session from the store", zap.Error(err))
 			http.Error(w, "server error", http.StatusInternalServerError)
+			return
+		}
+		if m.isTestMod {
+			next.ServeHTTP(w, r)
 			return
 		}
 		if ar, ok := sess.Values["auth"]; !ok {

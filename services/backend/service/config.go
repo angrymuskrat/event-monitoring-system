@@ -14,6 +14,7 @@ type Config struct {
 	TimerLogPath    string
 	User            string
 	Password        string
+	TestMod         bool
 	Connector       string
 	ConnectorParams map[string]string `toml:"conn-params"`
 	CORSOrigin      string            `toml:"cors-origin"`

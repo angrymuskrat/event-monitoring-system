@@ -29,7 +29,7 @@ func Start(confPath string) {
 	svc = &backendService{
 		storageConn: conn,
 	}
-	sm, err := newAuthManager(conf.SessionKey, conf.AuthLogPath)
+	sm, err := newAuthManager(conf.SessionKey, conf.AuthLogPath, conf.TestMod)
 	if err != nil {
 		panic(err)
 	}
@@ -49,16 +49,20 @@ func Start(confPath string) {
 	r.Use(sm.Handler)
 	r.Use(tm.Handler)
 
-	http.Handle("/", accessControl(r, conf.CORSOrigin))
+	http.Handle("/", accessControl(r, conf.CORSOrigin, conf.TestMod))
 	err = http.ListenAndServe(conf.Address, nil)
 	if err != nil {
 		unilog.Logger().Error("error in service handler", zap.Error(err))
 	}
 }
 
-func accessControl(h http.Handler, origin string) http.Handler {
+func accessControl(h http.Handler, origin string, isTestMod bool) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
+		if isTestMod {
+			w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
@@ -222,8 +226,8 @@ func instaImage(w http.ResponseWriter, r *http.Request) {
 	}
 	_, err = io.Copy(w, resp.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		unilog.Logger().Error("unable to write response", zap.Error(err))
+		//w.WriteHeader(http.StatusInternalServerError)
+		//unilog.Logger().Error("unable to write response", zap.Error(err))
 		return
 	}
 }
