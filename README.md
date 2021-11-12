@@ -29,7 +29,7 @@
 
 #### Event object
 A city event is several posts close in location and time and linked by a common theme or hashtag.
-```json
+```
 {
   "Center": "{float64},{float64}", // concatinating of latitude and longitude of a event
   "PostCodes": array of string, // shortcodes of Instagram posts related with the event  
@@ -42,7 +42,7 @@ A city event is several posts close in location and time and linked by a common 
 
 #### Timeline object
 Timeline object characterizes the number of publications and events in a given hour
-```json
+```
 {
     "time": int, // unix timestamp of begining the hour
     "posts": int, // count of posts in the hour 
@@ -53,7 +53,7 @@ Timeline object characterizes the number of publications and events in a given h
 #### Heatmap object
 Heatmap object is a map area of size 50 by 50 meters for which the number of publications is calculated, the cell is 
 set by the coordinates of its center.
-```json
+```
 {
   "c": "{float64},{float64}", // concatinating of latitude and longitude - center the cell
   "n": int // count of posts in this cell
@@ -62,7 +62,7 @@ set by the coordinates of its center.
 
 #### ShortPost object
 ShortPost contains basic information about the Instagram post.
-```json
+```
 {
   "Shortcode": string, // unic id of the post
   "Caption": string, // text of the post
@@ -79,7 +79,7 @@ Request: /login <br>
 Type: POST <br>
 Description: For an existing user it gives the "session" cookie needed for all other requests. <br>
 Input: body - raw object:
-```json
+```
 {
   "login": string,  // login 
   "password": string // password
