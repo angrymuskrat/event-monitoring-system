@@ -121,10 +121,10 @@ const SelectAggrPosts = `
 	WHERE hour = %v AND ST_Contains(%v, center); 
 `
 
-const CreateHyperTableEvents = "SELECT create_hypertable('events', 'start', chunk_time_interval => 86400, if_not_exists => TRUE);"
-const SetTimeFunctionForEvents = "SELECT set_integer_now_func('events', 'unix_now', replace_if_exists => true);"
+const CreateHyperTableEvents = "SELECT create_hypertable('events_12', 'start', chunk_time_interval => 86400, if_not_exists => TRUE);"
+const SetTimeFunctionForEvents = "SELECT set_integer_now_func('events_12', 'unix_now', replace_if_exists => true);"
 const CreateEventsTable = `
-	CREATE TABLE IF NOT EXISTS events (
+	CREATE TABLE IF NOT EXISTS events_12 (
 		Id SERIAL,
 		Title VARCHAR (100),
 		Start BIGINT,
@@ -136,7 +136,7 @@ const CreateEventsTable = `
 	);
 `
 const InsertEvent = `
-	INSERT INTO events 
+	INSERT INTO events_12
 		(Title, Start, Finish, Center, PostCodes, Tags)
 	VALUES
 		($1, $2, $3, ST_SetSRID( ST_Point($4, $5), 4326), $6, $7)
@@ -146,7 +146,7 @@ const SelectEvents = `
 		Title, Start, Finish, PostCodes, Tags,  
 		ST_X(Center) as Lon, 
 		ST_Y(Center) as Lat
-	FROM events 
+	FROM events_12
 	WHERE 
 		ST_Covers(%v, Center) 
 		AND (Start BETWEEN %v AND (%v - 1))
@@ -156,7 +156,7 @@ const SelectEventsTags = `
 		Title, Start, Finish, PostCodes, Tags,
 		ST_X(Center) as Lon, 
 		ST_Y(Center) as Lat
-	FROM events 
+	FROM events_12
 	WHERE
 		(%v <= Finish AND %v >= Start) %v;
 `
@@ -188,7 +188,7 @@ const CreateEventsTimelineView = `
 	SELECT
 	time_bucket('3600', start) as time,
 	COUNT(*) as count
-	FROM events 
+	FROM events_12
 	GROUP BY time;
 `
 const SelectTimeline = `
@@ -250,7 +250,7 @@ const SelectGrid = `
 
 const SelectShortPostsInIntervalSQLTemplate = `
 	SELECT 
-		Shortcode, Caption, CommentsCount, Timestamp, LikesCount, 
+		Shortcode, Caption, CommentsCount, LikesCount, Timestamp, 
 		ST_X(Location) as Lon, 
 		ST_Y(Location) as Lat
 	FROM posts
@@ -271,7 +271,7 @@ func makeSelectShortPostsInIntervalSQL(shortcodes []string, startTimestamp int64
 
 const makeSelectSinglePostSQLTemplate = `
 	SELECT 
-		Shortcode, Caption, CommentsCount, Timestamp, LikesCount, 
+		Shortcode, Caption, CommentsCount, LikesCount, Timestamp, 
 		ST_X(Location) as Lon, 
 		ST_Y(Location) as Lat
 	FROM posts 
