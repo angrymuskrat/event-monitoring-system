@@ -112,6 +112,12 @@ const CreateAggrPostsView = `
 	FROM posts
 	GROUP BY hour, center;
 `
+
+func makeCreateAggrPostsView(gridSize float64) string {
+	statement := fmt.Sprintf(CreateAggrPostsView, gridSize, gridSize)
+	return statement
+}
+
 const SelectAggrPosts = `
 	SELECT
 		count,
@@ -121,10 +127,22 @@ const SelectAggrPosts = `
 	WHERE hour = %v AND ST_Contains(%v, center); 
 `
 
-const CreateHyperTableEvents = "SELECT create_hypertable('events_12', 'start', chunk_time_interval => 86400, if_not_exists => TRUE);"
-const SetTimeFunctionForEvents = "SELECT set_integer_now_func('events_12', 'unix_now', replace_if_exists => true);"
+const CreateHyperTableEvents = "SELECT create_hypertable('%v', 'start', chunk_time_interval => 86400, if_not_exists => TRUE);"
+
+func makeCreateHyperTableEvents(eventTableName string) string {
+	statement := fmt.Sprintf(CreateHyperTableEvents, eventTableName)
+	return statement
+}
+
+const SetTimeFunctionForEvents = "SELECT set_integer_now_func('%v', 'unix_now', replace_if_exists => true);"
+
+func makeSetTimeFunctionForEvents(eventTableName string) string {
+	statement := fmt.Sprintf(SetTimeFunctionForEvents, eventTableName)
+	return statement
+}
+
 const CreateEventsTable = `
-	CREATE TABLE IF NOT EXISTS events_12 (
+	CREATE TABLE IF NOT EXISTS %v (
 		Id SERIAL,
 		Title VARCHAR (100),
 		Start BIGINT,
@@ -135,40 +153,59 @@ const CreateEventsTable = `
 		PRIMARY KEY (Id, Start)
 	);
 `
+
+func makeCreateEventsTable(eventTableName string) string {
+	statement := fmt.Sprintf(CreateEventsTable, eventTableName)
+	return statement
+}
+
 const InsertEvent = `
-	INSERT INTO events_12
+	INSERT INTO %v
 		(Title, Start, Finish, Center, PostCodes, Tags)
 	VALUES
 		($1, $2, $3, ST_SetSRID( ST_Point($4, $5), 4326), $6, $7)
 `
+
+func makeInsertEvent(eventTableName string) string {
+	statement := fmt.Sprintf(InsertEvent, eventTableName)
+	return statement
+}
+
 const SelectEvents = `
 	SELECT 
 		Title, Start, Finish, PostCodes, Tags,  
 		ST_X(Center) as Lon, 
 		ST_Y(Center) as Lat
-	FROM events_12
+	FROM %v
 	WHERE 
 		ST_Covers(%v, Center) 
 		AND (Start BETWEEN %v AND (%v - 1))
 `
+
+func makeSelectEvents(eventTableName string, interval data.SpatioHourInterval) string {
+	poly := MakePoly(interval.Area)
+	statement := fmt.Sprintf(SelectEvents, eventTableName, poly, interval.Hour, interval.Hour+Hour)
+	return statement
+}
+
 const SelectEventsTags = `
 	SELECT
 		Title, Start, Finish, PostCodes, Tags,
 		ST_X(Center) as Lon, 
 		ST_Y(Center) as Lat
-	FROM events_12
+	FROM %v
 	WHERE
 		(%v <= Finish AND %v >= Start) %v;
 `
 
-func MakeSelectEventsTags(tags []string, start, finish int64) string {
+func makeSelectEventsTags(eventsTableName string, tags []string, start, finish int64) string {
 	tagsStr := ""
 	if len(tags) > 0 {
 		for _, tag := range tags {
 			tagsStr += fmt.Sprintf("\n		AND '%v' = ANY (Tags)", tag)
 		}
 	}
-	return fmt.Sprintf(SelectEventsTags, start, finish, tagsStr)
+	return fmt.Sprintf(SelectEventsTags, eventsTableName, start, finish, tagsStr)
 }
 
 const CreatePostsTimelineView = `
@@ -182,15 +219,21 @@ const CreatePostsTimelineView = `
 	GROUP BY time;
 `
 const CreateEventsTimelineView = `
-	CREATE MATERIALIZED VIEW events_timeline
+	CREATE MATERIALIZED VIEW %v_timeline
 	WITH (timescaledb.continuous)
 	AS
 	SELECT
 	time_bucket('3600', start) as time,
 	COUNT(*) as count
-	FROM events_12
+	FROM %v
 	GROUP BY time;
 `
+
+func makeCreateEventsTimelineView(eventTableName string) string {
+	statement := fmt.Sprintf(CreateEventsTimelineView, eventTableName, eventTableName)
+	return statement
+}
+
 const SelectTimeline = `
 	SELECT
 		SUM(posts) as posts,
@@ -202,11 +245,17 @@ const SelectTimeline = `
  		WHERE time BETWEEN %v AND %v
  		UNION
  		SELECT 0 as posts, count as events, time
- 		FROM events_timeline
+ 		FROM %v_timeline
 		WHERE time BETWEEN %v AND %v
 	) as tmp
 	GROUP BY time;
 `
+
+func makeSelectTimeline(startTimestamp, finishTimestamp int64, eventTableName string) string {
+	statement := fmt.Sprintf(SelectTimeline, startTimestamp, finishTimestamp, eventTableName,
+		startTimestamp, finishTimestamp)
+	return statement
+}
 
 const CreateLocationsTable = `
 	CREATE TABLE IF NOT EXISTS locations (

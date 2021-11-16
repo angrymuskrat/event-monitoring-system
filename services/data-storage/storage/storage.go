@@ -196,35 +196,30 @@ func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err er
 		return
 	}
 
-	createAggrPostsView := fmt.Sprintf(CreateAggrPostsView, s.config.GRIDSize, s.config.GRIDSize) // set grid size
-	_, err = conn.Exec(ctx, createAggrPostsView)
+	_, err = conn.Exec(ctx, makeCreateAggrPostsView(s.config.GRIDSize))
 	if err != nil && IsNotAlreadyExistsError(err) {
 		return
 	}
-
 	// create events table
-	_, err = conn.Exec(ctx, CreateEventsTable)
-	if err != nil {
-		return
-	}
-	_, err = conn.Exec(ctx, CreateHyperTableEvents)
+	_, err = conn.Exec(ctx, makeCreateEventsTable(s.config.EventsTableName))
 	if err != nil {
 		return
 	}
 
-	_, err = conn.Exec(ctx, SetTimeFunctionForEvents)
+	_, err = conn.Exec(ctx, makeCreateHyperTableEvents(s.config.EventsTableName))
 	if err != nil {
 		return
 	}
 
-	createPostsTimelineView := fmt.Sprintf(CreatePostsTimelineView)
-	_, err = conn.Exec(ctx, createPostsTimelineView)
+	_, err = conn.Exec(ctx, makeSetTimeFunctionForEvents(s.config.EventsTableName))
+	if err != nil {
+		return
+	}
+	_, err = conn.Exec(ctx, CreatePostsTimelineView)
 	if err != nil && IsNotAlreadyExistsError(err) {
 		return
 	}
-
-	createEventsTimelineView := fmt.Sprintf(CreateEventsTimelineView)
-	_, err = conn.Exec(ctx, createEventsTimelineView)
+	_, err = conn.Exec(ctx, makeCreateEventsTimelineView(s.config.EventsTableName))
 	if err != nil && IsNotAlreadyExistsError(err) {
 		return
 	}
@@ -399,7 +394,7 @@ func (s *Storage) PullTimeline(ctx context.Context, cityId string, start, finish
 		return nil, err
 	}
 
-	statement := fmt.Sprintf(SelectTimeline, start, finish, start, finish)
+	statement := makeSelectTimeline(start, finish, s.config.EventsTableName)
 	rows, err := conn.Query(ctx, statement)
 	if err != nil {
 		unilog.Logger().Error("error in pull timeline", zap.Error(err))
@@ -504,7 +499,8 @@ func (s *Storage) PushEvents(ctx context.Context, cityId string, events []data.E
 	defer tx.Rollback(ctx)
 
 	for _, event := range events {
-		_, err = tx.Exec(ctx, InsertEvent, event.Title, event.Start, event.Finish, event.Center.Lon, event.Center.Lat, pq.Array(event.PostCodes), pq.Array(event.Tags))
+		_, err = tx.Exec(ctx, makeInsertEvent(s.config.EventsTableName),
+			event.Title, event.Start, event.Finish, event.Center.Lon, event.Center.Lat, pq.Array(event.PostCodes), pq.Array(event.Tags))
 		if err != nil {
 			unilog.Logger().Error("is not able to exec event", zap.Error(err))
 			return ErrPushEvents
@@ -524,9 +520,7 @@ func (s *Storage) PullEvents(ctx context.Context, cityId string, interval data.S
 		return nil, err
 	}
 
-	poly := MakePoly(interval.Area)
-	statement := fmt.Sprintf(SelectEvents, poly, interval.Hour, interval.Hour+Hour)
-	rows, err := conn.Query(ctx, statement)
+	rows, err := conn.Query(ctx, makeSelectEvents(s.config.EventsTableName, interval))
 
 	if err != nil {
 		unilog.Logger().Error("error in select events", zap.Error(err))
@@ -555,7 +549,7 @@ func (s *Storage) PullEventsTags(ctx context.Context, cityId string, tags []stri
 		return nil, err
 	}
 
-	statement := MakeSelectEventsTags(tags, startTime, finishTime)
+	statement := makeSelectEventsTags(s.config.EventsTableName, tags, startTime, finishTime)
 	rows, err := conn.Query(ctx, statement)
 
 	if err != nil {

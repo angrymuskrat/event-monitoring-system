@@ -14,6 +14,7 @@ type Configuration struct {
 	Port            string
 	GRIDSize        float64
 	RefreshInterval string
+	EventsTableName string
 }
 
 func readConfig(path string) (cfg Configuration, err error) {
