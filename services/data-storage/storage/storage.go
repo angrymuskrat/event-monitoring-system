@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -66,10 +65,10 @@ func (s *Storage) initGeneral(ctx context.Context) (err error) {
 	}
 
 	var name string
-	row := conn.QueryRow(ctx, MakeSelectDB(GeneralDBName))
+	row := conn.QueryRow(ctx, makeSelectDBSQL(GeneralDBName))
 	err = row.Scan(&name)
 	if err == pgx.ErrNoRows {
-		_, err = conn.Exec(ctx, MakeCreateDB(GeneralDBName))
+		_, err = conn.Exec(ctx, makeCreateDBSQL(GeneralDBName))
 	}
 	if err != nil {
 		return err
@@ -84,11 +83,11 @@ func (s *Storage) initGeneral(ctx context.Context) (err error) {
 		return err
 	}
 
-	_, err = conn.Exec(ctx, ExtensionPostGIS)
+	_, err = conn.Exec(ctx, ExtensionPostGISSQL)
 	if err != nil {
 		return err
 	}
-	_, err = conn.Exec(ctx, CreateCitiesTable)
+	_, err = conn.Exec(ctx, CreateCitiesTableSQL)
 	if err != nil {
 		return err
 	}
@@ -114,10 +113,10 @@ func (s *Storage) initCities(ctx context.Context) (err error) {
 }
 
 func (s *Storage) initCity(ctx context.Context, cityID string) error {
-	row := s.general.QueryRow(ctx, MakeSelectDB(cityID))
+	row := s.general.QueryRow(ctx, makeSelectDBSQL(cityID))
 	err := row.Scan(&cityID)
 	if err == pgx.ErrNoRows {
-		_, err = s.general.Exec(ctx, MakeCreateDB(cityID))
+		_, err = s.general.Exec(ctx, makeCreateDBSQL(cityID))
 	}
 	if err != nil {
 		unilog.Logger().Error("unable to create database for the city")
@@ -160,78 +159,78 @@ func (s *Storage) setCityEnvironment(ctx context.Context, cityId string) (err er
 	if err != nil {
 		return
 	}
-	_, err = conn.Exec(ctx, ExtensionTimescaleDB)
+	_, err = conn.Exec(ctx, ExtensionTimescaleDBSQL)
 	if err != nil {
 		return
 	}
-	_, err = conn.Exec(ctx, ExtensionPostGIS)
+	_, err = conn.Exec(ctx, ExtensionPostGISSQL)
 	if err != nil {
 		return
 	}
-	_, err = conn.Exec(ctx, ExtensionPostGISTopology)
+	_, err = conn.Exec(ctx, ExtensionPostGISTopologySQL)
 	if err != nil {
 		return
 	}
 
-	_, err = conn.Exec(ctx, CreateTimeFunction)
+	_, err = conn.Exec(ctx, CreateTimeFunctionSQL)
 	if err != nil {
 		return
 	}
 
 	// create table posts with it's environment (hypertable and integer time now function)
-	_, err = conn.Exec(ctx, CreatePostsTable)
+	_, err = conn.Exec(ctx, CreatePostsTableSQL)
 	if err != nil {
 		return
 	}
-	_, err = conn.Exec(ctx, CreatePostsIndexByShortcode)
+	_, err = conn.Exec(ctx, CreatePostsIndexByShortcodeSQL)
 	if err != nil {
 		return
 	}
-	_, err = conn.Exec(ctx, CreateHyperTablePosts)
+	_, err = conn.Exec(ctx, CreateHyperTablePostsSQL)
 	if err != nil {
 		return
 	}
-	_, err = conn.Exec(ctx, SetTimeFunctionForPosts)
+	_, err = conn.Exec(ctx, SetTimeFunctionForPostsSQL)
 	if err != nil {
 		return
 	}
 
-	_, err = conn.Exec(ctx, makeCreateAggrPostsView(s.config.GRIDSize))
-	if err != nil && IsNotAlreadyExistsError(err) {
+	_, err = conn.Exec(ctx, makeCreateAggrPostsViewSQL(s.config.GRIDSize))
+	if err != nil && isNotAlreadyExistsError(err) {
 		return
 	}
 	// create events table
-	_, err = conn.Exec(ctx, makeCreateEventsTable(s.config.EventsTableName))
+	_, err = conn.Exec(ctx, makeCreateEventsTableSQL(s.config.EventsTableName))
 	if err != nil {
 		return
 	}
 
-	_, err = conn.Exec(ctx, makeCreateHyperTableEvents(s.config.EventsTableName))
+	_, err = conn.Exec(ctx, makeCreateHyperTableEventsSQL(s.config.EventsTableName))
 	if err != nil {
 		return
 	}
 
-	_, err = conn.Exec(ctx, makeSetTimeFunctionForEvents(s.config.EventsTableName))
+	_, err = conn.Exec(ctx, makeSetTimeFunctionForEventsSQL(s.config.EventsTableName))
 	if err != nil {
 		return
 	}
-	_, err = conn.Exec(ctx, CreatePostsTimelineView)
-	if err != nil && IsNotAlreadyExistsError(err) {
+	_, err = conn.Exec(ctx, CreatePostsTimelineViewSQL)
+	if err != nil && isNotAlreadyExistsError(err) {
 		return
 	}
-	_, err = conn.Exec(ctx, makeCreateEventsTimelineView(s.config.EventsTableName))
-	if err != nil && IsNotAlreadyExistsError(err) {
+	_, err = conn.Exec(ctx, makeCreateEventsTimelineViewSQL(s.config.EventsTableName))
+	if err != nil && isNotAlreadyExistsError(err) {
 		return
 	}
 
 	// create table for locations
-	_, err = conn.Exec(ctx, CreateLocationsTable)
+	_, err = conn.Exec(ctx, CreateLocationsTableSQL)
 	if err != nil {
 		return
 	}
 
 	// create table for grids
-	_, err = conn.Exec(ctx, CreateGridsTable)
+	_, err = conn.Exec(ctx, CreateGridsTableSQL)
 	if err != nil {
 		return
 	}
@@ -243,9 +242,9 @@ func (s *Storage) InsertCity(ctx context.Context, city data.City, updateIfExist 
 	br := city.Area.BotRight
 	var statement string
 	if updateIfExist {
-		statement = UpsertCity
+		statement = UpsertCitySQL
 	} else {
-		statement = InsertCity
+		statement = InsertCitySQL
 	}
 	_, err = s.general.Exec(ctx, statement, city.Title, city.Code, tl.Lon, tl.Lat, br.Lon, br.Lat)
 	if err != nil {
@@ -256,8 +255,7 @@ func (s *Storage) InsertCity(ctx context.Context, city data.City, updateIfExist 
 }
 
 func (s *Storage) SelectCity(ctx context.Context, cityId string) (city *data.City, err error) {
-	statement := fmt.Sprintf(SelectCity, cityId)
-	row := s.general.QueryRow(ctx, statement)
+	row := s.general.QueryRow(ctx, makeSelectCitySQL(cityId))
 	var tl, br data.Point
 	city = &data.City{}
 
@@ -271,7 +269,7 @@ func (s *Storage) SelectCity(ctx context.Context, cityId string) (city *data.Cit
 }
 
 func (s *Storage) GetCities(ctx context.Context) (cities []data.City, err error) {
-	rows, err := s.general.Query(ctx, SelectCities)
+	rows, err := s.general.Query(ctx, SelectCitiesSQL)
 	if err != nil {
 		unilog.Logger().Error("error in GetCities - Query", zap.Error(err))
 		return nil, err
@@ -307,7 +305,7 @@ func (s *Storage) PushPosts(ctx context.Context, cityId string, posts []data.Pos
 	defer tx.Rollback(ctx)
 
 	for _, v := range posts {
-		_, err = tx.Exec(ctx, InsertPost, v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp, v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lon, v.Lat)
+		_, err = tx.Exec(ctx, InsertPostSQL, v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp, v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lon, v.Lat)
 		if err != nil {
 			unilog.Logger().Error("is not able to exec event", zap.Error(err))
 			return ErrPushPosts
@@ -326,9 +324,7 @@ func (s Storage) SelectPosts(ctx context.Context, cityId string, startTime, fini
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return nil, nil, err
 	}
-
-	statement := fmt.Sprintf(SelectPosts, startTime, finishTime)
-	rows, err := conn.Query(ctx, statement)
+	rows, err := conn.Query(ctx, makeSelectPostsSQL(startTime, finishTime))
 	if err != nil {
 		unilog.Logger().Error("error in select posts", zap.Error(err))
 		return nil, nil, ErrSelectPosts
@@ -360,10 +356,7 @@ func (s Storage) SelectAggrPosts(ctx context.Context, cityId string, interval da
 		return nil, err
 	}
 
-	poly := MakePoly(interval.Area)
-	statement := fmt.Sprintf(SelectAggrPosts, interval.Hour, poly)
-
-	rows, err := conn.Query(ctx, statement)
+	rows, err := conn.Query(ctx, makeSelectAggrPostsSQL(interval))
 	if err != nil {
 		unilog.Logger().Error("error in select aggr_posts", zap.Error(err))
 		return nil, ErrSelectPosts
@@ -394,7 +387,7 @@ func (s *Storage) PullTimeline(ctx context.Context, cityId string, start, finish
 		return nil, err
 	}
 
-	statement := makeSelectTimeline(start, finish, s.config.EventsTableName)
+	statement := makeSelectTimelineSQL(start, finish, s.config.EventsTableName)
 	rows, err := conn.Query(ctx, statement)
 	if err != nil {
 		unilog.Logger().Error("error in pull timeline", zap.Error(err))
@@ -426,7 +419,7 @@ func (s *Storage) PushGrid(ctx context.Context, cityId string, grids map[int64][
 	defer tx.Rollback(ctx)
 
 	for id, blob := range grids {
-		_, err = tx.Exec(ctx, InsertGrid, id, blob)
+		_, err = tx.Exec(ctx, InsertGridSQL, id, blob)
 		if err != nil {
 			if strings.Contains(err.Error(), "duplicate key") {
 				return ErrDuplicatedKey
@@ -499,7 +492,7 @@ func (s *Storage) PushEvents(ctx context.Context, cityId string, events []data.E
 	defer tx.Rollback(ctx)
 
 	for _, event := range events {
-		_, err = tx.Exec(ctx, makeInsertEvent(s.config.EventsTableName),
+		_, err = tx.Exec(ctx, makeInsertEventSQL(s.config.EventsTableName),
 			event.Title, event.Start, event.Finish, event.Center.Lon, event.Center.Lat, pq.Array(event.PostCodes), pq.Array(event.Tags))
 		if err != nil {
 			unilog.Logger().Error("is not able to exec event", zap.Error(err))
@@ -520,7 +513,7 @@ func (s *Storage) PullEvents(ctx context.Context, cityId string, interval data.S
 		return nil, err
 	}
 
-	rows, err := conn.Query(ctx, makeSelectEvents(s.config.EventsTableName, interval))
+	rows, err := conn.Query(ctx, makeSelectEventsSQL(s.config.EventsTableName, interval))
 
 	if err != nil {
 		unilog.Logger().Error("error in select events", zap.Error(err))
@@ -549,7 +542,7 @@ func (s *Storage) PullEventsTags(ctx context.Context, cityId string, tags []stri
 		return nil, err
 	}
 
-	statement := makeSelectEventsTags(s.config.EventsTableName, tags, startTime, finishTime)
+	statement := makeSelectEventsTagsSQL(s.config.EventsTableName, tags, startTime, finishTime)
 	rows, err := conn.Query(ctx, statement)
 
 	if err != nil {
@@ -604,7 +597,7 @@ func (s *Storage) PushLocations(ctx context.Context, cityId string, locations []
 	defer tx.Rollback(ctx)
 
 	for _, l := range locations {
-		_, err = tx.Exec(ctx, InsertLocation, l.ID, l.Position.Lon, l.Position.Lat, l.Title, l.Slug)
+		_, err = tx.Exec(ctx, InsertLocationSQL, l.ID, l.Position.Lon, l.Position.Lat, l.Title, l.Slug)
 		if err != nil {
 			unilog.Logger().Error("is not able to exec location", zap.Error(err))
 			return ErrPushLocations
@@ -623,7 +616,7 @@ func (s *Storage) PullLocations(ctx context.Context, cityId string) (locations [
 		unilog.Logger().Error("unexpected cityId", zap.String("cityId", cityId), zap.Error(err))
 		return nil, err
 	}
-	rows, err := conn.Query(ctx, SelectLocations)
+	rows, err := conn.Query(ctx, SelectLocationsSQL)
 
 	if err != nil {
 		unilog.Logger().Error("error in select locations", zap.Error(err))
@@ -693,7 +686,7 @@ func (s *Storage) PullSingleShortPost(ctx context.Context, cityId, shortcode str
 	return post, nil
 }
 
-func (s *Storage) Close(ctx context.Context) {
+func (s *Storage) Close(_ context.Context) {
 	if s.general == nil {
 		return
 	}
