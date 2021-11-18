@@ -26,8 +26,10 @@ message ShortPost {
     int64 CommentsCount = 3;
     int64 LikesCount = 4;
     int64 Timestamp = 5;
-    double Lat = 6;
-    double Lon = 7;
+    string AuthorID = 6;
+    string LocationID = 7;
+    double Lat = 8;
+    double Lon = 9;
 }
 
 message Area {

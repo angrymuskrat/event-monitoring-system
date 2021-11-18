@@ -318,7 +318,7 @@ const InsertGridSQL = `
 
 const SelectShortPostsInIntervalTemplate = `
 	SELECT 
-		Shortcode, Caption, CommentsCount, LikesCount, Timestamp,
+		Shortcode, Caption, CommentsCount, LikesCount, Timestamp, AuthorID, LocationID,
 		ST_X(Location) as Lon, 
 		ST_Y(Location) as Lat
 	FROM posts
@@ -339,7 +339,7 @@ func makeSelectShortPostsInIntervalSQL(shortcodes []string, startTimestamp int64
 
 const makeSelectSinglePostTemplate = `
 	SELECT 
-		Shortcode, Caption, CommentsCount, LikesCount, Timestamp, 
+		Shortcode, Caption, CommentsCount, LikesCount, Timestamp, AuthorID, LocationID,
 		ST_X(Location) as Lon, 
 		ST_Y(Location) as Lat
 	FROM posts 

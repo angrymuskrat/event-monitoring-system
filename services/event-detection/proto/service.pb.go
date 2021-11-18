@@ -14,7 +14,7 @@ import (
 	io "io"
 	math "math"
 	math_bits "math/bits"
-	proto1 "proto"
+	proto1 "github.com/angrymuskrat/event-monitoring-system/services/proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

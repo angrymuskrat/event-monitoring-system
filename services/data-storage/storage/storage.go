@@ -656,7 +656,7 @@ func (s *Storage) PullShortPostInInterval(ctx context.Context, cityId string, sh
 
 	for rows.Next() {
 		sp := new(data.ShortPost)
-		err = rows.Scan(&sp.Shortcode, &sp.Caption, &sp.CommentsCount, &sp.LikesCount, &sp.Timestamp, &sp.Lon, &sp.Lat)
+		err = rows.Scan(&sp.Shortcode, &sp.Caption, &sp.CommentsCount, &sp.LikesCount, &sp.Timestamp, &sp.AuthorID, &sp.LocationID, &sp.Lon, &sp.Lat)
 		if err != nil {
 			unilog.Logger().Error("PullShortPostInInterval: not be able to scan row", zap.Error(err))
 			return nil, ErrSelectLocations
@@ -677,7 +677,7 @@ func (s *Storage) PullSingleShortPost(ctx context.Context, cityId, shortcode str
 
 	post = &data.ShortPost{}
 
-	err = row.Scan(&post.Shortcode, &post.Caption, &post.CommentsCount, &post.LikesCount, &post.Timestamp,
+	err = row.Scan(&post.Shortcode, &post.Caption, &post.CommentsCount, &post.LikesCount, &post.Timestamp, &post.AuthorID, &post.LocationID,
 		&post.Lon, &post.Lat)
 	if err != nil {
 		unilog.Logger().Error("error in pullSingleShortPost", zap.Error(err))
