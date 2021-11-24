@@ -1,5 +1,8 @@
 # Backend API
 
+12063799 | 6748943
+
+
 ## Content
 
 ### Objects
@@ -10,12 +13,15 @@
 * [Short Instagram post](#shortpost-object) - contains main info about Instagram post
 
 ### Requests
-* [login](#/login) - get session cookie
-* [heatmap](#heatmap) - get heatmap of posts counts for a rectangle
-* [timeline](#timeline) - get city timelines
-* [events](#events) - search events
-* [search](#search) - search events by hashtags
-
+* [login](#login) - gets session cookie
+* [heatmap](#heatmap) - gets heatmap of posts counts for a rectangle
+* [timeline](#timeline) - gets city timelines
+* [events](#events) - searches events
+* [search](#search) - searches events by hashtags or mentions
+* [single post](#singleshortpost) - gets main fields of the post
+* [short posts in time interval](#shortposts) - same as [single post](#singleshortpost) 
+but for few posts in time interval (more preferable than single post request)
+* [image](#image) - gets image for the post
 ## Objects
 
 ### Event object
@@ -58,6 +64,7 @@ ShortPost contains basic information about the Instagram post.
   "Shortcode": string, // unic id of the post
   "Caption": string, // text of the post
   "LikesCount": int, // amount of likes
+  "CommentsCount": int // amount of comments
   "Timestamp": int, // unix timestamp 
   "Lat": float64, // lattitude
   "Lon": float64 // longitude
