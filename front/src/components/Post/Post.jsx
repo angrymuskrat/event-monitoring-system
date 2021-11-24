@@ -1,10 +1,25 @@
-import React from 'react'
-import PropTypes from 'prop-types'
+import React, { useEffect } from "react";
+import PropTypes from "prop-types";
 
 // styled
-import Container from './Post.styled'
+import Container from "./Post.styled";
+
+const checkImgSrc = (src) => {
+  const img = new Image();
+  img.onload = function() {
+    console.log(`valid src: ${src}`);
+  };
+  img.onerror = function() {
+    console.log(`unvalid src: ${src}`);
+  };
+  img.src = src;
+};
 
 function Post({ post }) {
+  useEffect(() => {
+    checkImgSrc(post.photoUrl);
+  }, []);
+
   return (
     <Container key={post.id}>
       <div className="post__header">
@@ -13,9 +28,9 @@ function Post({ post }) {
             className="post__profile-pic"
             style={{
               background: `url(${post.profilePicUrl})`,
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              backgroundSize: 'cover',
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "cover",
             }}
           ></div>
         </a>
@@ -46,10 +61,11 @@ function Post({ post }) {
           <img src={post.photoUrl} alt={post.caption} />
         </a> */}
         <img src={post.photoUrl} alt={post.caption} />
+        {console.log(`post.photoUrl`, post.photoUrl)}
       </div>
       <div className="post__likes">
         <p className="text text_post">
-          ♡ {post.likes} {post.likes === 1 ? 'like' : 'likes'}
+          ♡ {post.likes} {post.likes === 1 ? "like" : "likes"}
         </p>
       </div>
       <div className="post__description">
@@ -64,10 +80,10 @@ function Post({ post }) {
         <p className="text text_post">{post.caption}</p>
       </div>
     </Container>
-  )
+  );
 }
 Post.propTypes = {
   post: PropTypes.object.isRequired,
-}
+};
 
-export default Post
+export default Post;

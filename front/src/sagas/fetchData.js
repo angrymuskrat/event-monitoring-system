@@ -57,6 +57,7 @@ export const fetchSearchEventsData = ({city, tags, start, finish}) => {
     )
 }
 export const fetchPostData = ({city, postcode}) => {
+   
     return axios.get(`${server}/singleShortPost/${city}/${postcode}`, config)
 }
 // export const requestSessionCookie = data => {

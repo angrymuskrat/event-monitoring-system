@@ -554,6 +554,7 @@ function* handleSearchEvents({payload}) {
  * @param {String} postcode - instagram post postcode
  */
 function* fetchSingleInstagramPost(postcode) {
+    console.log(`poascode`, postcode)
     try {
         yield put(startLoading())
         const getCurrentCityId = state => state.getIn(['city', 'cityId'])

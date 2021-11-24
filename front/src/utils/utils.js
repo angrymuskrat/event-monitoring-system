@@ -9,6 +9,7 @@ import { point } from '@turf/helpers'
 const makeInstagramImageUrl = (code) => `http://10.64.0.206:17112/image/${code}`
 
 export const convertEventsToGeoJSON = async ({ data }) => {
+
   const events = await Promise.all(
     data.map(async d => {
       let lat = Number(d.Center.split(',')[0])
