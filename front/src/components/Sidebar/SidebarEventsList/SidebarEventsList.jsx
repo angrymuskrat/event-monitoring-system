@@ -29,9 +29,10 @@ function SidebarEventsList({
   viewport,
 }) {
   const renderEventsList = () => {
-    if (isLoading) {
+    /* временное решение, isLoading - общий на проект и не сбрасывается в каком-то процессы при открытии попапа */
+    /* if (isLoading) {
       return <p className="text text_p2 text__events">Loading...</p>
-    }
+    } */
     if (isSearchingEvents) {
       if (searchQuery && !isLoading) {
         searchQuery = searchQuery.toJS()
