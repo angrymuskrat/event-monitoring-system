@@ -221,6 +221,7 @@ export const GlobalStyle = createGlobalStyle`
     font-size: 1.3rem;
   }
   .text_location {
+    text-decoration: underline;
     margin-block-start: 0.5rem;
   }
   .ReactModal__Overlay--after-open {

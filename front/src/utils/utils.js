@@ -106,13 +106,15 @@ export const convertPostData = (post) => {
   return {
     photoUrl: makeInstagramImageUrl(post.Shortcode),
     caption: post.Caption,
-    likes: post.LikeCount,
-    location: `some location`, //TODO location name
+    likes: post.LikesCount,
+    location: `location id: ${post.LocationID}`,
+    locationLink: `https://www.instagram.com/explore/locations/${post.LocationID}`,
     profilePicUrl: `https://www.instagram.com/p/${post.Shortcode}/media/?size=l`,
-    username: `some user`,
+    username: `user id: ${post.AuthorID}`,
     profileLink: `https://www.instagram.com/p/${post.Shortcode}/`,
-    postLink: `https://www.instagram.com/p/${post.shortcode}/`,
+    postLink: `https://www.instagram.com/p/${post.Shortcode}/`,
     id: post.Shortcode,
+    comments: post.CommentsCount || 0,
   }
 }
 export const calculateDistance = (
