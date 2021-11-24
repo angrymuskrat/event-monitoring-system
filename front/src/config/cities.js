@@ -34,6 +34,8 @@ export const cities = [
     picture: moscowPic,
     lng: 37.61296270571807,
     lat: 55.73652849918221,
+    topLeft: [56.07182, 36.5666568499],
+    bottomRight: [55.0646688279, 38],
   },
   {
     id: 'london',
