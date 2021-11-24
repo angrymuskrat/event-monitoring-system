@@ -19,7 +19,7 @@ function Post({ post }) {
   useEffect(() => {
     checkImgSrc(post.photoUrl);
   }, []);
-
+  console.log(`post`, post);
   return (
     <Container key={post.id}>
       <div className="post__header">
