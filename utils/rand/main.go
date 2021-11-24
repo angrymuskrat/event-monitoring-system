@@ -18,6 +18,12 @@ func New() *SimpleRand {
 	return &r
 }
 
+func NewFixSeed(seed int64) *SimpleRand {
+	r := SimpleRand{}
+	r.seeded = rand.New(rand.NewSource(seed))
+	return &r
+}
+
 func (r *SimpleRand) Point(point data.Point, delta data.Point) data.Point {
 	return data.Point{Lat: point.Lat + r.DeltaDouble(delta.Lat), Lon: point.Lon + r.DeltaDouble(delta.Lon)}
 }
@@ -32,6 +38,12 @@ func (r *SimpleRand) FixString(length int) string {
 
 func (r *SimpleRand) AbsInt64(min, max int64) int64 {
 	return int64(r.seeded.Uint64()>>1)%(max-min) + min
+}
+
+func (r *SimpleRand) HourTimestamp(min, max int64) int64 {
+	timestamp := r.AbsInt64(min, max)
+	timestamp = timestamp / 3600 * 3600
+	return timestamp
 }
 
 func (r *SimpleRand) String(min, max int) string {

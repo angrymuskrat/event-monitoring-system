@@ -16,5 +16,12 @@ log.txt
 test
 tests
 
+
 # npm packages
 front/node_modules
+
+# go builds
+/services/backend/cmd/backend
+/services/coordinator/cmd/coordinator
+/services/data-storage/cmd/data_storage
+/services/event-detection/cmd/detection

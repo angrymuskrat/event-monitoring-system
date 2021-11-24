@@ -1,0 +1,7 @@
+GRIDSize = 50.0
+RefreshInterval = "10s" # timescaledb.refresh_interval for continious aggreagtion
+User = "storage" # user should be superuser
+Password = "cnjhfl;"
+Host = "10.32.15.30"
+Port = "5432"
+EventsTableName = "events_6"

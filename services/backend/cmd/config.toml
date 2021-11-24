@@ -1,11 +1,12 @@
-Address  = "localhost:42080"
+Address  = ":17112"
 LogPath  = "service.log"
 AuthLogPath  = "auth.log"
-SessionKey = ""
+SessionKey = "kjgnnuig34gsdgjbskg23242sgsk24t2ty2424hghdsbgubt4b34geehgbs"
 TimerLogPath  = "timer.log"
+cors-origin = "http://10.64.0.206:17115/"
 User     = "user"
 Password = "pwd"
 Connector = "storage"
-cors-origin = "http://localhost:3000"
+TestMod = true
 [conn-params]
-address = "10.9.14.118:8082"
+address = "localhost:8082"

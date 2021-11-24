@@ -33,17 +33,17 @@ func (r *Rand) Point() data.Point {
 func (r *Rand) Post(minTimestamp, maxTimestamp int64) *data.Post {
 	p := r.Point()
 	return &data.Post{
-		ID:            r.rand.FixString(20),
-		Shortcode:     r.rand.FixString(10),
-		ImageURL:      r.rand.String(50, 300),
+		ID:            r.rand.FixString(19),
+		Shortcode:     "@@" + r.rand.FixString(9),
+		ImageURL:      r.rand.String(230, 252),
 		IsVideo:       r.rand.Bool(),
-		Caption:       r.rand.String(0, 500),
-		CommentsCount: r.rand.AbsInt64(0, 1000),
+		Caption:       r.rand.String(0, 2200),
+		CommentsCount: r.rand.AbsInt64(0, 111146),
 		Timestamp:     r.rand.AbsInt64(minTimestamp, maxTimestamp),
-		LikesCount:    r.rand.AbsInt64(0, 10000),
+		LikesCount:    r.rand.AbsInt64(0, 8700346),
 		IsAd:          r.rand.Bool(),
-		AuthorID:      r.rand.FixString(15),
-		LocationID:    r.rand.FixString(15),
+		AuthorID:      r.rand.String(4, 11),
+		LocationID:    r.rand.String(4, 16),
 		Lat:           p.Lat,
 		Lon:           p.Lon,
 	}
