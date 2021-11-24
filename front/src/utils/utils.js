@@ -5,16 +5,17 @@ import { uuid } from 'uuidv4'
 import distance from '@turf/distance'
 import { point } from '@turf/helpers'
 
+//const makeInstagramImageUrl = code => `https://www.instagram.com/p/${code}/media/?size=m\``
+const makeInstagramImageUrl = (code) => `http://10.64.0.206:17112/image/${code}`
+
 export const convertEventsToGeoJSON = async ({ data }) => {
+
   const events = await Promise.all(
     data.map(async d => {
       let lat = Number(d.Center.split(',')[0])
       let lon = Number(d.Center.split(',')[1])
       let postData
       try {
-        postData = await axios.get(
-          `https://www.instagram.com/p/${d.PostCodes[0]}/?__a=1`
-        )
         return fromJS({
           properties: {
             tags: d.Tags,
@@ -23,16 +24,13 @@ export const convertEventsToGeoJSON = async ({ data }) => {
             start: d.Start,
             finish: d.Finish,
             id: uuid(),
-            photoUrl: `${postData.data.graphql.shortcode_media.display_url}`,
+            photoUrl: makeInstagramImageUrl(d.PostCodes[0]),
           },
           geometry: {
             coordinates: [lat, lon],
           },
         })
       } catch (error) {
-        postData = await axios.get(
-          `https://www.instagram.com/p/${d.PostCodes[1]}/?__a=1`
-        )
         return fromJS({
           properties: {
             tags: d.Tags,
@@ -41,7 +39,7 @@ export const convertEventsToGeoJSON = async ({ data }) => {
             start: d.Start,
             finish: d.Finish,
             id: uuid(),
-            photoUrl: `${postData.data.graphql.shortcode_media.display_url}`,
+            photoUrl: makeInstagramImageUrl(d.PostCodes[1]),
           },
           geometry: {
             coordinates: [lat, lon],
@@ -67,7 +65,7 @@ export const convertSearchQueryToGeoJSON = ({ data }) => {
           start: d.Start,
           finish: d.Finish,
           id: uuid(),
-          photoUrl: `https://instagram.com/p/${d.PostCodes[0]}/media/?size=m`,
+          photoUrl: makeInstagramImageUrl(d.PostCodes[0]),
         },
         geometry: {
           type: 'Point',
@@ -104,17 +102,17 @@ export const convertChartData = ({ data }) => {
     }
   })
 }
-export const convertPostData = post => {
+export const convertPostData = (post) => {
   return {
-    photoUrl: post.display_url,
-    caption: post.edge_media_to_caption.edges[0].node.text,
-    likes: post.edge_media_preview_like.count,
-    location: post.location.name,
-    profilePicUrl: post.owner.profile_pic_url,
-    username: post.owner.username,
-    profileLink: `https://www.instagram.com/${post.owner.username}`,
+    photoUrl: makeInstagramImageUrl(post.Shortcode),
+    caption: post.Caption,
+    likes: post.LikeCount,
+    location: `some location`, //TODO location name
+    profilePicUrl: `https://www.instagram.com/p/${post.Shortcode}/media/?size=l`,
+    username: `some user`,
+    profileLink: `https://www.instagram.com/p/${post.Shortcode}/`,
     postLink: `https://www.instagram.com/p/${post.shortcode}/`,
-    id: post.id,
+    id: post.Shortcode,
   }
 }
 export const calculateDistance = (

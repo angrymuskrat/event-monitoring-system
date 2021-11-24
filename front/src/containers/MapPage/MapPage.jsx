@@ -1,19 +1,19 @@
-import React, { useEffect, useRef, useState, lazy, Suspense } from 'react'
-import PropTypes from 'prop-types'
-import { useParams } from 'react-router-dom'
+import React, { useEffect, useRef, useState, lazy, Suspense } from "react";
+import PropTypes from "prop-types";
+import { useParams } from "react-router-dom";
 
 // containers
-import MapContainer from '../../components/Map/Map.jsx'
-import Sidebar from '../Sidebar'
+import MapContainer from "../../components/Map/Map.jsx";
+import Sidebar from "../Sidebar";
 
 // components
-import Loading from '../../components/Loading/Loading.jsx'
+import Loading from "../../components/Loading/Loading.jsx";
 
 // styled
-import Container from './MapPage.styled'
+import Container from "./MapPage.styled";
 
 // lazy
-const Popup = lazy(() => import('../../components/Popup/Popup.jsx'))
+const Popup = lazy(() => import("../../components/Popup/Popup.jsx"));
 
 function MapPage(props) {
   const {
@@ -32,33 +32,33 @@ function MapPage(props) {
     togglePopup,
     toggleSidebar,
     viewport,
-  } = props
+  } = props;
   // use refs to get mapbox bounds
-  const mapRef = useRef()
+  const mapRef = useRef();
   // react router hooks
-  let { city, topLeft, botRight, time } = useParams()
+  let { city, topLeft, botRight, time } = useParams();
 
-  const [isMapStoreLoaded, setIsMapStoreLoaded] = useState(false)
+  const [isMapStoreLoaded, setIsMapStoreLoaded] = useState(false);
 
   useEffect(() => {
-    const config = { city, topLeft, botRight, time }
+    const config = { city, topLeft, botRight, time };
     if (currentCityId === null) {
-      setupMapFromHistory(config)
+      setupMapFromHistory(config);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, []);
   useEffect(() => {
     if (viewport.toJS().center.length > 0) {
-      setIsMapStoreLoaded(true)
+      setIsMapStoreLoaded(true);
     }
     if (mapRef.current && !currentUserLocation) {
-      const pos = mapRef.current.leafletElement.locate()._renderer
-      const location = pos && pos._center
-      setCurrentUserLocation(location)
+      const pos = mapRef.current.leafletElement.locate()._renderer;
+      const location = pos && pos._center;
+      setCurrentUserLocation(location);
     }
-  }, [currentUserLocation, setCurrentUserLocation, viewport])
+  }, [currentUserLocation, setCurrentUserLocation, viewport]);
 
-  const handleViewportChangeEnd = viewport => {
+  const handleViewportChangeEnd = (viewport) => {
     let bottomRight = [
       Number(
         mapRef.current.leafletElement.getBounds()._southWest.lat.toFixed(3)
@@ -66,7 +66,7 @@ function MapPage(props) {
       Number(
         mapRef.current.leafletElement.getBounds()._southWest.lng.toFixed(3)
       ),
-    ]
+    ];
     let topLeft = [
       Number(
         mapRef.current.leafletElement.getBounds()._northEast.lat.toFixed(3)
@@ -74,21 +74,21 @@ function MapPage(props) {
       Number(
         mapRef.current.leafletElement.getBounds()._northEast.lng.toFixed(3)
       ),
-    ]
-    setViewport(viewport)
-    setBounds({ topLeft, bottomRight })
-    replace(`/map/${currentCityId}/${topLeft}/${bottomRight}/${selectedDate}`)
-  }
+    ];
+    setViewport(viewport);
+    setBounds({ topLeft, bottomRight });
+    replace(`/map/${currentCityId}/${topLeft}/${bottomRight}/${selectedDate}`);
+  };
   const onEventClick = (id, postcodes) => {
     if (window.innerWidth < 600) {
-      isSidebarOpen && toggleSidebar()
+      isSidebarOpen && toggleSidebar();
     }
-    setSelectedEvent(id)
-    togglePopup(postcodes)
-  }
+    setSelectedEvent(id);
+    togglePopup(postcodes);
+  };
   const closePopup = () => {
-    togglePopup()
-  }
+    togglePopup();
+  };
   return (
     <Container>
       {isMapStoreLoaded ? (
@@ -118,7 +118,7 @@ function MapPage(props) {
         </Suspense>
       ) : null}
     </Container>
-  )
+  );
 }
 MapPage.propTypes = {
   allHeatmapData: PropTypes.object,
@@ -142,6 +142,6 @@ MapPage.propTypes = {
   togglePopup: PropTypes.func.isRequired,
   toggleSidebar: PropTypes.func.isRequired,
   viewport: PropTypes.object,
-}
+};
 
-export default MapPage
+export default MapPage;

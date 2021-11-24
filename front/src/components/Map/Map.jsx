@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from 'react'
-import PropTypes from 'prop-types'
+import React, { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 // leaflet
-import { Map, TileLayer } from 'react-leaflet'
-import 'leaflet/dist/leaflet.css'
-import HeatmapLayer from 'react-leaflet-heatmap-layer'
+import { Map, TileLayer } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import HeatmapLayer from "react-leaflet-heatmap-layer";
 
 // styles
-import { heatmapGradient } from '../../config/styles'
+import { heatmapGradient } from "../../config/styles";
 
 // components
-import EventsLayer from './EventsLayer'
-import Loading from '../Loading/Loading.jsx'
+import EventsLayer from "./EventsLayer";
+import Loading from "../Loading/Loading.jsx";
 
 function MapContainer(props) {
   const {
@@ -28,26 +28,27 @@ function MapContainer(props) {
     handleViewportChangeEnd,
     viewport,
     onEventClick,
-  } = props
-  const [heatmapData, setHeatmapData] = useState(null)
-  const [eventsData, setEventsData] = useState(null)
-  const [innerViewport, setInnerViewport] = useState(null)
-  const [currentZoom, setCurrentZoom] = useState()
+  } = props;
+  const [heatmapData, setHeatmapData] = useState(null);
+  const [eventsData, setEventsData] = useState(null);
+  const [innerViewport, setInnerViewport] = useState(null);
+  const [currentZoom, setCurrentZoom] = useState();
 
   useEffect(() => {
-    setInnerViewport(viewport.toJS())
-  }, [viewport])
-  const handleViewportChanged = viewport => {
+    setInnerViewport(viewport.toJS());
+  }, [viewport]);
+  const handleViewportChanged = (viewport) => {
     if (mapRef.current) {
-      handleViewportChangeEnd(viewport)
+      handleViewportChangeEnd(viewport);
     }
-  }
-  const handleViewportChange = e => {
-    setCurrentZoom(e.zoom)
-  }
+  };
+  const handleViewportChange = (e) => {
+    setCurrentZoom(e.zoom);
+  };
+
   useEffect(() => {
-    setHeatmapData(calculateHeatmap())
-    setEventsData(calculateEventsData())
+    setHeatmapData(calculateHeatmap());
+    setEventsData(calculateEventsData());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     currentHeatmap,
@@ -58,12 +59,12 @@ function MapContainer(props) {
     isShowAllEvents,
     isSearchingEvents,
     selectedHour,
-  ])
+  ]);
 
   useEffect(() => {
-    setHeatmapData(calculateHeatmap())
+    setHeatmapData(calculateHeatmap());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentZoom])
+  }, [currentZoom]);
 
   const calculateHeatmap = () => {
     if (
@@ -72,29 +73,29 @@ function MapContainer(props) {
       selectedHour &&
       !isSearchingEvents
     ) {
-      let acc = []
+      let acc = [];
       if (isShowAllEvents && chartData && allHeatmapData) {
-        chartData.forEach(data => {
+        chartData.forEach((data) => {
           if (allHeatmapData.get(`${data.time}`) !== undefined) {
             allHeatmapData
               .get(`${data.time}`)
               .toJS()
-              .forEach(d => acc.push(d))
+              .forEach((d) => acc.push(d));
           }
-        })
+        });
       }
       return isShowAllEvents
         ? acc
         : currentHeatmap
         ? currentHeatmap.toJS()
-        : null
+        : null;
     } else {
-      return null
+      return null;
     }
-  }
+  };
   const calculateEventsData = () => {
     if (isSearchingEvents && searchQuery) {
-      return searchQuery.toJS()
+      return searchQuery.toJS();
     }
     if (
       mapRef.current &&
@@ -102,22 +103,26 @@ function MapContainer(props) {
       selectedHour &&
       !isSearchingEvents
     ) {
-      let acc = []
+      let acc = [];
       if (isShowAllEvents && chartData && events) {
-        chartData.forEach(data => {
+        chartData.forEach((data) => {
           if (events.get(`${data.time}`) !== undefined) {
             events
               .get(`${data.time}`)
               .toJS()
-              .forEach(d => acc.push(d))
+              .forEach((d) => acc.push(d));
           }
-        })
+        });
       }
-      return isShowAllEvents ? acc : currentEvents ? currentEvents.toJS() : null
+      return isShowAllEvents
+        ? acc
+        : currentEvents
+        ? currentEvents.toJS()
+        : null;
     } else {
-      return null
+      return null;
     }
-  }
+  };
   return (
     <>
       {innerViewport ? (
@@ -133,33 +138,34 @@ function MapContainer(props) {
             attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png"
           />
-          {isLoading ? (
+          {/* временное решение убрал окно загрузки для heatmap */}
+          {/* {isLoading ? (
             <Loading />
-          ) : (
-            <>
-              {!isSearchingEvents && (
-                <HeatmapLayer
-                  points={heatmapData}
-                  longitudeExtractor={m => m[1]}
-                  latitudeExtractor={m => m[0]}
-                  gradient={heatmapGradient}
-                  minOpacity={0.25}
-                  intensityExtractor={m => parseFloat(m[2] / 3)}
-                  radius={30}
-                  blur={10}
-                  max={3}
-                />
-              )}
+          ) : ( */}
+          <>
+            {!isSearchingEvents && heatmapData && (
+              <HeatmapLayer
+                points={heatmapData}
+                longitudeExtractor={(m) => m[1]}
+                latitudeExtractor={(m) => m[0]}
+                gradient={heatmapGradient}
+                minOpacity={0.25}
+                intensityExtractor={(m) => parseFloat(m[2] / 3)}
+                radius={30}
+                blur={10}
+                max={3}
+              />
+            )}
 
-              <EventsLayer events={eventsData} onEventClick={onEventClick} />
-            </>
-          )}
+            <EventsLayer events={eventsData} onEventClick={onEventClick} />
+          </>
+          {/* // )} */}
         </Map>
       ) : (
         <Loading />
       )}
     </>
-  )
+  );
 }
 MapContainer.propTypes = {
   isShowAllEvents: PropTypes.bool.isRequired,
@@ -176,5 +182,5 @@ MapContainer.propTypes = {
   handleViewportChangeEnd: PropTypes.func.isRequired,
   viewport: PropTypes.object,
   onEventClick: PropTypes.func.isRequired,
-}
-export default MapContainer
+};
+export default MapContainer;
