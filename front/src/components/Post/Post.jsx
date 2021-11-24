@@ -23,7 +23,7 @@ function Post({ post }) {
   return (
     <Container key={post.id}>
       <div className="post__header">
-        <a href={post.profileLink} target="_blank" rel="noopener noreferrer">
+        {/* <a href={post.profileLink} target="_blank" rel="noopener noreferrer">
           <div
             className="post__profile-pic"
             style={{
@@ -33,27 +33,27 @@ function Post({ post }) {
               backgroundSize: "cover",
             }}
           ></div>
-        </a>
+        </a> */}
 
         <div className="post__profile-info">
+          <p className="text text_bold text_post">{post.username}</p>
+
           <a
-            className="text text_bold text_post"
-            href={post.profileLink}
+            className="text text_p2 text_location"
+            href={post.locationLink}
             target="_blank"
             rel="noopener noreferrer"
           >
-            {post.username}
+            {post.location}
           </a>
-
-          <p className="text text_p2 text_location">{post.location}</p>
         </div>
         <a
-          href={post.profileLink}
+          href={post.postLink}
           target="_blank"
           rel="noopener noreferrer"
           className="text text_p2"
         >
-          <button className="post__profile-button">View profile</button>
+          <button className="post__profile-button">View post</button>
         </a>
       </div>
       <div className="post__picture">
@@ -61,22 +61,22 @@ function Post({ post }) {
           <img src={post.photoUrl} alt={post.caption} />
         </a> */}
         <img src={post.photoUrl} alt={post.caption} />
-        {console.log(`post.photoUrl`, post.photoUrl)}
+        {/* {console.log(`post.photoUrl`, post.photoUrl)} */}
       </div>
       <div className="post__likes">
         <p className="text text_post">
-          ♡ {post.likes} {post.likes === 1 ? "like" : "likes"}
+          ♡ {post.likes} {post.likes === 1 ? "like" : "likes"} | {post.comments} {post.likes === 1 ? "comment" : "comments"}
         </p>
       </div>
       <div className="post__description">
-        <a
-          href={post.profileLink}
-          target="_blank"
-          rel="noopener noreferrer"
+        {/* <p
+          // href={post.profileLink}
+          // target="_blank"
+          // rel="noopener noreferrer"
           className="text text_bold text_post"
         >
           {post.username}
-        </a>
+        </p> */}
         <p className="text text_post">{post.caption}</p>
       </div>
     </Container>
