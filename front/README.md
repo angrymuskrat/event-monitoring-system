@@ -54,18 +54,7 @@ the event window opens.
 
 ## Event window
 
-TODO: Change the displayed content and layout.
-
-Information that needs to be displayed:
-- user id (numeric string from 5 to 11 digits) from backend request
-- location id (numeric string from 5 to 16 digits) from backend request <br>
-OR location name (more preferable) from GET request "https://www.instagram.com/explore/locations/{locationID}/?__a=1"
-json object: response.data.native_location_data.location_info.name
-- link to location (by click on location id/name) - "https://www.instagram.com/explore/locations/{locationID}"
-- link to post In Instagram - "https://www.instagram.com/p/{shortcode}/"
-- post's image (or stub if the photo has been deleted) - from backend request
-- likes count and comments count (int, int) - from backend request
-- Text of the post (string, mostly 10-50 words, but may be several hundred words) - from backend request
+Main information about posts in the event.
 
 ![img.png](../data/front_readme/event_window.png)
 
