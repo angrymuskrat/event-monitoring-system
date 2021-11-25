@@ -25,3 +25,4 @@ front/node_modules
 /services/coordinator/cmd/coordinator
 /services/data-storage/cmd/data_storage
 /services/event-detection/cmd/detection
+/speedtests/postgres-distributed-cities/speetest
