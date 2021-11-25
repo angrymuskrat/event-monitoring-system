@@ -107,7 +107,7 @@ export const convertPostData = (post) => {
     photoUrl: makeInstagramImageUrl(post.Shortcode),
     caption: post.Caption,
     likes: post.LikesCount,
-    location: `location id: ${post.LocationID}`,
+    location: post.LocationID,
     locationLink: `https://www.instagram.com/explore/locations/${post.LocationID}`,
     profilePicUrl: `https://www.instagram.com/p/${post.Shortcode}/media/?size=l`,
     username: `user id: ${post.AuthorID}`,

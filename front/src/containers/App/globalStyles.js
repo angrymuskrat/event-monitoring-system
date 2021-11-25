@@ -222,7 +222,6 @@ export const GlobalStyle = createGlobalStyle`
   }
   .text_location {
     text-decoration: underline;
-    margin-block-start: 0.5rem;
   }
   .ReactModal__Overlay--after-open {
     z-index: 200;
