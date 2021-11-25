@@ -53,12 +53,13 @@ function Post({ post }) {
           <p className="text text_bold text_post">{post.username}</p>
 
           <a
-            className="text text_p2 text_location"
+            className="text text_p2"
             href={post.locationLink}
             target="_blank"
             rel="noopener noreferrer"
           >
-            {post.location}
+            <span>location id: </span>
+            <span className="text_location">{post.location}</span>
           </a>
         </div>
         <a
@@ -85,14 +86,7 @@ function Post({ post }) {
         </p>
       </div>
       <div className="post__description">
-        {/* <p
-          // href={post.profileLink}
-          // target="_blank"
-          // rel="noopener noreferrer"
-          className="text text_bold text_post"
-        >
-          {post.username}
-        </p> */}
+        <p className="text text_bold text_post">Description</p>
         <p className="text text_post">{post.caption}</p>
       </div>
     </Container>
