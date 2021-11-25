@@ -6,7 +6,7 @@ import distance from '@turf/distance'
 import { point } from '@turf/helpers'
 
 //const makeInstagramImageUrl = code => `https://www.instagram.com/p/${code}/media/?size=m\``
-const makeInstagramImageUrl = (code) => `http://10.64.0.206:17112/image/${code}`
+export const makeInstagramImageUrl = (code) => `http://10.64.0.206:17112/image/${code}`
 
 export const convertEventsToGeoJSON = async ({ data }) => {
 

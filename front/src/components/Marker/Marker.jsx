@@ -4,20 +4,29 @@ import { Marker } from "react-leaflet";
 
 import noPhotoMarker from "../../assets/img/noPhotoMarker.png";
 
+import { makeInstagramImageUrl } from "../../utils/utils";
+
 function MarkerContainer(props) {
   const { properties, center, onEventClick } = props;
   const [isPhotoValid, setIsPhotoValid] = useState(noPhotoMarker);
 
   useEffect(() => {
-    const img = new Image();
-    img.onload = () => {
-      setIsPhotoValid(img.src);
+    const imagesUrl = properties.postcodes.map((i) => makeInstagramImageUrl(i));
+
+    const getImage = (index) => {
+      if (index === imagesUrl.length) return;
+      const image = new Image();
+      image.onload = () => {
+        setIsPhotoValid(image.src);
+      };
+      image.onerror = () => {
+        getImage(index + 1);
+      };
+      image.src = imagesUrl[index];
     };
-    img.onerror = function() {
-      setIsPhotoValid(noPhotoMarker);
-    };
-    img.src = properties.photoUrl;
-  }, [properties.photoUrl]);
+
+    getImage(0);
+  }, [properties.postcodes]);
 
   const handleClick = () => {
     onEventClick(properties.id, properties.postcodes);

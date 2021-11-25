@@ -1,4 +1,4 @@
-import React, { useEffect, useState }  from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import moment from "moment";
 
@@ -8,6 +8,7 @@ import Container from "./SidebarCard.styled";
 // styles
 import { lightGrey } from "../../../config/styles";
 import noPhoto from "../../../assets/img/noPhotoEvent.png";
+import { makeInstagramImageUrl } from "../../../utils/utils";
 
 function SidebarCard({
   event,
@@ -41,18 +42,22 @@ function SidebarCard({
   };
 
   useEffect(() => {
-    // checkImgSrc(post.photoUrl);
-    // если фото отгрузилось отображаем его если нет то ставим картинку
-    const img = new Image();
-    img.onload = () => {
-      setIsPhotoValid(img.src);
-      // console.log(`img`, img.src);
+    const imagesUrl = postcodes.map((i) => makeInstagramImageUrl(i));
+
+    const getImage = (index) => {
+      if (index === imagesUrl.length) return;
+      const image = new Image();
+      image.onload = () => {
+        setIsPhotoValid(image.src);
+      };
+      image.onerror = () => {
+        getImage(index + 1);
+      };
+      image.src = imagesUrl[index];
     };
-    img.onerror = function() {
-      setIsPhotoValid(noPhoto);
-    };
-    img.src = photoUrl;
-  }, [photoUrl]);
+
+    getImage(0);
+  }, [postcodes]);
 
   return (
     <Container
