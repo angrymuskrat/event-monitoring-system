@@ -118,7 +118,7 @@ func main() {
 	fmt.Println("Parallel test")
 	testsCount := 0
 	for test := range hub {
-		fmt.Println(test)
+		fmt.Println(test.String())
 		testsCount += 1
 		if testsCount == len(connectors) {
 			break
@@ -130,7 +130,7 @@ func main() {
 		//go conn.runSpeedTestPostHour(hub, times, restarts)
 		go conn.runPostHour(hub, cityTimes[conn.dbName], restarts)
 		test := <-hub
-		fmt.Println(test)
+		fmt.Println(test.String())
 	}
 
 }
