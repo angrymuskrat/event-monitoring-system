@@ -1,24 +1,38 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 
 // styled
 import Container from "./Post.styled";
 
-const checkImgSrc = (src) => {
-  const img = new Image();
-  img.onload = function() {
-    console.log(`valid src: ${src}`);
-  };
-  img.onerror = function() {
-    console.log(`unvalid src: ${src}`);
-  };
-  img.src = src;
-};
+import noPhoto from "../../assets/img/noPhoto.png";
+
+// const checkImgSrc = (src) => {
+//   const img = new Image();
+//   img.onload = function() {
+//     console.log(`valid src: ${src}`);
+//   };
+//   img.onerror = function() {
+//     console.log(`unvalid src: ${src}`);
+//   };
+//   img.src = src;
+// };
 
 function Post({ post }) {
+  const [isPhotoValid, setIsPhotoValid] = useState(noPhoto);
+
   useEffect(() => {
-    checkImgSrc(post.photoUrl);
-  }, []);
+    // checkImgSrc(post.photoUrl);
+    // если фото отгрузилось отображаем его если нет то ставим картинку
+    const img = new Image();
+    img.onload = () => {
+      setIsPhotoValid(img.src);
+      // console.log(`img`, img.src);
+    };
+    img.onerror = function() {
+      setIsPhotoValid(noPhoto);
+    };
+    img.src = post.photoUrl;
+  }, [post.photoUrl]);
 
   return (
     <Container key={post.id}>
@@ -60,12 +74,14 @@ function Post({ post }) {
         {/* <a href={post.postLink} target="_blank" rel="noopener noreferrer">
           <img src={post.photoUrl} alt={post.caption} />
         </a> */}
-        <img src={post.photoUrl} alt={post.caption} />
+        {/* <img src={post.photoUrl} alt={post.caption} /> */}
+        <img src={isPhotoValid} alt={post.caption} />
         {/* {console.log(`post.photoUrl`, post.photoUrl)} */}
       </div>
       <div className="post__likes">
         <p className="text text_post">
-          ♡ {post.likes} {post.likes === 1 ? "like" : "likes"} | {post.comments} {post.likes === 1 ? "comment" : "comments"}
+          ♡ {post.likes} {post.likes === 1 ? "like" : "likes"} | {post.comments}{" "}
+          {post.likes === 1 ? "comment" : "comments"}
         </p>
       </div>
       <div className="post__description">
