@@ -23,8 +23,8 @@ export const cities = [
     picture: newyorkPic,
     lng: -73.99152387944392,
     lat: 40.701733209232735,
-    topLeft: [40.8482826, -73.9873646],
-    bottomRight: [40.6185618, -74.0340492],
+    topLeft: [41.1906922914, -74.9679205469],
+    bottomRight: [39.130442194, -73.0110420899],
   },
   {
     id: 'moscow',
