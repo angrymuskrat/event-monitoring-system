@@ -3,18 +3,17 @@ package service
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"github.com/gorilla/mux"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
 var svc *backendService
+var storagePath string
 
 func Start(confPath string) {
 	conf, err := readConfig(confPath)
@@ -29,6 +28,7 @@ func Start(confPath string) {
 	svc = &backendService{
 		storageConn: conn,
 	}
+	storagePath = conf.ProxyDataPath
 	sm, err := newAuthManager(conf.SessionKey, conf.AuthLogPath, conf.TestMod)
 	if err != nil {
 		panic(err)
@@ -208,27 +208,16 @@ func instaImage(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	urlTemplate := "https://www.instagram.com/p/%v/media/?size=m"
-	url := fmt.Sprintf(urlTemplate, req.Shortcode)
-	resp, err := http.Get(url)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		unilog.Logger().Error("unable to get image from Instagram", zap.Error(err))
-		return
-	}
-	//copyHeader(w.Header(), resp.Header)
-	var image []byte
-	_, err = resp.Body.Read(image)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		unilog.Logger().Error("unable to read image from response", zap.Error(err))
-		return
-	}
-	_, err = io.Copy(w, resp.Body)
-	if err != nil {
-		//w.WriteHeader(http.StatusInternalServerError)
-		//unilog.Logger().Error("unable to write response", zap.Error(err))
-		return
+	image, status := uploadImage(req)
+	w.WriteHeader(status)
+	if status == http.StatusOK {
+		w.Header().Set("Content-Type", "image/jpeg")
+		_, err = w.Write(image)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			unilog.Logger().Error("unable to write insta image to response", zap.Error(err))
+			return
+		}
 	}
 }
 
