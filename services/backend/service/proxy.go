@@ -17,7 +17,13 @@ func uploadImage(req InstaImageRequest) (image []byte, status int) {
 	}
 	urlTemplate := "https://www.instagram.com/p/%v/media/?size=m"
 	url := fmt.Sprintf(urlTemplate, req.Shortcode)
-	resp, err := http.Get(url)
+
+	resp, err := torClient.Get(url)
+	defer func() {
+		errResp := resp.Body.Close()
+		unilog.Logger().Error("failed with closing of toResponseBody", zap.Error(errResp))
+	}()
+
 	if err != nil {
 		unilog.Logger().Error("unable to get image from Instagram", zap.Error(err))
 		return nil, http.StatusInternalServerError

@@ -26,3 +26,4 @@ front/node_modules
 /services/data-storage/cmd/data_storage
 /services/event-detection/cmd/detection
 /speedtests/postgres-distributed-cities/speetest
+/services/backend/cmd/tor_data/

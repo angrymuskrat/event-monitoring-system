@@ -16,6 +16,7 @@ type Config struct {
 	User            string
 	Password        string
 	TestMod         bool
+	TorSocks        string
 	Connector       string
 	ConnectorParams map[string]string `toml:"conn-params"`
 	CORSOrigin      string            `toml:"cors-origin"`
