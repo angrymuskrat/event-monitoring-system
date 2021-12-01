@@ -7,13 +7,16 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
+	"golang.org/x/net/proxy"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 )
 
 var svc *backendService
 var storagePath string
+var torClient *http.Client
 
 func Start(confPath string) {
 	conf, err := readConfig(confPath)
@@ -28,7 +31,22 @@ func Start(confPath string) {
 	svc = &backendService{
 		storageConn: conn,
 	}
+
 	storagePath = conf.ProxyDataPath
+
+	tbProxyURL, err := url.Parse(conf.TorSocks)
+	if err != nil {
+		unilog.Logger().Error("failed to parse proxy", zap.String("URL", conf.TorSocks), zap.Error(err))
+		return
+	}
+	tbDialer, err := proxy.FromURL(tbProxyURL, proxy.Direct)
+	if err != nil {
+		unilog.Logger().Error("Failed to obtain proxy dialer", zap.Error(err))
+		return
+	}
+	tbTransport := &http.Transport{Dial: tbDialer.Dial}
+	torClient = &http.Client{Transport: tbTransport}
+
 	sm, err := newAuthManager(conf.SessionKey, conf.AuthLogPath, conf.TestMod)
 	if err != nil {
 		panic(err)
