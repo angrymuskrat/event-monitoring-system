@@ -5,26 +5,26 @@ import (
 	"sort"
 	"strings"
 
+	convtree "github.com/angrymuskrat/conv-tree"
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
-	convtree "github.com/visheratin/conv-tree"
 )
 
-func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints int, filterTags map[string]bool, start, finish int64) ([]data.Event, bool) {
-	candGrid, wasFound := findCandidates(&histGrid, posts, maxPoints)
+func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints float64, minUser int, filterTags map[string]bool, start, finish int64) ([]data.Event, bool) {
+	candidateGrid, wasFound := findCandidates(&histGrid, posts, maxPoints)
 	if !wasFound {
 		return nil, false
 	}
-	splitGrid(candGrid, maxPoints)
-	events := treeEvents(candGrid, maxPoints, filterTags, start, finish)
+	splitGrid(candidateGrid, maxPoints)
+	events := treeEvents(candidateGrid, maxPoints, minUser, filterTags, start, finish)
 	if len(events) == 0 {
 		return nil, false
 	}
 	return events, true
 }
 
-func splitGrid(tree *convtree.ConvTree, maxPoints int) {
+func splitGrid(tree *convtree.ConvTree, maxPoints float64) {
 	if tree.IsLeaf {
-		if len(tree.Points) >= maxPoints {
+		if sumWeightPoints(tree.Points) >= maxPoints {
 			tree.Check()
 		}
 	} else {
@@ -35,13 +35,13 @@ func splitGrid(tree *convtree.ConvTree, maxPoints int) {
 	}
 }
 
-func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bool, start, finish int64) []data.Event {
+func treeEvents(tree *convtree.ConvTree, maxPoints float64, minUser int, filterTags map[string]bool, start, finish int64) []data.Event {
 	if tree.IsLeaf {
-		result := []data.Event{}
-		if len(tree.Points) >= maxPoints {
+		var result []data.Event
+		if sumWeightPoints(tree.Points) >= maxPoints {
 			evHolders, posts := eventHolders(tree.Points, filterTags)
 			for _, e := range evHolders {
-				event, ok := checkEvent(e, maxPoints, posts, start, finish)
+				event, ok := checkEvent(e, minUser, posts, start, finish)
 				if ok {
 					result = append(result, event)
 				}
@@ -50,17 +50,17 @@ func treeEvents(tree *convtree.ConvTree, maxPoints int, filterTags map[string]bo
 		}
 		return result
 	} else {
-		result := []data.Event{}
-		result = append(result, treeEvents(tree.ChildBottomLeft, maxPoints, filterTags, start, finish)...)
-		result = append(result, treeEvents(tree.ChildBottomRight, maxPoints, filterTags, start, finish)...)
-		result = append(result, treeEvents(tree.ChildTopLeft, maxPoints, filterTags, start, finish)...)
-		result = append(result, treeEvents(tree.ChildTopRight, maxPoints, filterTags, start, finish)...)
+		var result []data.Event
+		result = append(result, treeEvents(tree.ChildBottomLeft, maxPoints, minUser, filterTags, start, finish)...)
+		result = append(result, treeEvents(tree.ChildBottomRight, maxPoints, minUser, filterTags, start, finish)...)
+		result = append(result, treeEvents(tree.ChildTopLeft, maxPoints, minUser, filterTags, start, finish)...)
+		result = append(result, treeEvents(tree.ChildTopRight, maxPoints, minUser, filterTags, start, finish)...)
 		return result
 	}
 }
 
 func extractTags(post data.Post, filterTags map[string]bool) []string {
-	tags := []string{}
+	var tags []string
 	r, _ := regexp.Compile("#[a-zA-Z0-9а-яА-Я_]+")
 	hashtags := r.FindAllString(post.Caption, -1)
 	for idx := range hashtags {
@@ -88,7 +88,7 @@ func extractTags(post data.Post, filterTags map[string]bool) []string {
 }
 
 func eventHolders(d []convtree.Point, filterTags map[string]bool) ([]eventHolder, []data.Post) {
-	evHolders := []eventHolder{}
+	var evHolders []eventHolder
 	posts := make([]data.Post, len(d))
 	for pi, p := range d {
 		post := p.Content.(data.Post)
@@ -128,7 +128,7 @@ func eventHolders(d []convtree.Point, filterTags map[string]bool) ([]eventHolder
 
 func uniteHolders(evHolders []eventHolder) ([]eventHolder, bool) {
 	united := false
-	res := []eventHolder{}
+	var res []eventHolder
 	for i := 0; i < len(evHolders); i++ {
 		eh1 := evHolders[i]
 		for j := i + 1; j < len(evHolders); j++ {
@@ -195,15 +195,15 @@ func combineHolders(eh1, eh2 eventHolder) eventHolder {
 	return res
 }
 
-func checkEvent(e eventHolder, maxPoints int, posts []data.Post, start, finish int64) (data.Event, bool) {
+func checkEvent(e eventHolder, minUser int, posts []data.Post, start, finish int64) (data.Event, bool) {
 	if len(e.users) < 2 {
 		return data.Event{}, false
 	}
-	if len(e.users) < maxPoints/2 {
+	if len(e.users) < minUser {
 		return data.Event{}, false
 	}
-	tags := sortTags(e.tags, 5)
-	postCodes := []string{}
+	tags := sortTags(e.tags)
+	var postCodes []string
 	for k := range e.posts {
 		postCodes = append(postCodes, k)
 	}
@@ -217,7 +217,7 @@ func checkEvent(e eventHolder, maxPoints int, posts []data.Post, start, finish i
 	}, true
 }
 
-func sortTags(tags map[string]int, max int) []string {
+func sortTags(tags map[string]int) []string {
 	rev := map[int][]string{}
 	for t, c := range tags {
 		if _, ok := rev[c]; !ok {
@@ -233,18 +233,10 @@ func sortTags(tags map[string]int, max int) []string {
 	sort.Slice(keys, func(i, j int) bool {
 		return keys[i] > keys[j]
 	})
-	res := []string{}
+	var res []string
 	for _, k := range keys {
 		res = append(res, rev[k]...)
-		//if len(res) >= max {
-		//	break
-		//}
 	}
-	//l := max
-	//if l > (len(res) - 1) {
-	//	l = len(res)
-	//}
-	//res = res[0:l]
 	return res
 }
 
@@ -277,4 +269,12 @@ func eventCenter(codes map[string]bool, posts []data.Post) data.Point {
 func filterTag(tag string, filterTags map[string]bool) bool {
 	_, ok := filterTags[tag]
 	return ok
+}
+
+func sumWeightPoints(points []convtree.Point) float64 {
+	sumWeight := float64(0)
+	for _, point := range points {
+		sumWeight += point.Weight
+	}
+	return sumWeight
 }

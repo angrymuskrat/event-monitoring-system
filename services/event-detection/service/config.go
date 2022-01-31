@@ -9,7 +9,8 @@ import (
 type Config struct {
 	LogPath            string
 	WorkersNumber      int
-	MaxPoints          int
+	MaxPoints          float64
+	MinUsers           int
 	DataStorageAddress string
 	Address            string
 }

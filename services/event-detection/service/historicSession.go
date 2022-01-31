@@ -125,7 +125,7 @@ func (hs *historicSession) gridWorker(wg *sync.WaitGroup, area data.Area) {
 	cl := service.NewGRPCClient(conn)
 	defer wg.Done()
 	for id := range hs.gridChan {
-		posts := []data.Post{}
+		var posts []data.Post
 		for _, i := range id.value {
 			ps, _, err := cl.SelectPosts(context.Background(), hs.histReq.CityId, i[0], i[1])
 			if err != nil {

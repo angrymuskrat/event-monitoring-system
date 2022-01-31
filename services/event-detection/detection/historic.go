@@ -4,9 +4,9 @@ import (
 	"strconv"
 	"time"
 
+	convtree "github.com/angrymuskrat/conv-tree"
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"github.com/gonum/stat"
-	convtree "github.com/visheratin/conv-tree"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
 )
@@ -19,16 +19,16 @@ const (
 	gridSize   = 10
 )
 
-func HistoricGrid(data []data.Post, topLeft, bottomRight data.Point, maxPoints int, tz string, gridSize float64) (convtree.ConvTree, error) {
-	posts, numDays, err := splitPosts(data, tz, topLeft, gridSize)
+func HistoricGrid(postsData []data.Post, topLeft, bottomRight data.Point, maxPoints float64, tz string, gridSize float64) (convtree.ConvTree, error) {
+	posts, numDays, err := splitPosts(postsData, tz, topLeft, gridSize)
 	if err != nil {
 		unilog.Logger().Error("unable to split posts", zap.Error(err))
 		return convtree.ConvTree{}, err
 	}
 	averagedPosts := map[convtree.Point]float64{}
-	for coord, data := range posts {
-		if len(data) > 0 {
-			averagedPosts[coord] = filterPosts(data, numDays)
+	for coordinate, postData := range posts {
+		if len(postData) > 0 {
+			averagedPosts[coordinate] = filterPosts(postData, numDays)
 		}
 	}
 	tree, err := buildGrid(averagedPosts, topLeft, bottomRight, maxPoints)
@@ -40,16 +40,16 @@ func HistoricGrid(data []data.Post, topLeft, bottomRight data.Point, maxPoints i
 	return tree, nil
 }
 
-func buildGrid(postData map[convtree.Point]float64, topLeft, bottomRight data.Point, maxPoints int) (convtree.ConvTree, error) {
-	points := []convtree.Point{}
-	for coord, data := range postData {
-		numToAdd := int(data)
+func buildGrid(postsData map[convtree.Point]float64, topLeft, bottomRight data.Point, maxPoints float64) (convtree.ConvTree, error) {
+	var points []convtree.Point
+	for coordinate, postData := range postsData {
+		numToAdd := postData
 		if numToAdd < 1 {
 			continue
 		}
 		point := convtree.Point{
-			X:      coord.X,
-			Y:      coord.Y,
+			X:      coordinate.X,
+			Y:      coordinate.Y,
 			Weight: numToAdd,
 		}
 		points = append(points, point)
@@ -72,19 +72,19 @@ func buildGrid(postData map[convtree.Point]float64, topLeft, bottomRight data.Po
 }
 
 func filterPosts(posts map[string]int, numDays int) float64 {
-	data := []float64{}
+	var postsCount []float64
 	for _, v := range posts {
-		data = append(data, float64(v))
+		postsCount = append(postsCount, float64(v))
 	}
 	diff := numDays - len(posts)
 	for i := 0; i < diff; i++ {
-		data = append(data, 0.0)
+		postsCount = append(postsCount, 0.0)
 	}
-	if len(data) > 1 {
-		avg := stat.Mean(data, nil)
-		std := stat.StdDev(data, nil)
+	if len(postsCount) > 1 {
+		avg := stat.Mean(postsCount, nil)
+		std := stat.StdDev(postsCount, nil)
 		maxValue := avg + 2*std
-		res := []float64{}
+		var res []float64
 		for _, v := range posts {
 			val := float64(v)
 			if val <= maxValue {
@@ -97,7 +97,7 @@ func filterPosts(posts map[string]int, numDays int) float64 {
 		}
 		return mean
 	} else {
-		return data[0]
+		return postsCount[0]
 	}
 }
 

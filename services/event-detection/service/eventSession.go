@@ -7,11 +7,11 @@ import (
 	"sync"
 	"time"
 
+	convtree "github.com/angrymuskrat/conv-tree"
 	service "github.com/angrymuskrat/event-monitoring-system/services/data-storage"
 	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/detection"
 	"github.com/angrymuskrat/event-monitoring-system/services/event-detection/proto"
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
-	convtree "github.com/visheratin/conv-tree"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -91,7 +91,7 @@ func getTimes(start, finish int64, tz string) ([][2]time.Time, error) {
 		unilog.Logger().Error("unable to load timezone", zap.Error(err))
 		return nil, err
 	}
-	res := [][2]time.Time{}
+	var res [][2]time.Time
 	s := time.Unix(start, 0)
 	s = s.In(loc)
 	f := time.Unix(finish, 0)
@@ -114,7 +114,7 @@ func generateGridIds(startDate, finishDate int64) []int64 {
 	startTime := time.Unix(startDate, 0)
 	finishTime := time.Unix(finishDate, 0)
 	t := startTime
-	res := []int64{}
+	var res []int64
 	for t.Before(finishTime) {
 		v := getGridNum(t.Month(), t.Weekday(), t.Hour())
 		res = append(res, v)
@@ -167,7 +167,7 @@ func (es *eventSession) eventWorker(wg *sync.WaitGroup, timeChan chan [2]time.Ti
 		}
 
 		filterTags := filterTags(es.eventReq.FilterTags)
-		evs, found := detection.FindEvents(grid, posts, es.cfg.MaxPoints, filterTags, startTime, finishTime)
+		evs, found := detection.FindEvents(grid, posts, es.cfg.MaxPoints, es.cfg.MinUsers, filterTags, startTime, finishTime)
 		if found {
 			unilog.Logger().Info("found events", zap.String("session", es.id),
 				zap.Int("num", len(evs)), zap.String("timestamp", t[0].String()))

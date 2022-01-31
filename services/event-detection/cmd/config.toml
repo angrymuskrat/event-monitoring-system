@@ -1,4 +1,5 @@
 WorkersNumber = 10
 MaxPoints = 6
+MinUser = 2
 DataStorageAddress = "localhost:8082"
 Address = "localhost:8084"
