@@ -18,6 +18,8 @@ message Post {
     string LocationID = 11;
     double Lat = 12;
     double Lon = 13;
+    double NoiseProbability = 14;
+    double EventUtility = 15;
 }
 
 message ShortPost {
