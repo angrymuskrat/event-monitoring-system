@@ -305,7 +305,9 @@ func (s *Storage) PushPosts(ctx context.Context, cityId string, posts []data.Pos
 	defer tx.Rollback(ctx)
 
 	for _, v := range posts {
-		_, err = tx.Exec(ctx, InsertPostSQL, v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount, v.Timestamp, v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lon, v.Lat)
+		_, err = tx.Exec(ctx, InsertPostSQL, v.ID, v.Shortcode, v.ImageURL, v.IsVideo, v.Caption, v.CommentsCount,
+			v.Timestamp, v.LikesCount, v.IsAd, v.AuthorID, v.LocationID, v.Lon, v.Lat,
+			v.NoiseProbability, v.EventUtility)
 		if err != nil {
 			unilog.Logger().Error("is not able to exec event", zap.Error(err))
 			return ErrPushPosts
@@ -334,7 +336,7 @@ func (s Storage) SelectPosts(ctx context.Context, cityId string, startTime, fini
 	for rows.Next() {
 		p := new(data.Post)
 		err = rows.Scan(&p.ID, &p.Shortcode, &p.ImageURL, &p.IsVideo, &p.Caption, &p.CommentsCount, &p.Timestamp,
-			&p.LikesCount, &p.IsAd, &p.AuthorID, &p.LocationID, &p.Lon, &p.Lat)
+			&p.LikesCount, &p.IsAd, &p.AuthorID, &p.LocationID, &p.Lon, &p.Lat, &p.NoiseProbability, &p.EventUtility)
 		if err != nil {
 			unilog.Logger().Error("error in select posts", zap.Error(err))
 			return nil, nil, ErrSelectPosts

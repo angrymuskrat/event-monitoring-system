@@ -93,6 +93,8 @@ const CreatePostsTableSQL = `
 		AuthorID VARCHAR (15) NOT NULL,
 		LocationID VARCHAR (20) NOT NULL,
 		Location geometry,
+		NoiseProbability DOUBLE PRECISION DEFAULT 0.0,
+		EventUtility DOUBLE PRECISION DEFAULT 1.0,
 		PRIMARY KEY (Shortcode, Timestamp)
 	);
 `
@@ -100,16 +102,17 @@ const CreatePostsIndexByShortcodeSQL = "CREATE INDEX IF NOT EXISTS shortcode_to_
 
 const InsertPostSQL = `
 	INSERT INTO posts
-		(ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, Location)
+		(ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, Location, NoiseProbability, EventUtility)
 	VALUES 
-		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, ST_SetSRID( ST_Point($12, $13), 4326))
+		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, ST_SetSRID( ST_Point($12, $13), 4326), $14, $15)
 	ON CONFLICT (Shortcode, Timestamp) DO UPDATE SET Location = EXCLUDED.Location;
 `
 const SelectPostsTemplate = `
 	SELECT 
 		ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, 
 		ST_X(Location) as Lon, 
-		ST_Y(Location) as Lat
+		ST_Y(Location) as Lat,
+		NoiseProbability, EventUtility
 	FROM posts
 	WHERE Timestamp BETWEEN %v AND %v
 `

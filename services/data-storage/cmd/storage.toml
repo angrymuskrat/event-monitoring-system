@@ -3,5 +3,5 @@ RefreshInterval = "10s" # timescaledb.refresh_interval for continious aggreagtio
 User = "storage" # user should be superuser
 Password = "cnjhfl;"
 Host = "10.32.15.30"
-Port = "5432"
-EventsTableName = "events_6"
+Port = "5433"
+EventsTableName = "anomalies_3"
