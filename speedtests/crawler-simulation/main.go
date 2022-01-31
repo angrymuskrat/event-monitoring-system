@@ -24,17 +24,25 @@ func main() {
 	}
 	defer conn.Close()
 	svc = storagesvc.NewGRPCClient(conn)
-	postAmount = 5
+	postAmount = 1
 	randomizer := prand.New(data.Point{Lat: 60.115617, Lon: 30.103768}, data.Point{Lat: 59.738057, Lon: 30.637967})
-	nExps := 50
-	ans := int64(0)
-	for i := 0; i < nExps; i++ {
+
+	for i := 0; i < 10; i++ {
 		fmt.Printf("\n\nIteration: %v\n", i)
 
 		posts := randomizer.Posts(postAmount, 1578836800, 1578836800+(3600*24))
 		fmt.Println("posts generated!")
 
 		start := time.Now()
+		err = svc.PushPosts(context.Background(), "spb_empty_test", posts)
+		if err != nil {
+			fmt.Print(err)
+			return
+		}
+		fmt.Println("spb_empty_test completed!")
+		timePerPostEmpty := time.Since(start).Microseconds() / int64(postAmount)
+
+		start = time.Now()
 		err = svc.PushPosts(context.Background(), "spb_test", posts)
 		if err != nil {
 			fmt.Print(err)
@@ -42,8 +50,6 @@ func main() {
 		}
 		fmt.Println("spb_test completed!")
 		timePerPost := time.Since(start).Microseconds() / int64(postAmount)
-		fmt.Printf("avg time per post for: \n %v mcs", timePerPost)
-		ans += timePerPost
+		fmt.Printf("avg time per post for: \n    empty db: %v ms \n    db with real posts: %v ms", timePerPostEmpty, timePerPost)
 	}
-	fmt.Printf("avg time per post for: \n %v mcs", ans/int64(nExps))
 }
