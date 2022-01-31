@@ -9,13 +9,14 @@ import (
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 )
 
-func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints float64, minUser int, filterTags map[string]bool, start, finish int64) ([]data.Event, bool) {
+func FindEvents(histGrid convtree.ConvTree, posts []data.Post, maxPoints float64, minUser int,
+	filterTags map[string]bool, start, finish int64, anomalyMode bool) ([]data.Event, bool) {
 	candidateGrid, wasFound := findCandidates(&histGrid, posts, maxPoints)
 	if !wasFound {
 		return nil, false
 	}
 	splitGrid(candidateGrid, maxPoints)
-	events := treeEvents(candidateGrid, maxPoints, minUser, filterTags, start, finish)
+	events := treeEvents(candidateGrid, maxPoints, minUser, filterTags, start, finish, anomalyMode)
 	if len(events) == 0 {
 		return nil, false
 	}
@@ -35,13 +36,14 @@ func splitGrid(tree *convtree.ConvTree, maxPoints float64) {
 	}
 }
 
-func treeEvents(tree *convtree.ConvTree, maxPoints float64, minUser int, filterTags map[string]bool, start, finish int64) []data.Event {
+func treeEvents(tree *convtree.ConvTree, maxPoints float64, minUser int, filterTags map[string]bool,
+	start, finish int64, anomalyMode bool) []data.Event {
 	if tree.IsLeaf {
 		var result []data.Event
 		if sumWeightPoints(tree.Points) >= maxPoints {
-			evHolders, posts := eventHolders(tree.Points, filterTags)
-			for _, e := range evHolders {
-				event, ok := checkEvent(e, minUser, posts, start, finish)
+			eventHolders, posts := eventHolders(tree.Points, filterTags, anomalyMode)
+			for _, holder := range eventHolders {
+				event, ok := checkEvent(holder, minUser, posts, start, finish)
 				if ok {
 					result = append(result, event)
 				}
@@ -51,10 +53,10 @@ func treeEvents(tree *convtree.ConvTree, maxPoints float64, minUser int, filterT
 		return result
 	} else {
 		var result []data.Event
-		result = append(result, treeEvents(tree.ChildBottomLeft, maxPoints, minUser, filterTags, start, finish)...)
-		result = append(result, treeEvents(tree.ChildBottomRight, maxPoints, minUser, filterTags, start, finish)...)
-		result = append(result, treeEvents(tree.ChildTopLeft, maxPoints, minUser, filterTags, start, finish)...)
-		result = append(result, treeEvents(tree.ChildTopRight, maxPoints, minUser, filterTags, start, finish)...)
+		result = append(result, treeEvents(tree.ChildBottomLeft, maxPoints, minUser, filterTags, start, finish, anomalyMode)...)
+		result = append(result, treeEvents(tree.ChildBottomRight, maxPoints, minUser, filterTags, start, finish, anomalyMode)...)
+		result = append(result, treeEvents(tree.ChildTopLeft, maxPoints, minUser, filterTags, start, finish, anomalyMode)...)
+		result = append(result, treeEvents(tree.ChildTopRight, maxPoints, minUser, filterTags, start, finish, anomalyMode)...)
 		return result
 	}
 }
@@ -87,60 +89,60 @@ func extractTags(post data.Post, filterTags map[string]bool) []string {
 	return tags
 }
 
-func eventHolders(d []convtree.Point, filterTags map[string]bool) ([]eventHolder, []data.Post) {
-	var evHolders []eventHolder
-	posts := make([]data.Post, len(d))
-	for pi, p := range d {
-		post := p.Content.(data.Post)
-		posts[pi] = post
+func eventHolders(leafPoints []convtree.Point, filterTags map[string]bool, anomalyMode bool) ([]eventHolder, []data.Post) {
+	var holders []eventHolder
+	posts := make([]data.Post, len(leafPoints))
+	for pointInd, point := range leafPoints {
+		post := point.Content.(data.Post)
+		posts[pointInd] = post
 		tags := extractTags(post, filterTags)
-		if len(tags) == 0 {
+		if (len(tags) == 0) && !anomalyMode {
 			continue
 		}
-		h := eventHolder{
+		holder := eventHolder{
 			users: map[string]bool{},
 			posts: map[string]bool{},
 			tags:  map[string]int{},
 		}
-		h.users[post.AuthorID] = true
-		h.posts[post.Shortcode] = true
+		holder.users[post.AuthorID] = true
+		holder.posts[post.Shortcode] = true
 		for _, tag := range tags {
-			h.tags[tag] = 1
+			holder.tags[tag] = 1
 		}
 		found := false
-		for i := range evHolders {
-			if _, ok := evHolders[i].users[post.AuthorID]; ok {
-				h = combineHolders(evHolders[i], h)
-				evHolders[i] = h
+		for i := range holders {
+			if _, ok := holders[i].users[post.AuthorID]; ok {
+				holder = combineHolders(holders[i], holder)
+				holders[i] = holder
 				found = true
 			}
-		}
+		} // каждый holders - публикации от одного пользователя в данной ячейке
 		if !found {
-			evHolders = append(evHolders, h)
+			holders = append(holders, holder)
 		}
 	}
-	res, un := uniteHolders(evHolders)
-	for un {
-		res, un = uniteHolders(res)
+	result, wasUnion := uniteHolders(holders, anomalyMode)
+	for wasUnion {
+		result, wasUnion = uniteHolders(result, anomalyMode)
 	}
-	return res, posts
+	return result, posts
 }
 
-func uniteHolders(evHolders []eventHolder) ([]eventHolder, bool) {
+func uniteHolders(holders []eventHolder, anomalyMode bool) ([]eventHolder, bool) {
 	united := false
 	var res []eventHolder
-	for i := 0; i < len(evHolders); i++ {
-		eh1 := evHolders[i]
-		for j := i + 1; j < len(evHolders); j++ {
-			if j == (len(evHolders) - 1) {
+	for i := 0; i < len(holders); i++ {
+		holder1 := holders[i]
+		for j := i + 1; j < len(holders)-1; j++ {
+			/*if j == (len(holders) - 1) { in for was j < len(holders) - What the fuck was that?
 				continue
-			}
-			eh2 := evHolders[j]
+			}*/
+			holder2 := holders[j]
 			found := false
-			for t1 := range eh1.tags {
-				for t2 := range eh2.tags {
-					if t1 == t2 {
-						eh1 = combineHolders(eh1, eh2)
+			for tag1 := range holder1.tags {
+				for tag2 := range holder2.tags {
+					if (tag1 == tag2) || anomalyMode {
+						holder1 = combineHolders(holder1, holder2)
 						united = true
 						found = true
 						break
@@ -151,45 +153,45 @@ func uniteHolders(evHolders []eventHolder) ([]eventHolder, bool) {
 				}
 			}
 			if found {
-				evHolders = append(evHolders[:j], evHolders[j+1:]...)
+				holders = append(holders[:j], holders[j+1:]...)
 				j--
 			}
 		}
-		res = append(res, eh1)
+		res = append(res, holder1)
 	}
 	return res, united
 }
 
-func combineHolders(eh1, eh2 eventHolder) eventHolder {
+func combineHolders(holder1, holder2 eventHolder) eventHolder {
 	res := eventHolder{
 		users: map[string]bool{},
 		posts: map[string]bool{},
 		tags:  map[string]int{},
 	}
-	for u := range eh1.users {
-		res.users[u] = true
+	for userId := range holder1.users {
+		res.users[userId] = true
 	}
-	for u := range eh2.users {
-		res.users[u] = true
+	for userId := range holder2.users {
+		res.users[userId] = true
 	}
-	for p := range eh1.posts {
-		res.posts[p] = true
+	for postCode := range holder1.posts {
+		res.posts[postCode] = true
 	}
-	for p := range eh2.posts {
-		res.posts[p] = true
+	for postCode := range holder2.posts {
+		res.posts[postCode] = true
 	}
-	for t, c := range eh1.tags {
-		if _, ok := res.tags[t]; ok {
-			res.tags[t] += c
+	for tag, count := range holder1.tags {
+		if _, ok := res.tags[tag]; ok {
+			res.tags[tag] += count
 		} else {
-			res.tags[t] = c
+			res.tags[tag] = count
 		}
 	}
-	for t, c := range eh2.tags {
-		if _, ok := res.tags[t]; ok {
-			res.tags[t] += c
+	for tag, count := range holder2.tags {
+		if _, ok := res.tags[tag]; ok {
+			res.tags[tag] += count
 		} else {
-			res.tags[t] = c
+			res.tags[tag] = count
 		}
 	}
 	return res

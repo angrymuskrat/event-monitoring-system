@@ -11,6 +11,7 @@ type Config struct {
 	WorkersNumber      int
 	MaxPoints          float64
 	MinUsers           int
+	AnomalyMode        bool
 	DataStorageAddress string
 	Address            string
 }
