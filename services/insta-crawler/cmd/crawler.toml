@@ -1,5 +1,6 @@
-RootDir                 = "/run/media/alexvish/Data/insta-crawler"
-CheckpointUpdateTimeout = "4m"
-WorkersNumber           = 20
-DataStorageURL          = "10.9.14.118:8082"
-UseDataStorage          = false
+RootDir = "/home/muskrat/workplace/event-monitoring-system/services/insta-crawler/cmd/data"
+DataStorageURL = "localhost:8082"
+[[Groups]]
+TorPorts = [9151, 9152, 9153, 9154, 9155, 9156, 9157, 9158, 9159, 9160]
+Token = "spb_test"
+SessionID = "spb_test_id"

@@ -1,0 +1,14 @@
+Address = ":17112"
+LogPath = "service.log"
+AuthLogPath = "auth.log"
+SessionKey = "kjgnnuig34gsdgjbskg23242sgsk24t2ty2424hghdsbgubt4b34geehgbs"
+TimerLogPath = "timer.log"
+ProxyDataPath = "/data/images/"
+cors-origin = "http://10.32.15.30:17115/"
+TorSocks = "socks5://127.0.0.1:9150"
+User = "user"
+Password = "pwd"
+Connector = "storage"
+TestMod = false
+[conn-params]
+address = "localhost:8082"

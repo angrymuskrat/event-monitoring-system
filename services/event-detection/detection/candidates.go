@@ -11,7 +11,7 @@ func findCandidates(histGrid *convtree.ConvTree, posts []data.Post, maxPoints in
 			X:       post.Lon,
 			Y:       post.Lat,
 			Content: post,
-			Weight:  1,
+			Weight:  1, // TODO add
 		}
 		histGrid.Insert(point, false)
 	}

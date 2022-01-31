@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="event monitoring"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>Event monitoring</title>
+  </head>
+  <body >
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script>
+      var isEdge = window.navigator.userAgent.indexOf('Edge') != -1
+      if (isEdge) {
+        var root = document.getElementById('root');
+        var div = document.createElement("div")
+        var content = document.createElement('p')
+        div.setAttribute("style", "position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; text-align: center; font-family: Arial; font-size: 16px;");
+        content.innerHTML = 'Oops! This app do not support this browser. Please, select another one.'
+        div.appendChild(content)
+        root.appendChild(div);
+      }
+    </script>
+  </body>
+</html>

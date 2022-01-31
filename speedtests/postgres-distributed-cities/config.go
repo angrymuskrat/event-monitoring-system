@@ -8,10 +8,15 @@ import (
 )
 
 type Configuration struct {
-	User     string
-	Password string
-	Host     string
-	Port     string
+	User       string
+	Password   string
+	Host       string
+	Port       string
+	Seed       int64
+	MinTime    int64
+	MaxTime    int64
+	TimesCount int
+	Restarts   int
 }
 
 func readConfig(path string) (cfg Configuration, err error) {

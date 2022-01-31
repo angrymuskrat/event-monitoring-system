@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/visheratin/unilog"
 	"go.uber.org/zap"
@@ -23,5 +24,6 @@ func readConfig(path string) (cfg Configuration, err error) {
 	if err != nil {
 		unilog.Logger().Error("unable to read config file", zap.String("path", path), zap.Error(err))
 	}
+	fmt.Println(cfg)
 	return
 }

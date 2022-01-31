@@ -1,8 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
-const SelectPostsSQLTemplate = `
+const SelectPostsTemplate = `
 	SELECT 
 		ID, Shortcode, ImageURL, IsVideo, Caption, CommentsCount, Timestamp, LikesCount, IsAd, AuthorID, LocationID, 
 		ST_X(Location) as Lon, 
@@ -10,18 +12,30 @@ const SelectPostsSQLTemplate = `
 	FROM posts
 	WHERE Timestamp BETWEEN %v AND %v`
 
-const SelectPostsCountSQLTemplate = `
+const SelectPostsCountTemplate = `
 	SELECT 
 		count(*) as count
 	FROM posts
 	WHERE Timestamp BETWEEN %v AND %v`
 
-func makeSelectPostsSQL(startTimestamp, endTimestamp int64) string {
-	request := fmt.Sprintf(SelectPostsSQLTemplate, startTimestamp, endTimestamp)
-	return request
+const SelectEventsTemplate = `
+	SELECT 
+		Title, Start, Finish, PostCodes, Tags,  
+		ST_X(Center) as Lon, 
+		ST_Y(Center) as Lat
+	FROM events_6
+	WHERE
+		Start BETWEEN %v AND (%v - 1)`
+
+const SelectEventsCountTemplate = `
+	SELECT 
+		COUNT(*) as count
+	FROM events_6
+	WHERE
+		Start BETWEEN %v AND %v`
+
+func buildSelectRequest(template string, startTimestamp, endTimestamp int64) string {
+	statement := fmt.Sprintf(template, startTimestamp, endTimestamp)
+	return statement
 }
 
-func makeSelectPostsCountSQL(startTimestamp, endTimestamp int64) string {
-	request := fmt.Sprintf(SelectPostsCountSQLTemplate, startTimestamp, endTimestamp)
-	return request
-}
