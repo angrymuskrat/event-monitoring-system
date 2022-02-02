@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	data "github.com/angrymuskrat/event-monitoring-system/services/proto"
 	"github.com/jackc/pgx/v4"
@@ -494,10 +495,22 @@ func (s *Storage) PushEvents(ctx context.Context, cityId string, events []data.E
 	defer tx.Rollback(ctx)
 
 	for _, event := range events {
+		if len(event.Title) >= 99 {
+			event.Title = event.Title[:99]
+		}
+		isUTF8Valid := utf8.ValidString(event.Title)
+		for i := 0; i < len(event.Tags) && isUTF8Valid; i++ {
+			isUTF8Valid = isUTF8Valid && utf8.ValidString(event.Tags[i])
+		}
+		if !isUTF8Valid {
+			unilog.Logger().Info("PushEvents: not correct title or tags")
+			continue
+		}
+
 		_, err = tx.Exec(ctx, makeInsertEventSQL(s.config.EventsTableName),
 			event.Title, event.Start, event.Finish, event.Center.Lon, event.Center.Lat, pq.Array(event.PostCodes), pq.Array(event.Tags))
 		if err != nil {
-			unilog.Logger().Error("is not able to exec event", zap.Error(err))
+			unilog.Logger().Error("is not able to exec event", zap.Error(err), zap.String("event title", event.Title))
 			return ErrPushEvents
 		}
 	}
