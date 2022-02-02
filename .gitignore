@@ -27,3 +27,6 @@ front/node_modules
 /services/event-detection/cmd/detection
 /speedtests/postgres-distributed-cities/speetest
 /services/backend/cmd/tor_data/
+/utils/csvlib/cmd/connection.toml
+/utils/csvlib/cmd/loader
+/utils/csvlib/cmd/events_posts.csv
