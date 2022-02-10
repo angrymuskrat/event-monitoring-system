@@ -16,7 +16,11 @@ func main() {
 	rootPath := flag.String("root", "./", "working dir path")
 	additionalParams := map[string]*string{}
 	additionalParams["EventTableName"] = flag.String("EventTableName", "events_6", "name of events table for request connected with events")
-	additionalParams["EventPostsOutput"] = flag.String("EventsPostsFile", "events_posts.csv", "name of file for saving events")
+	additionalParams["OutputFile"] = flag.String("OutputFile", "output.csv", "name of file for saving data")
+	additionalParams["InputFile"] = flag.String("InputFile", "input.csv", "name of input files InputFile")
+	intParams := map[string]*int64{}
+	intParams["Start"] = flag.Int64("Start", 0, "Start timestamp for query, 0 - None and default value")
+	intParams["Finish"] = flag.Int64("Finish", 0, "Finish timestamp for query, 0 - None and default value")
 	flag.Parse()
 	/*fmt.Printf("cityCode: %v\n", *cityCode)
 	fmt.Printf("requestType: %v\n", *requestType)
@@ -28,7 +32,7 @@ func main() {
 		unilog.Logger().Error("don't be able to build connector", zap.Error(err))
 		os.Exit(0)
 	}
-	err = connector.ExecuteRequest(context.Background(), *requestType, *rootPath, additionalParams)
+	err = connector.ExecuteRequest(context.Background(), *requestType, *rootPath, additionalParams, intParams)
 	if err != nil {
 		unilog.Logger().Error("don't be able exec request", zap.Error(err))
 		os.Exit(0)

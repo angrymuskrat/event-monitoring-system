@@ -47,9 +47,23 @@ func NewConnector(ctx context.Context, configPath *string, dbName string) (c *co
 	return c, nil
 }
 
+func (c *connector) ExecuteRequest(ctx context.Context, requestType string, rootPath string,
+	additionalParams map[string]*string, intParams map[string]*int64) (err error) {
+	switch requestType {
+	case "LoadEventPosts":
+		err = c.eventPosts(ctx, rootPath, *additionalParams["EventTableName"], *additionalParams["OutputFile"],
+			*intParams["Start"], *intParams["Finish"])
+	case "UpdateAdv":
+		err = c.updateAdvPosts(ctx, rootPath, *additionalParams["InputFile"])
+	default:
+		err = errors.New("unknown type flag option")
+	}
+	return err
+}
+
 func (c *connector) selectPostsByCodes(ctx context.Context, codes []string,
 	start, finish int64) (posts []data.Post, err error) {
-	rows, err := c.conn.Query(ctx, makeSelectPostsByCodesSQL(codes, start, finish, c.config.HasNoiseAndUtility))
+	rows, err := c.conn.Query(ctx, makeSelectPostsByCodesSQL(codes, start, finish))
 	if err != nil {
 		unilog.Logger().Error("error in select posts", zap.Error(err))
 		return nil, ErrSelectPosts
@@ -58,13 +72,11 @@ func (c *connector) selectPostsByCodes(ctx context.Context, codes []string,
 
 	for rows.Next() {
 		p := new(data.Post)
-		if c.config.HasNoiseAndUtility {
-			err = rows.Scan(&p.ID, &p.Shortcode, &p.ImageURL, &p.IsVideo, &p.Caption, &p.CommentsCount, &p.Timestamp,
-				&p.LikesCount, &p.IsAd, &p.AuthorID, &p.LocationID, &p.Lon, &p.Lat, &p.NoiseProbability, &p.EventUtility)
-		} else {
-			err = rows.Scan(&p.ID, &p.Shortcode, &p.ImageURL, &p.IsVideo, &p.Caption, &p.CommentsCount, &p.Timestamp,
-				&p.LikesCount, &p.IsAd, &p.AuthorID, &p.LocationID, &p.Lon, &p.Lat)
-		}
+
+		err = rows.Scan(&p.ID, &p.Shortcode, &p.ImageURL, &p.IsVideo, &p.Caption,
+			&p.CommentsCount, &p.Timestamp, &p.LikesCount, &p.IsAd, &p.AuthorID,
+			&p.LocationID, &p.Lon, &p.Lat, &p.NoiseProbability, &p.EventUtility)
+
 		if err != nil {
 			unilog.Logger().Error("error in select posts", zap.Error(err))
 			return nil, ErrSelectPosts
@@ -74,8 +86,8 @@ func (c *connector) selectPostsByCodes(ctx context.Context, codes []string,
 	return posts, nil
 }
 
-func (c *connector) selectAllEvents(ctx context.Context, eventTable string) (events []data.Event, err error) {
-	rows, err := c.conn.Query(ctx, makeSelectAllEventsSQL(eventTable))
+func (c *connector) selectEvents(ctx context.Context, eventTable string, start, finish int64) (events []data.Event, err error) {
+	rows, err := c.conn.Query(ctx, makeSelectEventsSQL(eventTable, start, finish))
 
 	if err != nil {
 		unilog.Logger().Error("error in select events", zap.Error(err))
@@ -97,9 +109,9 @@ func (c *connector) selectAllEvents(ctx context.Context, eventTable string) (eve
 	return events, nil
 }
 
-func (c *connector) eventPosts(ctx context.Context, rootPath, eventTableName, outputFile string) error {
+func (c *connector) eventPosts(ctx context.Context, rootPath, eventTableName, outputFile string, start, finish int64) error {
 	unilog.Logger().Info("process status: start collecting events")
-	events, err := c.selectAllEvents(ctx, eventTableName)
+	events, err := c.selectEvents(ctx, eventTableName, start, finish)
 	unilog.Logger().Info("process status: finish collecting events")
 	if err != nil {
 		return err
@@ -124,9 +136,9 @@ func (c *connector) eventPosts(ctx context.Context, rootPath, eventTableName, ou
 	w := csv.NewWriter(f)
 	defer w.Flush()
 
-	columns := []string{"code", "caption", "lat", "lon", "author_id", "location_id", "timestamp", "city", "event_ind", "event_title"}
-	if c.config.HasNoiseAndUtility {
-		columns = append(columns, []string{"noise_probability", "event_utility"}...)
+	columns := []string{"code", "caption", "lat", "lon", "author_id", "location_id", "timestamp",
+		"city", "event_ind", "event_title",
+		"noise_probability", "event_utility",
 	}
 	if err := w.Write(columns); err != nil {
 		unilog.Logger().Error("error writing record to file", zap.Error(err))
@@ -143,13 +155,11 @@ func (c *connector) eventPosts(ctx context.Context, rootPath, eventTableName, ou
 		}
 
 		for _, p := range posts {
-			record := []string{p.Shortcode, p.Caption, fmt.Sprintf("%v", p.Lat), fmt.Sprintf("%v", p.Lon),
-				p.AuthorID, p.LocationID, fmt.Sprintf("%v", p.Timestamp), c.dbName, fmt.Sprintf("%v", ind),
-				events[ind].Title}
-			if c.config.HasNoiseAndUtility {
-				record = append(record, []string{
-					fmt.Sprintf("%v", p.NoiseProbability),
-					fmt.Sprintf("%v", p.EventUtility)}...)
+			record := []string{p.Shortcode, p.Caption,
+				fmt.Sprintf("%v", p.Lat), fmt.Sprintf("%v", p.Lon),
+				p.AuthorID, p.LocationID, fmt.Sprintf("%v", p.Timestamp),
+				c.dbName, fmt.Sprintf("%v", ind), events[ind].Title,
+				fmt.Sprintf("%v", p.NoiseProbability), fmt.Sprintf("%v", p.EventUtility),
 			}
 			if err := w.Write(record); err != nil {
 				unilog.Logger().Error("error writing record to file", zap.Error(err))
@@ -168,13 +178,48 @@ func (c *connector) eventPosts(ctx context.Context, rootPath, eventTableName, ou
 	return nil
 }
 
-func (c *connector) ExecuteRequest(ctx context.Context, requestType string, rootPath string,
-	additionalParams map[string]*string) (err error) {
-	switch requestType {
-	case "LoadEventPosts":
-		err = c.eventPosts(ctx, rootPath, *additionalParams["EventTableName"], *additionalParams["EventPostsOutput"])
-	default:
-		err = errors.New("unknown type flag option")
+func (c *connector) updateAdvPosts(ctx context.Context, rootPath, inputFile string) error {
+	f, err := os.Open(rootPath + inputFile)
+	if err != nil {
+		unilog.Logger().Error("error read csv", zap.Error(err))
+		return err
 	}
-	return err
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			unilog.Logger().Error("don't be able to close file", zap.Error(err))
+		}
+	}()
+
+	reader := csv.NewReader(f)
+	reader.FieldsPerRecord = 2
+	reader.Comment = '#'
+
+	var (
+		codes []string
+		isAd  []bool
+	)
+	_, e := reader.Read()
+	if e != nil {
+		unilog.Logger().Error("don't be able to read headers", zap.Error(err))
+		return err
+	}
+	for {
+		record, e := reader.Read()
+
+		if e != nil {
+			// unilog.Logger().Error("don't be able to read next line file", zap.Error(err))
+			break
+		}
+		codes = append(codes, record[0])
+		isAd = append(isAd, record[1] == "1")
+	}
+	statement := makeUpdatePostsAdvSQL(codes, isAd)
+	_, err = c.conn.Exec(ctx, statement)
+	if err != nil {
+		unilog.Logger().Error("don't be able to update posts", zap.Error(err))
+		return err
+	}
+	unilog.Logger().Info("updated posts", zap.Int("posts amount", len(codes)))
+	return nil
 }

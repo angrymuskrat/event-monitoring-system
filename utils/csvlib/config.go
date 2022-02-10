@@ -8,11 +8,10 @@ import (
 )
 
 type configuration struct {
-	User               string
-	Password           string
-	Host               string
-	Port               string
-	HasNoiseAndUtility bool
+	User     string
+	Password string
+	Host     string
+	Port     string
 }
 
 func readConfig(path string) (cfg *configuration, err error) {
